@@ -148,23 +148,24 @@ app_license = "mit"
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"custom_app_api.tasks.all"
-# 	],
-# 	"daily": [
-# 		"custom_app_api.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"custom_app_api.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"custom_app_api.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"custom_app_api.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	# "all": [
+	# 	"custom_app_api.tasks.all"
+	# ],
+	# "daily": [
+	# 	"custom_app_api.tasks.daily"
+	# ],
+	"hourly": [
+		# "custom_app_api.tasks.hourly"
+        "custom_app_api.cron_functions.salary_slip_cron.generate_salary_slips_for_active_employees"
+	],
+	# "weekly": [
+	# 	"custom_app_api.tasks.weekly"
+	# ],
+	# "monthly": [
+	# 	"custom_app_api.tasks.monthly"
+	# ],
+}
 
 # Testing
 # -------
