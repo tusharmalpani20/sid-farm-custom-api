@@ -61,6 +61,7 @@ def get_all_employees():
             "error": str(e)
         }
 
+@frappe.whitelist()
 def get_all_inactive_or_left_employees_having_device_id():
     """
     Get all inactive or left employees having device id

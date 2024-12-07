@@ -40,12 +40,12 @@ day_abbr = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 def execute(filters: Filters | None = None) -> tuple:
 	filters = frappe._dict(filters or {})
 
-	# Automatically enable summarized view for Route, Area, Zone
-	if filters.group_by in ["Route", "Area", "Zone"]:
+	# Automatically enable summarized view for Route, Area, Zone, Point
+	if filters.group_by in ["Route", "Area", "Zone", "Point"]:
 		filters.summarized_view = 1
 
-	if not (filters.month and filters.year):
-		frappe.throw(_("Please select month and year."))
+	# Validate and process date filters
+	validate_and_process_date_filters(filters)
 
 	if filters.company:
 		filters.companies = [filters.company]
@@ -68,12 +68,39 @@ def execute(filters: Filters | None = None) -> tuple:
 
 	return columns, data, None, chart
 
+def validate_and_process_date_filters(filters):
+	"""Validate and process date range filters"""
+	if filters.date_range == "Daily":
+		if not filters.specific_date:
+			frappe.throw(_("Please select a date."))
+		# Convert specific_date to month and year for consistency
+		date_obj = getdate(filters.specific_date)
+		filters.month = date_obj.month
+		filters.year = date_obj.year
+		# Add day filter for daily view
+		filters.day = date_obj.day
+	
+	elif filters.date_range == "Monthly":
+		if not (filters.month and filters.year):
+			frappe.throw(_("Please select month and year."))
+	
+	elif filters.date_range == "Quarterly":
+		if not (filters.quarter and filters.year):
+			frappe.throw(_("Please select quarter and year."))
+		# Convert quarter to month range
+		quarter_mapping = {
+			"Q1 (Jan-Mar)": [1, 3],
+			"Q2 (Apr-Jun)": [4, 6],
+			"Q3 (Jul-Sep)": [7, 9],
+			"Q4 (Oct-Dec)": [10, 12]
+		}
+		filters.from_month, filters.to_month = quarter_mapping.get(filters.quarter, [1, 3])
 
 def get_columns(filters: Filters) -> list[dict]:
 	columns = []
 	
-	# Special handling for Route, Area, Zone
-	if filters.group_by in ["Route", "Area", "Zone"]:
+	# Special handling for Route, Area, Zone, Point
+	if filters.group_by in ["Route", "Area", "Zone", "Point"]:
 		columns.extend([
 			{
 				"label": _(filters.group_by),
@@ -163,8 +190,8 @@ def get_columns(filters: Filters) -> list[dict]:
 
 
 def get_data(filters: Filters, attendance_map: dict) -> list[dict]:
-	# Special handling for Route, Area, Zone
-	if filters.group_by in ["Route", "Area", "Zone"]:
+	# Special handling for Route, Area, Zone, Point
+	if filters.group_by in ["Route", "Area", "Zone", "Point"]:
 		return get_location_wise_attendance(filters, attendance_map)
 	
 	# Standard handling for Branch, Department, etc.
@@ -191,14 +218,15 @@ def get_data(filters: Filters, attendance_map: dict) -> list[dict]:
 
 
 def get_location_wise_attendance(filters: Filters, attendance_map: dict) -> list[dict]:
-	"""Get summarized attendance data grouped by Route/Area/Zone"""
+	"""Get summarized attendance data grouped by Route/Area/Zone/Point"""
 	Employee = frappe.qb.DocType("Employee")
 	
 	# Map group_by to custom field names
 	field_mapping = {
 		"Route": "custom_route",
 		"Area": "custom_area",
-		"Zone": "custom_zone"
+		"Zone": "custom_zone",
+		"Point": "custom_point"
 	}
 	
 	group_field = field_mapping.get(filters.group_by)
@@ -313,6 +341,7 @@ def get_attendance_map(filters: Filters) -> dict:
 
 
 def get_attendance_records(filters: Filters) -> list[dict]:
+	"""Modified to handle different date ranges"""
 	Attendance = frappe.qb.DocType("Attendance")
 	query = (
 		frappe.qb.from_(Attendance)
@@ -325,13 +354,25 @@ def get_attendance_records(filters: Filters) -> list[dict]:
 		.where(
 			(Attendance.docstatus == 1)
 			& (Attendance.company.isin(filters.companies))
-			& (Extract("month", Attendance.attendance_date) == filters.month)
-			& (Extract("year", Attendance.attendance_date) == filters.year)
 		)
 	)
 
+	if filters.date_range == "Daily":
+		query = query.where(Attendance.attendance_date == filters.specific_date)
+	elif filters.date_range == "Monthly":
+		query = query.where(
+			(Extract("month", Attendance.attendance_date) == filters.month)
+			& (Extract("year", Attendance.attendance_date) == filters.year)
+		)
+	elif filters.date_range == "Quarterly":
+		query = query.where(
+			(Extract("month", Attendance.attendance_date).between(filters.from_month, filters.to_month))
+			& (Extract("year", Attendance.attendance_date) == filters.year)
+		)
+
 	if filters.employee:
 		query = query.where(Attendance.employee == filters.employee)
+	
 	query = query.orderby(Attendance.employee, Attendance.attendance_date)
 
 	return query.run(as_dict=1)
@@ -375,11 +416,13 @@ def get_employee_related_details(filters: Filters) -> tuple[dict, list]:
 			"Designation": "designation",
 			"Route": "custom_route",
 			"Area": "custom_area",
-			"Zone": "custom_zone"
+			"Zone": "custom_zone",
+			"Point": "custom_point"
 		}
 		
-		group_by = field_mapping.get(group_by, group_by.lower())
-		query = query.orderby(group_by)
+		# Use the base field name for ordering (without 'custom_' prefix)
+		order_by = group_by.lower()
+		query = query.orderby(order_by)
 
 	employee_details = query.run(as_dict=True)
 
@@ -388,7 +431,7 @@ def get_employee_related_details(filters: Filters) -> tuple[dict, list]:
 
 	if group_by:
 		# Use the mapped field name for grouping
-		field_name = group_by
+		field_name = field_mapping.get(group_by)
 		group_key = lambda d: "" if d.get(field_name) is None else d.get(field_name)
 		
 		for parameter, employees in groupby(sorted(employee_details, key=group_key), key=group_key):
@@ -733,19 +776,30 @@ def get_chart_data(attendance_map: dict, filters: Filters) -> dict:
 
 
 def get_columns_for_days(filters: Filters) -> list[dict]:
-	"""Returns list of dict containing column definitions for each day of the month"""
-	total_days = get_total_days_in_month(filters)
+	"""Returns list of dict containing column definitions for each day of the month/quarter"""
 	days = []
 
-	for day in range(1, total_days + 1):
-		day = cstr(day)
-		# forms the dates from selected year and month from filters
-		date = f"{cstr(filters.year)}-{cstr(filters.month)}-{day}"
-		# gets abbr from weekday number
-		weekday = day_abbr[getdate(date).weekday()]
-		# sets days as 1 Mon, 2 Tue, 3 Wed
+	if filters.date_range == "Daily":
+		# For daily view, only show one day
+		day = getdate(filters.specific_date).day
+		weekday = day_abbr[getdate(filters.specific_date).weekday()]
 		label = f"{day} {weekday}"
-		days.append({"label": label, "fieldtype": "Data", "fieldname": day, "width": 65})
+		days.append({"label": label, "fieldtype": "Data", "fieldname": str(day), "width": 65})
+	
+	elif filters.date_range == "Monthly":
+		total_days = get_total_days_in_month(filters)
+		for day in range(1, total_days + 1):
+			date = f"{cstr(filters.year)}-{cstr(filters.month)}-{cstr(day)}"
+			weekday = day_abbr[getdate(date).weekday()]
+			label = f"{day} {weekday}"
+			days.append({"label": label, "fieldtype": "Data", "fieldname": str(day), "width": 65})
+	
+	elif filters.date_range == "Quarterly":
+		# For quarterly view, show month names instead of days
+		for month in range(filters.from_month, filters.to_month + 1):
+			month_name = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", 
+						 "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][month - 1]
+			days.append({"label": month_name, "fieldtype": "Data", "fieldname": str(month), "width": 100})
 
 	return days
 

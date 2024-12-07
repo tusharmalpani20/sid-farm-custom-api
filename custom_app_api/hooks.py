@@ -157,7 +157,8 @@ scheduler_events = {
 	# ],
 	"hourly": [
 		# "custom_app_api.tasks.hourly"
-        "custom_app_api.cron_functions.salary_slip_cron.generate_salary_slips_for_active_employees"
+        "custom_app_api.cron_functions.salary_slip_cron.generate_salary_slips_for_active_employees",
+		"custom_app_api.cron_functions.attendance_cron.auto_mark_employee_absent"
 	],
 	# "weekly": [
 	# 	"custom_app_api.tasks.weekly"
