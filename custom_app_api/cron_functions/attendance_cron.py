@@ -10,10 +10,10 @@ def auto_mark_employee_absent() -> None:
     try:
 
         #run this only if time is between 05:30 AM to 06:30 AM
-        current_time = datetime.now().time()
-        if current_time < time(5, 30) or current_time > time(6, 30):
-            print("Not the right time to mark absent")
-            return
+        # current_time = datetime.now().time()
+        # if current_time < time(5, 30) or current_time > time(6, 30):
+        #     print("Not the right time to mark absent")
+        #     return
 
         today = frappe.utils.nowdate()
         
