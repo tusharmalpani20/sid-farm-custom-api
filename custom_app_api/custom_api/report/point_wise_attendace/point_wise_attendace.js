@@ -8,20 +8,6 @@ frappe.query_reports["Point Wise Attendance"] = {
 			reqd: 1,
 		},
 		{
-			fieldname: "company",
-			label: __("Company"),
-			fieldtype: "Link",
-			options: "Company",
-			default: frappe.defaults.get_user_default("Company"),
-			reqd: 1,
-		},
-		{
-			fieldname: "include_company_descendants",
-			label: __("Include Company Descendants"),
-			fieldtype: "Check",
-			default: 1,
-		},
-		{
 			fieldname: "points",
 			label: __("Points"),
 			fieldtype: "MultiSelectList",
@@ -37,6 +23,20 @@ frappe.query_reports["Point Wise Attendance"] = {
 					return result.map(r => r.custom_point);
 				});
 			}
+		},
+		{
+			fieldname: "company",
+			label: __("Company"),
+			fieldtype: "Link",
+			options: "Company",
+			default: frappe.defaults.get_user_default("Company"),
+			reqd: 1,
+		},
+		{
+			fieldname: "include_company_descendants",
+			label: __("Include Company Descendants"),
+			fieldtype: "Check",
+			default: 1,
 		}
 	]
 };
