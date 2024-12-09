@@ -58,16 +58,22 @@ def get_columns():
 
 def get_point_wise_attendance(filters):
     # Get all points and their employees
+    point_filters = {
+        "company": ("in", filters.companies),
+        "status": "Active"
+    }
+    
+    # Add points filter if specified
+    if filters.get("points"):
+        point_filters["custom_point"] = ("in", filters.get("points"))
+
     points = frappe.get_all(
         "Employee",
         fields=[
             "custom_point as point",
             "count(*) as total_employees"
         ],
-        filters={
-            "company": ("in", filters.companies),
-            "status": "Active"
-        },
+        filters=point_filters,
         group_by="custom_point"
     )
 

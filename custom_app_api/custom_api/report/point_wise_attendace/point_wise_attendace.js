@@ -20,6 +20,23 @@ frappe.query_reports["Point Wise Attendance"] = {
 			label: __("Include Company Descendants"),
 			fieldtype: "Check",
 			default: 1,
+		},
+		{
+			fieldname: "points",
+			label: __("Points"),
+			fieldtype: "MultiSelectList",
+			get_data: function() {
+				return frappe.db.get_list('Employee', {
+					fields: ['custom_point'],
+					filters: {
+						custom_point: ['is', 'set']
+					},
+					group_by: 'custom_point',
+					order_by: 'custom_point asc'
+				}).then(result => {
+					return result.map(r => r.custom_point);
+				});
+			}
 		}
 	]
 };
