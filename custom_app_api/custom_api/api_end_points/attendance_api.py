@@ -170,7 +170,7 @@ def create_attendance() -> Dict[str, Any]:
             frappe.response.status_code = 400
             return {
                 "status": "error",
-                "message": _("Missing required fields: {}").format(", ".join(missing_fields)),
+                "message": "Missing required fields: {}".format(", ".join(missing_fields)),
                 "http_status_code": 400
             }
         # Check if attendance already exists
@@ -184,7 +184,7 @@ def create_attendance() -> Dict[str, Any]:
             frappe.response.status_code = 400
             return {
                 "status": "error",
-                "message": _("Attendance already exists for this employee on this date"),
+                "message": "Attendance already exists for this employee on this date",
                 "http_status_code": 400
             }
         
@@ -194,7 +194,7 @@ def create_attendance() -> Dict[str, Any]:
             frappe.response.status_code = 400
             return {
                 "status": "error",
-                "message": _("Employee is not active or does not exist"),
+                "message": "Employee is not active or does not exist",
                 "http_status_code": 400
             }
 
