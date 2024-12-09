@@ -12,6 +12,94 @@ def handle_error_response(error: Exception, error_message: str) -> Dict[str, Any
         "http_status_code": 500
     }
 
+def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
+    """
+    Verify the JWT token from headers and handle Frappe authentication
+    Returns:
+        Tuple of (is_valid, response_dict)
+    """
+    try:
+        # Extract token from headers
+        auth_header = headers.get('Auth-Token')
+        if not auth_header or not auth_header.startswith('Bearer '):
+            return False, {
+                "status": "error",
+                "message": "Missing or invalid authorization header",
+                "http_status_code": 401
+            }
+        
+        auth_token = auth_header.split(' ')[1]
+        
+        # Decode JWT token
+        secret_key = frappe.conf.get('jwt_secret_key')
+        decoded_token = jwt.decode(auth_token, secret_key, algorithms=["HS256"])
+        
+        # Get token record
+        token_record = frappe.get_doc("DP Mobile Token", decoded_token.get('token_id'))
+        
+        # Check if token exists and is active
+        if not token_record or token_record.status != "Active":
+            return False, {
+                "status": "error",
+                "message": "Invalid or inactive token",
+                "http_status_code": 401
+            }
+        # Check if token has expired
+        if datetime.now() > frappe.utils.get_datetime(token_record.expires_at):
+            # Update token status to expired
+            token_record.status = "Expired"
+            token_record.save()
+            return False, {
+                "status": "error",
+                "message": "Token has expired",
+                "http_status_code": 401
+            }
+        
+        # Check if employee is still active
+        employee_status = frappe.db.get_value("Employee", token_record.employee, "status")
+        if employee_status != "Active":
+            return False, {
+                "status": "error",
+                "message": "Employee is not active",
+                "http_status_code": 401
+            }
+
+        # Update last_login time
+        token_record.last_login = frappe.utils.now()
+        token_record.save()
+        
+        # Handle Frappe authentication
+        # api_key = frappe.conf.get('api_key')
+        # api_secret = frappe.conf.get('api_secret')
+        
+        # if api_key and api_secret:
+        #     frappe.session.user = "Administrator"
+        frappe.session.user = "Administrator"
+        #frappe.session.user = "dp_app_api@api.com"
+        
+        return True, {
+            "employee": token_record.employee,
+            "user": frappe.session.user,
+            "name": token_record.name,
+            "token": auth_token
+        }
+        
+    except jwt.ExpiredSignatureError:
+        return False, {
+            "status": "error",
+            "message": "Token has expired",
+            "http_status_code": 401
+        }
+    except jwt.InvalidTokenError:
+        return False, {
+            "status": "error",
+            "message": "Invalid token",
+            "http_status_code": 401
+        }
+    except Exception as e:
+        return False, handle_error_response(e, "Error verifying token")
+
+
 @frappe.whitelist()
 def get_max_table_row_id(table_name: Optional[str] = None) -> Dict[str, Any]:
     """
@@ -79,12 +167,12 @@ def create_attendance() -> Dict[str, Any]:
                          if not attendance_data.get(field)]
         
         if missing_fields:
+            frappe.response.status_code = 400
             return {
                 "status": "error",
                 "message": _("Missing required fields: {}").format(", ".join(missing_fields)),
                 "http_status_code": 400
             }
-        
         # Check if attendance already exists
         existing_attendance = frappe.db.exists("Attendance", {
             "employee": attendance_data.get("employee"),
@@ -93,6 +181,7 @@ def create_attendance() -> Dict[str, Any]:
         })
         
         if existing_attendance:
+            frappe.response.status_code = 400
             return {
                 "status": "error",
                 "message": _("Attendance already exists for this employee on this date"),
@@ -106,16 +195,17 @@ def create_attendance() -> Dict[str, Any]:
         })
         
         attendance.insert()
-        attendance.submit()  # Submit the document
+        # Don't submit the document here anymore
+        # attendance.submit()  # Removed
         
         return {
             "status": "success",
-            "message": _("Attendance created and submitted successfully"),
+            "message": "Attendance created and submitted successfully",
             "data": {
                 "name": attendance.name,
                 "employee": attendance.employee,
                 "attendance_date": attendance.attendance_date,
-                "docstatus": attendance.docstatus  # Will be 1 for submitted
+                "docstatus": attendance.docstatus  # Will be 0 for draft
             }
         }
         
@@ -159,10 +249,10 @@ def get_total_attendance_count_and_leave_count() -> Dict[str, Any]:
                 "employee": employee,
                 "attendance_date": today,
                 "status": "Present",
-                "docstatus": 1
+                "docstatus": ["in", [0, 1]]  # Modified to include draft documents
             },
             ["name", "employee", "employee_name", "attendance_date", "status", 
-             "in_time", "out_time", "working_hours", "late_entry", "early_exit"],
+             "in_time", "out_time", "working_hours", "late_entry", "early_exit", "custom_attendance_marked_at" , "custom_mobile_punch_in_at", "custom_mobile_punch_out_at"],
             as_dict=True
         )
         
@@ -194,9 +284,123 @@ def get_total_attendance_count_and_leave_count() -> Dict[str, Any]:
         
     except Exception as e:
         return handle_error_response(e, "Error retrieving attendance and leave counts")
+        
     
-@frappe.whitelist(methods=["POST"])
-def get_today_attendance() -> Dict[str, Any]:
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def update_attendance_punch_times() -> Dict[str, Any]:
+    """Update mobile punch in/out times for an employee's attendance"""
+    try:
+        # Verify token and authenticate
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        
+        if not is_valid:
+            frappe.response.status_code = result.get("http_status_code", 500)
+            return result
+
+        if not frappe.request.json:
+            frappe.response.status_code = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Request body is required",
+                "http_status_code": 400
+            }
+
+        data = frappe.request.json
+        employee = result["employee"]
+        
+        # Validate required fields
+        punch_in = data.get("custom_mobile_punch_in_at")
+        punch_out = data.get("custom_mobile_punch_out_at")
+        
+        if not punch_in:
+            frappe.response.status_code = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Punch in time is required",
+                "http_status_code": 400
+            }
+            
+        # Convert strings to datetime objects for comparison
+        try:
+            punch_in_dt = frappe.utils.get_datetime(punch_in)
+            punch_out_dt = frappe.utils.get_datetime(punch_out) if punch_out else None
+            
+            # If punch out is provided, validate it's after punch in
+            if punch_out_dt and punch_in_dt >= punch_out_dt:
+                frappe.response.status_code = 400
+                return {
+                    "success": False,
+                    "status": "error",
+                    "message": "Punch out time must be after punch in time",
+                    "http_status_code": 400
+                }
+        except Exception:
+            frappe.response.status_code = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Invalid datetime format. Use YYYY-MM-DD HH:MM:SS",
+                "http_status_code": 400
+            }
+            
+        # Get attendance for the day
+        attendance_date = punch_in_dt.date()
+        attendance = frappe.db.get_value(
+            "Attendance",
+            {
+                "employee": employee,
+                "attendance_date": attendance_date,
+                "status": "Present",
+                "docstatus": ["in", [0, 1]]  # Modified to include draft documents
+            },
+            ["name", "docstatus"],
+            as_dict=True
+        )
+        
+        if not attendance:
+            frappe.response.status_code = 404
+            return {
+                "success": False,
+                "status": "error",
+                "message": "No attendance record found for the date",
+                "http_status_code": 404
+            }
+            
+        # Update attendance
+        attendance_doc = frappe.get_doc("Attendance", attendance.name)
+        
+        # If document is already submitted, cancel it first
+        if attendance_doc.docstatus == 1:
+            attendance_doc.cancel()
+            attendance_doc.reload()
+        
+        # Make the changes
+        attendance_doc.custom_mobile_punch_in_at = punch_in
+        if punch_out:
+            attendance_doc.custom_mobile_punch_out_at = punch_out
+            attendance_doc.docstatus = 1  # Submit only when punch out is provided
+        
+        attendance_doc.save(ignore_permissions=True)
+        
+        return {
+            "success": True,
+            "status": "success",
+            "message": "Attendance punch times updated successfully",
+            "data": {
+                "name": attendance_doc.name,
+                "employee": attendance_doc.employee,
+                "attendance_date": attendance_doc.attendance_date,
+                "custom_mobile_punch_in_at": attendance_doc.custom_mobile_punch_in_at,
+                "custom_mobile_punch_out_at": attendance_doc.custom_mobile_punch_out_at,
+                "docstatus": attendance_doc.docstatus
+            }
+        }
+        
+    except Exception as e:
+        return handle_error_response(e, "Error updating attendance punch times")
+    
     """
     Get today's attendance details for all the employees
     Returns:

@@ -1,0 +1,106 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-12-06 11:24:05.609756",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "phone",
+  "code",
+  "send_for",
+  "provider",
+  "send_at",
+  "expires_at",
+  "is_expired",
+  "verified_at"
+ ],
+ "fields": [
+  {
+   "fieldname": "phone",
+   "fieldtype": "Data",
+   "label": "Phone",
+   "reqd": 1
+  },
+  {
+   "fieldname": "code",
+   "fieldtype": "Data",
+   "label": "Code",
+   "length": 4,
+   "reqd": 1
+  },
+  {
+   "fieldname": "send_for",
+   "fieldtype": "Select",
+   "label": "Send For",
+   "options": "Delivery Partner Mobile Auth\nWeb Auth",
+   "reqd": 1
+  },
+  {
+   "fieldname": "provider",
+   "fieldtype": "Select",
+   "label": "Provider",
+   "options": "Text Local",
+   "reqd": 1
+  },
+  {
+   "fieldname": "send_at",
+   "fieldtype": "Datetime",
+   "in_list_view": 1,
+   "label": "Send At",
+   "reqd": 1
+  },
+  {
+   "fieldname": "expires_at",
+   "fieldtype": "Datetime",
+   "label": "Expires At",
+   "reqd": 1
+  },
+  {
+   "fieldname": "verified_at",
+   "fieldtype": "Datetime",
+   "label": "Verified At"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_expired",
+   "fieldtype": "Check",
+   "label": "Is Expired"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-12-06 14:57:20.875410",
+ "modified_by": "Administrator",
+ "module": "Custom API",
+ "name": "OTP",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Guest",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -149,17 +149,21 @@ app_license = "mit"
 # ---------------
 
 scheduler_events = {
+	"cron": {
+		"30 9 * * *": [
+			"custom_app_api.cron_functions.attendance_cron.auto_mark_employee_absent_and_submit_all_todays_attendance"
+		]
+	}
 	# "all": [
 	# 	"custom_app_api.tasks.all"
 	# ],
 	# "daily": [
 	# 	"custom_app_api.tasks.daily"
 	# ],
-	"hourly": [
-		# "custom_app_api.tasks.hourly"
-        "custom_app_api.cron_functions.salary_slip_cron.generate_salary_slips_for_active_employees",
-		"custom_app_api.cron_functions.attendance_cron.auto_mark_employee_absent"
-	],
+	# "hourly": [
+	# 	# "custom_app_api.tasks.hourly"
+	#   #"custom_app_api.cron_functions.salary_slip_cron.generate_salary_slips_for_active_employees",
+	# ],
 	# "weekly": [
 	# 	"custom_app_api.tasks.weekly"
 	# ],

@@ -2,19 +2,12 @@ import frappe
 from frappe import _
 from typing import Dict, Any, Optional
 
-def auto_mark_employee_absent() -> None:
+def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
     """
     Scheduled job to mark absent for employees with no attendance record
     Designed to run at the end of each day via scheduler
     """
     try:
-
-        #run this only if time is between 05:30 AM to 06:30 AM
-        # current_time = datetime.now().time()
-        # if current_time < time(5, 30) or current_time > time(6, 30):
-        #     print("Not the right time to mark absent")
-        #     return
-
         today = frappe.utils.nowdate()
         
         
@@ -32,14 +25,14 @@ def auto_mark_employee_absent() -> None:
             frappe.logger().info("No active employees found for marking absent")
             return
 
-        # Get today's attendance records
-        existing_attendance = frappe.get_all(
+        # Get today's attendance records with full documents
+        existing_attendance = frappe.db.get_all(
             "Attendance",
             filters={
                 "attendance_date": today,
                 "docstatus": ["!=", 2]  # Not cancelled
             },
-            fields=["employee"]
+            fields=["*"]
         )
 
         # Create set of employees who already have attendance
@@ -47,6 +40,7 @@ def auto_mark_employee_absent() -> None:
         
         absent_count = 0
         error_count = 0
+        submitted_count = 0
 
         # Create absent records for employees without attendance
         for employee in active_employees:
@@ -74,12 +68,26 @@ def auto_mark_employee_absent() -> None:
                         title="Auto Mark Absent Error"
                     )
 
+        # Submit all draft attendance records
+        for attendance_record in existing_attendance:
+            if attendance_record.docstatus == 0:  # Draft state
+                try:
+                    attendance_record.submit()
+                    submitted_count += 1
+                except Exception as e:
+                    error_count += 1
+                    frappe.log_error(
+                        message=f"Error submitting attendance {attendance_record.name}: {str(e)}",
+                        title="Auto Submit Attendance Error"
+                    )
+
         # Log summary
         frappe.logger().info(
             f"Auto Mark Absent Summary - Date: {today}\n"
             f"Total Active Employees: {len(active_employees)}\n"
             f"Existing Attendance: {len(existing_attendance)}\n"
             f"Marked Absent: {absent_count}\n"
+            f"Submitted: {submitted_count}\n"
             f"Errors: {error_count}"
         )
 
