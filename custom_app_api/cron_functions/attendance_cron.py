@@ -72,6 +72,8 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
         for attendance_record in existing_attendance:
             if attendance_record.docstatus == 0:  # Draft state
                 try:
+                    attendance_record.custom_mobile_punch_out_at = frappe.utils.now()
+                    attendance_record.custom_is_mobile_auto_punch_out = 1
                     attendance_record.submit()
                     submitted_count += 1
                 except Exception as e:

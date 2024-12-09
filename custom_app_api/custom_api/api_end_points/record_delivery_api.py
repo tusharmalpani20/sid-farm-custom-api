@@ -122,6 +122,7 @@ def record_delivery() -> Dict[str, Any]:
             })
             
             delivery_record.insert()
+            delivery_record.submit()
             
             frappe.response.status_code = 201
             return {
