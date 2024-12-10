@@ -120,7 +120,7 @@ app_license = "mit"
 permission_query_conditions = {
 	#"Event": "frappe.desk.doctype.event.event.get_permission_query_conditions",
 	"Employee": "custom_app_api.permission_query_conditions.employee.get_permission_query_conditions",
-	"Route": "custom_app_api.permission_query_conditions.Route.get_permission_query_conditions",
+	#"Route": "custom_app_api.permission_query_conditions.Route.get_permission_query_conditions",
 }
 #
 # has_permission = {
