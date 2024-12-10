@@ -46,10 +46,11 @@ def get_permission_query_conditions(user):
     
     frappe.msgprint(f"Subordinates: {subordinate_names}")
     
-    # Add condition to show only subordinates - WITH PROPER QUOTING
+    # Add condition to show only subordinates - Fixed SQL syntax
     if subordinate_names:
-        quoted_names = ["'" + frappe.db.escape(name) + "'" for name in subordinate_names]
-        conditions.append(f"name in ({','.join(quoted_names)})")
+        # Simple string join with single quotes
+        names_str = "','".join(subordinate_names)
+        conditions.append(f"name in ('{names_str}')")
     
     final_condition = " and ".join(conditions)
     frappe.msgprint(f"Final condition: {final_condition}")
