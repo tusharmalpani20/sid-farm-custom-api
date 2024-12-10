@@ -16,7 +16,7 @@ def get_permission_query_conditions(user):
     # Skip for System Manager or Administrator
     if "System Manager" in frappe.get_roles(user) or user == "Administrator":
         frappe.msgprint("User is System Manager or Administrator - No restrictions")
-        return " and ".join(conditions)
+        return ""
     
     # Get employee record for logged-in user
     employee = frappe.db.get_value("Employee", 
@@ -29,25 +29,37 @@ def get_permission_query_conditions(user):
     
     if not employee:
         frappe.msgprint("No employee record found - Using default permissions")
-        return " and ".join(conditions)  # Return default permissions if no employee record
+        return ""
+    
+    frappe.msgprint(f"Checking filters for designation: {employee.designation}")
     
     # Apply filters based on designation
     if employee.designation == "Last Mile Head":
         if employee.branch:
-            conditions.append(f"branch = '{employee.branch}'")
+            conditions.append(f"`tabRoute`.branch = '{employee.branch}'")
             frappe.msgprint(f"Last Mile Head filter applied for branch: {employee.branch}")
+        else:
+            frappe.msgprint("Warning: Last Mile Head has no branch assigned!")
             
     elif employee.designation == "Last Mile Zonal Head":
         if employee.custom_zone:
-            conditions.append(f"zone_name = '{employee.custom_zone}'")
+            conditions.append(f"`tabRoute`.zone_name = '{employee.custom_zone}'")
             frappe.msgprint(f"Last Mile Zonal Head filter applied for zone: {employee.custom_zone}")
+        else:
+            frappe.msgprint("Warning: Last Mile Zonal Head has no zone assigned!")
             
     elif employee.designation == "Last Mile Lead":
         if employee.custom_area:
-            conditions.append(f"area_name = '{employee.custom_area}'")
+            conditions.append(f"`tabRoute`.area_name = '{employee.custom_area}'")
             frappe.msgprint(f"Last Mile Lead filter applied for area: {employee.custom_area}")
+        else:
+            frappe.msgprint("Warning: Last Mile Lead has no area assigned!")
+            # Fallback to branch level if area is not assigned
+            if employee.branch:
+                conditions.append(f"`tabRoute`.branch = '{employee.branch}'")
+                frappe.msgprint(f"Fallback: Using branch filter: {employee.branch}")
     
-    final_condition = " and ".join(conditions)
+    final_condition = " and ".join(conditions) if conditions else "1=1"
     frappe.msgprint(f"Final condition: {final_condition}")
     
     return final_condition
