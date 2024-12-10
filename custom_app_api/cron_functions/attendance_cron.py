@@ -1,6 +1,7 @@
 import frappe
 from frappe import _
 from typing import Dict, Any, Optional
+from custom_app_api.custom_api.helper_function.calculate_distance import calculate_total_distance
 
 def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
     """
@@ -72,10 +73,35 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
         for attendance_record in existing_attendance:
             if attendance_record.docstatus == 0:  # Draft state
                 try:
-                    attendance_record.custom_mobile_punch_out_at = frappe.utils.now()
-                    attendance_record.custom_is_mobile_auto_punch_out = 1
-                    attendance_record.submit()
+                    attendance_doc = frappe.get_doc("Attendance", attendance_record.name)
+                    
+                    # Get route tracking records for this attendance
+                    route_records = frappe.get_all(
+                        "Route Tracking",
+                        filters={
+                            "attendance": attendance_record.name
+                        },
+                        fields=["latitude", "longitude", "recorded_at"],
+                        order_by="recorded_at ASC"
+                    )
+                    
+                    # Calculate total distance if route records exist
+                    if route_records:
+                        coordinates = [[record.latitude, record.longitude] 
+                                    for record in route_records]
+                        total_distance = calculate_total_distance(coordinates)
+                        
+                        # Update the attendance record with total distance
+                        attendance_doc.kilometers_travelled = total_distance
+                    
+                    # Only set punch out time if it hasn't been set yet
+                    if not attendance_doc.custom_mobile_punch_out_at:
+                        attendance_doc.custom_mobile_punch_out_at = frappe.utils.now()
+                        attendance_doc.custom_is_mobile_auto_punch_out = 1
+                    
+                    attendance_doc.submit()
                     submitted_count += 1
+                    
                 except Exception as e:
                     error_count += 1
                     frappe.log_error(

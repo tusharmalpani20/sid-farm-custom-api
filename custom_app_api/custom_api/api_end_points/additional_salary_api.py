@@ -49,8 +49,6 @@ def create_advance_salary() -> Dict[str, Any]:
             },
             limit=1
         )
-
-        print(pending_requests)
         
         if pending_requests:
             frappe.response.status_code = 400
@@ -154,7 +152,8 @@ def get_pending_advance_salary() -> Dict[str, Any]:
                 "employee": employee,
                 "salary_component": "Advance Salary",
                 "docstatus": 0,  # Draft/Pending
-                "to_date": [">=", date.today()]
+                # "to_date": [">=", date.today()]
+                # since we are only allowing one request at a time, we don't need to check for to_date
             },
             fields=[
                 "name",
@@ -166,7 +165,8 @@ def get_pending_advance_salary() -> Dict[str, Any]:
                 "from_date",
                 "to_date",
                 "creation",
-                "modified"
+                "modified",
+                "workflow_state"
             ]
         )
         
@@ -183,7 +183,8 @@ def get_pending_advance_salary() -> Dict[str, Any]:
                 "start_date": request.from_date,
                 "end_date": request.to_date,
                 "created_at": request.creation,
-                "last_modified": request.modified
+                "last_modified": request.modified,
+                "workflow_state": request.workflow_state
             })
         
         return {
@@ -199,5 +200,3 @@ def get_pending_advance_salary() -> Dict[str, Any]:
     except Exception as e:
         frappe.response.status_code = 500
         return handle_error_response(e, "Error fetching pending advance salary requests")
-
-

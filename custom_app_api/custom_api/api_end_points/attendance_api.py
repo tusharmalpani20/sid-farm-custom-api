@@ -1,6 +1,6 @@
 import frappe
 from frappe import _
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, Tuple
 
 def handle_error_response(error: Exception, error_message: str) -> Dict[str, Any]:
     """Standard error response handler"""
@@ -520,9 +520,10 @@ def mobile_punch_out() -> Dict[str, Any]:
             attendance_doc.reload()
         
         attendance_doc.custom_mobile_punch_out_at = punch_out
-        attendance_doc.docstatus = 1  # Submit when punch out is provided
+        # attendance_doc.docstatus = 1  # Submit when punch out is provided
         attendance_doc.save(ignore_permissions=True)
         
+        frappe.response.status_code = 201
         return {
             "success": True,
             "status": "success",
@@ -541,125 +542,3 @@ def mobile_punch_out() -> Dict[str, Any]:
         
     except Exception as e:
         return handle_error_response(e, "Error updating punch out time")
-
-    """
-    Get today's attendance details for all the employees
-    Returns:
-        Dict containing status, message and data with today's attendance details
-    """
-    try:
-        today = frappe.utils.nowdate()
-        
-        # Get detailed attendance records including essential fields
-        attendance_details = frappe.get_all(
-            "Attendance",
-            filters={
-                "attendance_date": today,
-                "docstatus": 1  # Submitted documents
-            }
-        )
-
-        if not attendance_details:
-            return {
-                "status": "success",
-                "message": _("No attendance records found for today"),
-                "data": []
-            }
-
-        # Enhance each attendance record with department and designation
-        for record in attendance_details:
-            employee_details = frappe.db.get_value(
-                "Employee",
-                record.employee,
-                ["department", "designation"],
-                as_dict=True
-            )
-            record.update(employee_details)
-
-        return {
-            "status": "success",
-            "message": _("Attendance data retrieved successfully"),
-            "data": attendance_details,
-            "total_records": len(attendance_details)
-        }
-    
-    except Exception as e:
-        return handle_error_response(e, "Error retrieving today's attendance details")
-
-    """
-    Scheduled job to mark absent for employees with no attendance record
-    Designed to run at the end of each day via scheduler
-    """
-    try:
-        today = frappe.utils.nowdate()
-        
-        # Get all active employees
-        active_employees = frappe.get_all(
-            "Employee",
-            filters={
-                "status": "Active",
-                "date_of_joining": ["<=", today]
-            },
-            fields=["name", "employee_name", "company", "department"]
-        )
-
-        if not active_employees:
-            frappe.logger().info("No active employees found for marking absent")
-            return
-
-        # Get today's attendance records
-        existing_attendance = frappe.get_all(
-            "Attendance",
-            filters={
-                "attendance_date": today,
-                "docstatus": ["!=", 2]  # Not cancelled
-            },
-            fields=["employee"]
-        )
-
-        # Create set of employees who already have attendance
-        employees_with_attendance = {att.employee for att in existing_attendance}
-        
-        absent_count = 0
-        error_count = 0
-
-        # Create absent records for employees without attendance
-        for employee in active_employees:
-            if employee.name not in employees_with_attendance:
-                try:
-                    # Create new attendance record
-                    attendance = frappe.get_doc({
-                        "doctype": "Attendance",
-                        "employee": employee.name,
-                        "employee_name": employee.employee_name,
-                        "attendance_date": today,
-                        "status": "Absent",
-                        "company": employee.company,
-                        "department": employee.department
-                    })
-                    
-                    attendance.insert()
-                    attendance.submit()
-                    absent_count += 1
-                    
-                except Exception as e:
-                    error_count += 1
-                    frappe.log_error(
-                        message=f"Error marking absent for employee {employee.name}: {str(e)}",
-                        title="Auto Mark Absent Error"
-                    )
-
-        # Log summary
-        frappe.logger().info(
-            f"Auto Mark Absent Summary - Date: {today}\n"
-            f"Total Active Employees: {len(active_employees)}\n"
-            f"Existing Attendance: {len(existing_attendance)}\n"
-            f"Marked Absent: {absent_count}\n"
-            f"Errors: {error_count}"
-        )
-
-    except Exception as e:
-        frappe.log_error(
-            message=f"Error in auto mark absent job: {str(e)}",
-            title="Auto Mark Absent Job Failed"
-        )
