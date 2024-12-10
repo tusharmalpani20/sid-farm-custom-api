@@ -11,7 +11,7 @@ def get_permission_query_conditions(user):
 
     #frappe.msgprint(f"Permission check for user: {user}")
     
-    #conditions = ["status = 'Active'"]
+    conditions = [] #["status = 'Active'"]
     
     # Skip for System Manager or Administrator
     if "System Manager" in frappe.get_roles(user) or user == "Administrator":
