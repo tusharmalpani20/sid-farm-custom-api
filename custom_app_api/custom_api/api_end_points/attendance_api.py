@@ -491,7 +491,7 @@ def mobile_punch_out() -> Dict[str, Any]:
 
         # Check delivery records count
         actual_delivery_count = frappe.db.count(
-            "Delivery Record",
+            "Delivery Records",
             filters={
                 "attendance": attendance.name,
                 "docstatus": 1  # Only count submitted delivery records
