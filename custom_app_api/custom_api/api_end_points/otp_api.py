@@ -292,7 +292,7 @@ def send_sms_via_textlocal(phone_number, otp_code):
             'sender': frappe.conf.get('textlocal_sender_id', 'SIDOTP'),
             'template_id': "1407162867250922316",
             'test': False,
-            "message": f"{otp_code} is your 4 digit Sid's farm OTP for log in.\n {otp_code} Sid's Farm."
+            "message": f"{otp_code} is your 4 digit Sid's farm OTP for log in.\n {otp_code} Sid's Farm.",
             'custom': json.dumps({
                 'OTP': otp_code,
                 'GoogleIdentityCode': otp_code
