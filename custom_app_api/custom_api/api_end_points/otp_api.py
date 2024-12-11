@@ -6,6 +6,7 @@ import requests  # For TextLocal API
 import jwt
 import urllib.request
 import urllib.parse
+import json
 
 @frappe.whitelist(allow_guest=True)
 def send_otp(phone_number):
@@ -284,15 +285,17 @@ def send_sms_via_textlocal(phone_number, otp_code):
             frappe.log_error(f"Phone number standardization failed: {str(e)}", "SMS Error")
             return False
 
-        # Prepare message
-        message = f"{otp_code} is your 4 digit Sid's farm OTP for log in.\n {otp_code} Sid's Farm."
-        
         # Prepare data for API request
         data = {
             'apikey': api_key,
             'numbers': formatted_number,
-            'message': message,
-            'sender': frappe.conf.get('textlocal_sender_id', 'SIDOTP')  # Default sender ID if not configured
+            'sender': frappe.conf.get('textlocal_sender_id', 'SIDOTP'),
+            'template_id': "1407162867250922316",
+            'test': False,
+            'custom': json.dumps({
+                'OTP': otp_code,
+                'GoogleIdentityCode': otp_code
+            })
         }
 
         # Encode data for POST request
