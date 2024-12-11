@@ -59,7 +59,7 @@ def get_permission_query_conditions(user):
             zone_list = frappe.get_all(
                 "Delivery Zone Mapping",
                 filters={"parent": delivery_mapping[0].name},
-                pluck="zone"
+                pluck="zone_name"
             )
             
             if zone_list:
