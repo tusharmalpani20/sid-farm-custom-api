@@ -4,16 +4,20 @@ from datetime import datetime, timedelta
 import random
 import requests  # For TextLocal API
 import jwt
+import urllib.request
+import urllib.parse
 
 @frappe.whitelist(allow_guest=True)
 def send_otp(phone_number):
     try:
-        # Validate phone number format (exactly 10 digits)
-        if not phone_number or len(phone_number) != 10 or not phone_number.isdigit():
+        # Standardize and validate phone number
+        try:
+            phone_number = standardize_phone_number(phone_number)
+        except ValueError:
             frappe.response.http_status_code = 400
             return {
                 "success": False,
-                "message": "Invalid phone number. Please enter 10 digits",
+                "message": "Invalid phone number format. Please enter a valid 10-digit number",
                 "code": "INVALID_PHONE"
             }
 
@@ -240,7 +244,74 @@ def resend_otp(phone_number):
             "error": str(e)
         }
 
+def standardize_phone_number(phone_number):
+    """
+    Standardizes phone number to 10 digits by:
+    1. Removing any '+' symbols
+    2. Removing leading '91' or '0'
+    3. Ensuring exactly 10 digits remain
+    """
+    # Remove any spaces or special characters
+    cleaned = ''.join(filter(str.isdigit, str(phone_number)))
+    
+    # Remove leading '91' if present
+    if cleaned.startswith('91') and len(cleaned) > 10:
+        cleaned = cleaned[2:]
+    
+    # Remove leading '0' if present
+    if cleaned.startswith('0'):
+        cleaned = cleaned[1:]
+    
+    # Validate final number
+    if len(cleaned) != 10:
+        raise ValueError(f"Invalid phone number format: {phone_number}")
+        
+    return cleaned
+
 def send_sms_via_textlocal(phone_number, otp_code):
-    # TODO: Implement TextLocal SMS sending logic
-    # You'll need to add your TextLocal API credentials and implementation
-    pass
+    try:
+        # Get API key from Frappe configuration
+        api_key = frappe.conf.get('textlocal_api_key')
+        if not api_key:
+            frappe.log_error("TextLocal API key not configured", "SMS Error")
+            return False
+
+        # Standardize and format phone number
+        try:
+            standardized_number = standardize_phone_number(phone_number)
+            formatted_number = f"91{standardized_number}"
+        except ValueError as e:
+            frappe.log_error(f"Phone number standardization failed: {str(e)}", "SMS Error")
+            return False
+
+        # Prepare message
+        message = f"Your OTP is {otp_code}. Valid for 2 minutes. Do not share this OTP with anyone."
+        
+        # Prepare data for API request
+        data = {
+            'apikey': api_key,
+            'numbers': formatted_number,
+            'message': message,
+            'sender': frappe.conf.get('textlocal_sender_id', 'SIDOTP')  # Default sender ID if not configured
+        }
+
+        # Encode data for POST request
+        encoded_data = urllib.parse.urlencode(data).encode('utf-8')
+
+        # Make API request
+        request = urllib.request.Request("https://api.textlocal.in/send/?")
+        response = urllib.request.urlopen(request, encoded_data)
+        response_data = response.read().decode('utf-8')
+        
+        # Parse response
+        json_response = frappe.parse_json(response_data)
+        
+        if json_response.get('status') == 'success':
+            return True
+        else:
+            frappe.log_error(f"TextLocal API Error: {response_data}", "SMS Error")
+            return False
+
+    except Exception as e:
+        frappe.log_error(f"Failed to send SMS via TextLocal: {str(e)}", "SMS Error")
+        return False
