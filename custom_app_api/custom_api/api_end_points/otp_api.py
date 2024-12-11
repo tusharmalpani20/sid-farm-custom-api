@@ -285,7 +285,7 @@ def send_sms_via_textlocal(phone_number, otp_code):
             return False
 
         # Prepare message
-        message = f"{otp_code} is your 4 digit Sid's farm OTP for log in.\n {otp_code}\n Sid's Farm."
+        message = f"{otp_code} is your 4 digit Sid's farm OTP for log in.\n {otp_code} Sid's Farm."
         
         # Prepare data for API request
         data = {
