@@ -238,7 +238,7 @@ def create_attendance() -> Dict[str, Any]:
         return handle_error_response(e, "Error creating attendance record")
 
 
-@frappe.whitelist(methods=["GET"])
+@frappe.whitelist(allow_guest=True, methods=["GET"])
 def get_total_attendance_count_and_leave_count() -> Dict[str, Any]:
     """
     Get total attendance count for current month and remaining leave count for logged-in user
