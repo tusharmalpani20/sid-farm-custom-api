@@ -1,0 +1,72 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:{zone_name}-{branch}",
+ "creation": "2024-12-01 13:25:32.466183",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "zone_name",
+  "city_name",
+  "state_name",
+  "branch"
+ ],
+ "fields": [
+  {
+   "fieldname": "zone_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Zone Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "city_name",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "City Name",
+   "options": "City",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "city_name.state_name",
+   "fieldname": "state_name",
+   "fieldtype": "Link",
+   "label": "State Name",
+   "options": "State",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "Branch",
+   "options": "Branch",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-12-11 16:51:32.815539",
+ "modified_by": "Administrator",
+ "module": "Custom API",
+ "name": "Zone",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

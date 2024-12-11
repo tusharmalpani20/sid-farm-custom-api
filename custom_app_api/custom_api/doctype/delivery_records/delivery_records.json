@@ -1,0 +1,95 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-12-01 13:47:34.828981",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "attendance",
+  "employee",
+  "latitude",
+  "longitude",
+  "accuracy",
+  "image",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "attendance",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Attendance",
+   "options": "Attendance",
+   "reqd": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fieldname": "latitude",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Latitude",
+   "reqd": 1
+  },
+  {
+   "fieldname": "longitude",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "Longitude",
+   "reqd": 1
+  },
+  {
+   "fieldname": "accuracy",
+   "fieldtype": "Float",
+   "label": "Accuracy",
+   "reqd": 1
+  },
+  {
+   "fieldname": "image",
+   "fieldtype": "Attach Image",
+   "label": "Image",
+   "reqd": 1
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Delivery Records",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2024-12-11 16:52:57.748817",
+ "modified_by": "Administrator",
+ "module": "Custom API",
+ "name": "Delivery Records",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

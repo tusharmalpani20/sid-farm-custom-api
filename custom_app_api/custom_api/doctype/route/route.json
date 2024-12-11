@@ -1,0 +1,108 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:{area_name}-{branch}",
+ "creation": "2024-12-01 13:36:24.246481",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "route_name",
+  "point_name",
+  "area_name",
+  "zone_name",
+  "city_name",
+  "state_name",
+  "branch",
+  "total_delivery"
+ ],
+ "fields": [
+  {
+   "fieldname": "route_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Route Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "point_name",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Point Name",
+   "options": "Point",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "point_name.area_name",
+   "fieldname": "area_name",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Area Name",
+   "options": "Area",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "point_name.zone_name",
+   "fieldname": "zone_name",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Zone Name",
+   "options": "Zone",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "point_name.city_name",
+   "fieldname": "city_name",
+   "fieldtype": "Link",
+   "label": "City Name",
+   "options": "City",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "point_name.zone_name",
+   "fieldname": "state_name",
+   "fieldtype": "Link",
+   "label": "State Name",
+   "options": "State",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "point_name.branch",
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "Branch",
+   "options": "Branch",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "total_delivery",
+   "fieldtype": "Int",
+   "label": "Total Delivery"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-12-11 16:53:38.659478",
+ "modified_by": "Administrator",
+ "module": "Custom API",
+ "name": "Route",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

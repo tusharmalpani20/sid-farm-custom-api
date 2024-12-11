@@ -1,0 +1,140 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-12-01 13:51:02.143331",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "device_id",
+  "device_f_name",
+  "device_s_name",
+  "device_direction",
+  "serial_number",
+  "connection_type",
+  "ip_address",
+  "device_type",
+  "last_ping",
+  "is_real_time",
+  "device_vendor",
+  "device_info",
+  "user_count",
+  "f_p_count",
+  "device_model",
+  "server_url",
+  "point"
+ ],
+ "fields": [
+  {
+   "fieldname": "device_id",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Device ID"
+  },
+  {
+   "fieldname": "device_f_name",
+   "fieldtype": "Data",
+   "label": "Device First Name"
+  },
+  {
+   "fieldname": "device_s_name",
+   "fieldtype": "Data",
+   "label": "Device S Name"
+  },
+  {
+   "fieldname": "device_direction",
+   "fieldtype": "Data",
+   "label": "Device Direction"
+  },
+  {
+   "fieldname": "serial_number",
+   "fieldtype": "Data",
+   "label": "Serial Number"
+  },
+  {
+   "fieldname": "connection_type",
+   "fieldtype": "Data",
+   "label": "Connection Type"
+  },
+  {
+   "fieldname": "ip_address",
+   "fieldtype": "Data",
+   "label": "IP Address"
+  },
+  {
+   "fieldname": "device_type",
+   "fieldtype": "Data",
+   "label": "Device Type"
+  },
+  {
+   "fieldname": "last_ping",
+   "fieldtype": "Datetime",
+   "label": "Last Ping"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_real_time",
+   "fieldtype": "Check",
+   "label": "Is Real Time"
+  },
+  {
+   "fieldname": "device_vendor",
+   "fieldtype": "Data",
+   "label": "Device Vendor"
+  },
+  {
+   "fieldname": "device_info",
+   "fieldtype": "JSON",
+   "label": "Device Info"
+  },
+  {
+   "fieldname": "user_count",
+   "fieldtype": "Int",
+   "label": "User Count"
+  },
+  {
+   "fieldname": "f_p_count",
+   "fieldtype": "Int",
+   "label": "FP Count"
+  },
+  {
+   "fieldname": "device_model",
+   "fieldtype": "Data",
+   "label": "Device Model"
+  },
+  {
+   "fieldname": "server_url",
+   "fieldtype": "Data",
+   "label": "Server URL"
+  },
+  {
+   "fieldname": "point",
+   "fieldtype": "Link",
+   "label": "Point",
+   "options": "Point"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-12-11 16:53:13.243274",
+ "modified_by": "Administrator",
+ "module": "Custom API",
+ "name": "Devices",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

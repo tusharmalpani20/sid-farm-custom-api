@@ -1,0 +1,130 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:{point_name}-{branch}",
+ "creation": "2024-12-01 13:32:50.707469",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "point_id",
+  "point_name",
+  "point_code",
+  "latitude",
+  "longitude",
+  "radius",
+  "full_address",
+  "is_active",
+  "area_name",
+  "zone_name",
+  "city_name",
+  "state_name",
+  "branch"
+ ],
+ "fields": [
+  {
+   "fieldname": "point_id",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "Point ID"
+  },
+  {
+   "fieldname": "point_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Point Name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "point_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Point Code",
+   "reqd": 1
+  },
+  {
+   "fieldname": "latitude",
+   "fieldtype": "Float",
+   "label": "Latitude"
+  },
+  {
+   "fieldname": "longitude",
+   "fieldtype": "Float",
+   "label": "Longitude"
+  },
+  {
+   "fieldname": "radius",
+   "fieldtype": "Float",
+   "label": "Radius"
+  },
+  {
+   "fieldname": "full_address",
+   "fieldtype": "Text",
+   "label": "Full Address"
+  },
+  {
+   "default": "1",
+   "fieldname": "is_active",
+   "fieldtype": "Check",
+   "label": "Is Active"
+  },
+  {
+   "fieldname": "area_name",
+   "fieldtype": "Link",
+   "label": "Area Name",
+   "options": "Area"
+  },
+  {
+   "fetch_from": "area_name.zone_name",
+   "fieldname": "zone_name",
+   "fieldtype": "Link",
+   "label": "Zone Name",
+   "options": "Zone"
+  },
+  {
+   "fetch_from": "area_name.city_name",
+   "fieldname": "city_name",
+   "fieldtype": "Link",
+   "label": "City Name",
+   "options": "City"
+  },
+  {
+   "fetch_from": "area_name.state_name",
+   "fieldname": "state_name",
+   "fieldtype": "Link",
+   "label": "State Name",
+   "options": "State"
+  },
+  {
+   "fetch_from": "area_name.branch",
+   "fieldname": "branch",
+   "fieldtype": "Link",
+   "label": "Branch",
+   "options": "Branch"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-12-11 16:52:44.302913",
+ "modified_by": "Administrator",
+ "module": "Custom API",
+ "name": "Point",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
