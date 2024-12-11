@@ -246,14 +246,14 @@ def get_total_attendance_count_and_leave_count() -> Dict[str, Any]:
         Dict containing status, message and data with attendance and leave counts
     """
     try:
-        # Check if user is linked to an employee
-        employee = frappe.db.get_value("Employee", {"user_id": frappe.session.user}, "name")
-        if not employee:
-            return {
-                "status": "error",
-                "message": _("No employee record found for current user"),
-                "http_status_code": 400
-            }
+        # Verify token and authenticate
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        
+        if not is_valid:
+            frappe.response.status_code = result.get("http_status_code", 500)
+            return result
+
+        employee = result["employee"]  # Get employee from token verification result
         
         # Get current month's attendance count
         month_start = frappe.utils.get_first_day(frappe.utils.nowdate())
