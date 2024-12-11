@@ -19,7 +19,7 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
                 "status": "Active",
                 "date_of_joining": ["<=", today]
             },
-            fields=["name", "employee_name", "company", "department"]
+            fields=["name", "employee_name", "company", "department", "custom_route"]
         )
 
         if not active_employees:
@@ -47,8 +47,8 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
         for employee in active_employees:
             if employee.name not in employees_with_attendance:
                 try:
-                    # Create new attendance record
-                    attendance = frappe.get_doc({
+                    # Prepare attendance data
+                    attendance_data = {
                         "doctype": "Attendance",
                         "employee": employee.name,
                         "employee_name": employee.employee_name,
@@ -56,8 +56,24 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
                         "status": "Absent",
                         "company": employee.company,
                         "department": employee.department
-                    })
+                    }
+
+                    # Add custom_route and fetch total_delivery from Route
+                    if employee.custom_route:
+                        attendance_data["custom_route"] = employee.custom_route
+                        
+                        # # Get total_delivery from Route doctype
+                        # route_total_delivery = frappe.db.get_value(
+                        #     "Route",
+                        #     employee.custom_route,
+                        #     "total_delivery"
+                        # )
+                        
+                        # if route_total_delivery:
+                        #     attendance_data["custom_total_deliveries"] = route_total_delivery
                     
+                    # Create new attendance record
+                    attendance = frappe.get_doc(attendance_data)
                     attendance.insert()
                     attendance.submit()
                     absent_count += 1
