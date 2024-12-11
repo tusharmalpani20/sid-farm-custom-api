@@ -11,14 +11,21 @@ def get_permission_query_conditions(user):
     
     conditions = []
     
+    # Log user and roles
+    frappe.msgprint(f"User: {user}, Roles: {frappe.get_roles(user)}")
+    
     # Skip for System Manager or Administrator
     if "System Manager" in frappe.get_roles(user) or user == "Administrator":
+        frappe.msgprint("User is System Manager or Administrator - no conditions applied")
         return " and ".join(conditions)
     
     # Get employee record for logged-in user
     employee = frappe.db.get_value("Employee", {"user_id": user}, "name")
+    frappe.msgprint(f"Employee record found: {employee}")
+    
     if not employee:
-        return " and ".join(conditions)  # Return default permissions if no employee record
+        frappe.msgprint("No employee record found - using default permissions")
+        return " and ".join(conditions)
     
     # Get all subordinates using MariaDB recursive query
     subordinates_query = """
@@ -40,10 +47,12 @@ def get_permission_query_conditions(user):
     subordinates = frappe.db.sql(subordinates_query, {"employee": employee}, as_dict=1)
     subordinate_names = [employee]  # Include self
     subordinate_names.extend([d.name for d in subordinates])
+    frappe.msgprint(f"Found subordinates: {subordinate_names}")
     
     # Add condition to show only subordinates' attendance records
     if subordinate_names:
         names_str = "','".join(subordinate_names)
         conditions.append(f"employee in ('{names_str}')")
+        frappe.msgprint(f"Final SQL condition: {' and '.join(conditions)}")
     
     return " and ".join(conditions)
