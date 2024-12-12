@@ -40,31 +40,31 @@ def execute(filters=None):
                 "value": total_employees,
                 "label": "Total Employees",
                 "datatype": "Int",
-                "indicator": "blue"
+                "indicator": "gray"
             },
             {
                 "value": 0,
                 "label": "Present",
                 "datatype": "Int",
-                "indicator": "green"
+                "indicator": "gray"
             },
             {
                 "value": 0,
                 "label": "Absent",
                 "datatype": "Int",
-                "indicator": "red"
+                "indicator": "gray"
             },
             {
                 "value": 0,
                 "label": "On Leave",
                 "datatype": "Int",
-                "indicator": "orange"
+                "indicator": "gray"
             },
             {
                 "value": 0,
                 "label": "Attendance %",
                 "datatype": "Percent",
-                "indicator": "blue"
+                "indicator": "gray"
             }
         ]
     else:
