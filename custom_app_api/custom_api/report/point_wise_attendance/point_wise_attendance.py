@@ -15,10 +15,10 @@ def execute(filters=None):
     data = get_point_wise_attendance(filters)
 
     # Calculate totals for summary and chart
-    total_employees = sum(row["total_employees"] for row in data[:-1])  # Exclude the total row
-    total_present = sum(row["present"] for row in data[:-1])
-    total_absent = sum(row["absent"] for row in data[:-1])
-    total_on_leave = sum(row["on_leave"] for row in data[:-1])
+    total_employees = sum(row["total_employees"] for row in data)  # Remove [:-1] to include all rows
+    total_present = sum(row["present"] for row in data)
+    total_absent = sum(row["absent"] for row in data)
+    total_on_leave = sum(row["on_leave"] for row in data)
     total_marked = total_present + total_absent + total_on_leave
 
     # Handle case when there's no attendance data
@@ -89,7 +89,7 @@ def execute(filters=None):
                 }]
             },
             "type": "pie",
-            "colors": ["#28a745", "#dc3545", "#ffc107"],  # Green, Red, Yellow
+            "colors": ["#36a2eb", "#ff6384", "#ffcd56"],  # Professional blue, soft red, muted yellow
             "height": 280
         }
 
@@ -127,7 +127,7 @@ def execute(filters=None):
             }
         ]
 
-    return columns, data, message, chart, report_summary
+    return columns, data, None, chart, report_summary
 
 def get_columns():
     return [
@@ -270,11 +270,11 @@ def get_point_wise_attendance(filters):
     # Add totals row
     data.append({
         "point": "<b>Total</b>",
-        "total_employees": f"<b>{total_employees}</b>",
-        "present": f"<b>{total_present}</b>",
-        "absent": f"<b>{total_absent}</b>",
-        "on_leave": f"<b>{total_on_leave}</b>",
-        "attendance_percentage": f"<b>{overall_attendance_percentage:.1f}</b>"
+        "total_employees": total_employees,
+        "present": total_present,
+        "absent": total_absent,
+        "on_leave": total_on_leave,
+        "attendance_percentage": overall_attendance_percentage
     })
 
     return data
