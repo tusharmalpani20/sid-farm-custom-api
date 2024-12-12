@@ -19,14 +19,14 @@ def create_leave_application() -> Dict[str, Any]:
         # Verify token and authenticate
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
-            frappe.response.status_code = result.get("http_status_code", 500)
+            frappe.local.response['http_status_code'] = result.get("http_status_code", 500)
             return result
         
         employee = result["employee"]
         
         # Get request data
         if not frappe.request.json:
-            frappe.response.status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "status": "error",
@@ -40,7 +40,7 @@ def create_leave_application() -> Dict[str, Any]:
         # Validate required fields
         for field in required_fields:
             if not data.get(field):
-                frappe.response.status_code = 400
+                frappe.local.response['http_status_code'] = 400
                 return {
                     "success": False,
                     "status": "error",
@@ -62,7 +62,7 @@ def create_leave_application() -> Dict[str, Any]:
             })
             
             leave_application.insert()
-            frappe.response.status_code = 201
+            frappe.local.response['http_status_code'] = 201
             return {
                 "success": True,
                 "status": "success",
@@ -99,7 +99,7 @@ def get_leave_types() -> Dict[str, Any]:
         # Verify token and authenticate
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
-            frappe.response.status_code = result.get("http_status_code", 500)
+            frappe.local.response['http_status_code'] = result.get("http_status_code", 500)
             return result
         
         employee = result["employee"]
@@ -152,7 +152,7 @@ def get_leave_types() -> Dict[str, Any]:
         }
         
     except Exception as e:
-        frappe.response.status_code = 500
+        frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error fetching leave types")
 
 @frappe.whitelist(allow_guest=True, methods=["GET"])
@@ -164,7 +164,7 @@ def get_pending_leave_applications() -> Dict[str, Any]:
         # Verify token and authenticate
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
-            frappe.response.status_code = result.get("http_status_code", 500)
+            frappe.local.response['http_status_code'] = result.get("http_status_code", 500)
             return result
         
         employee = result["employee"]
@@ -243,6 +243,6 @@ def get_pending_leave_applications() -> Dict[str, Any]:
         }
         
     except Exception as e:
-        frappe.response.status_code = 500
+        frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error fetching leave applications")
 

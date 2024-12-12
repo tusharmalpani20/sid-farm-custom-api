@@ -15,7 +15,7 @@ def send_otp(phone_number):
         try:
             phone_number = standardize_phone_number(phone_number)
         except ValueError:
-            frappe.response.http_status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "message": "Invalid phone number format. Please enter a valid 10-digit number",
@@ -32,7 +32,7 @@ def send_otp(phone_number):
         )
         
         if not employee:
-            frappe.response.http_status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "message": "No active employee found with this number",
@@ -80,7 +80,7 @@ def send_otp(phone_number):
 
     except Exception as e:
         frappe.log_error(str(e), "OTP Send Error")
-        frappe.response.http_status_code = 500
+        frappe.local.response['http_status_code'] = 500
         return {
             "success": False,
             "message": "Failed to send OTP",
@@ -93,7 +93,7 @@ def verify_otp(phone_number, otp_code):
     try:
         # Validate phone number format
         if not phone_number or len(phone_number) != 10 or not phone_number.isdigit():
-            frappe.response.http_status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "message": "Invalid phone number. Please enter 10 digits",
@@ -113,7 +113,7 @@ def verify_otp(phone_number, otp_code):
         )
 
         if not otp:
-            frappe.response.http_status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "message": "Invalid OTP",
@@ -123,7 +123,7 @@ def verify_otp(phone_number, otp_code):
         # Check if OTP is expired
         if datetime.now() > frappe.utils.get_datetime(otp.expires_at):
             frappe.db.set_value("OTP", otp.name, "is_expired", 1)
-            frappe.response.http_status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "message": "OTP has expired",
@@ -191,7 +191,7 @@ def verify_otp(phone_number, otp_code):
 
     except Exception as e:
         frappe.log_error(str(e), "OTP Verification Error")
-        frappe.response.http_status_code = 500
+        frappe.local.response['http_status_code'] = 500
         return {
             "success": False,
             "message": "Failed to verify OTP",
@@ -212,7 +212,7 @@ def resend_otp(phone_number):
         )
         
         if not employee:
-            frappe.response.http_status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "message": "No active employee found with this number",
@@ -237,7 +237,7 @@ def resend_otp(phone_number):
 
     except Exception as e:  
         frappe.log_error(str(e), "OTP Resend Error")
-        frappe.response.http_status_code = 500
+        frappe.local.response['http_status_code'] = 500
         return {
             "success": False,
             "message": "Failed to resend OTP",

@@ -21,14 +21,14 @@ def record_delivery() -> Dict[str, Any]:
         # Verify token and authenticate
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
-            frappe.response.status_code = result.get("http_status_code", 500)
+            frappe.local.response['http_status_code'] = result.get("http_status_code", 500)
             return result
         
         employee = result["employee"]
         
         # Get request data
         if not frappe.request.json:
-            frappe.response.status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "status": "error",
@@ -42,7 +42,7 @@ def record_delivery() -> Dict[str, Any]:
         # Validate required fields
         for field in required_fields:
             if field not in data:
-                frappe.response.status_code = 400
+                frappe.local.response['http_status_code'] = 400
                 return {
                     "success": False,
                     "status": "error",
@@ -61,7 +61,7 @@ def record_delivery() -> Dict[str, Any]:
                 }, "name")
             
             if not attendance:
-                frappe.response.status_code = 400
+                frappe.local.response['http_status_code'] = 400
                 return {
                     "success": False,
                     "status": "error",
@@ -80,7 +80,7 @@ def record_delivery() -> Dict[str, Any]:
                     image_data = base64.b64decode(image_string)
                 except Exception as e:
                     frappe.local.response.http_status_code = 400
-                    frappe.response.status_code = 400
+                    frappe.local.response['http_status_code'] = 400
                     return {
                         "success": False,
                         "status": "error",
@@ -101,7 +101,7 @@ def record_delivery() -> Dict[str, Any]:
                 _file.insert()
                 
             except Exception as e:
-                frappe.response.status_code = 400
+                frappe.local.response['http_status_code'] = 400
                 return {
                     "success": False,
                     "status": "error",
@@ -124,7 +124,7 @@ def record_delivery() -> Dict[str, Any]:
             delivery_record.insert()
             delivery_record.submit()
             
-            frappe.response.status_code = 201
+            frappe.local.response['http_status_code'] = 201
             return {
                 "success": True,
                 "status": "success",
@@ -137,7 +137,7 @@ def record_delivery() -> Dict[str, Any]:
             }
             
         except frappe.ValidationError as e:
-            frappe.response.status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "status": "error",
@@ -146,5 +146,5 @@ def record_delivery() -> Dict[str, Any]:
             }
             
     except Exception as e:
-        frappe.response.status_code = 500
+        frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error recording delivery")

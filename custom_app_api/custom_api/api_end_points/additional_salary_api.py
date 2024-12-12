@@ -21,14 +21,14 @@ def create_advance_salary() -> Dict[str, Any]:
         # Verify token and authenticate
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
-            frappe.response.status_code = result.get("http_status_code", 500)
+            frappe.local.response['http_status_code'] = result.get("http_status_code", 500)
             return result
         
         employee = result["employee"]
         
         # Get request data
         if not frappe.request.json:
-            frappe.response.status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "status": "error",
@@ -51,7 +51,7 @@ def create_advance_salary() -> Dict[str, Any]:
         )
         
         if pending_requests:
-            frappe.response.status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "status": "error",
@@ -61,7 +61,7 @@ def create_advance_salary() -> Dict[str, Any]:
         
         # Validate required fields
         if not data.get("custom_total_amount"):
-            frappe.response.status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "status": "error",
@@ -71,7 +71,7 @@ def create_advance_salary() -> Dict[str, Any]:
         
         # Validate installment data
         if data.get("custom_pay_in_installment") and not data.get("custom_number_of_installments"):
-            frappe.response.status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "status": "error",
@@ -111,7 +111,7 @@ def create_advance_salary() -> Dict[str, Any]:
         })
         
         additional_salary.insert()
-        frappe.response.status_code = 201
+        frappe.local.response['http_status_code'] = 201
         return {
             "success": True,
             "status": "success",
@@ -127,7 +127,7 @@ def create_advance_salary() -> Dict[str, Any]:
         }
         
     except Exception as e:
-        frappe.response.status_code = 500
+        frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error creating advance salary request")
 
 @frappe.whitelist(allow_guest=True, methods=["GET"])
@@ -140,7 +140,7 @@ def get_pending_advance_salary() -> Dict[str, Any]:
         # Verify token and authenticate
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
-            frappe.response.status_code = result.get("http_status_code", 500)
+            frappe.local.response['http_status_code'] = result.get("http_status_code", 500)
             return result
         
         employee = result["employee"]
@@ -198,5 +198,5 @@ def get_pending_advance_salary() -> Dict[str, Any]:
         }
         
     except Exception as e:
-        frappe.response.status_code = 500
+        frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error fetching pending advance salary requests")

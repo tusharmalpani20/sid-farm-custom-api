@@ -28,7 +28,7 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
             return False, {
                 "success": False,
                 "status": "error",
-                "error_code" : "Missing or invalid authorization header"
+                "error_code": "Missing or invalid authorization header",
                 "message": "Invalid Token",
                 "http_status_code": 401
             }
@@ -49,7 +49,7 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
                 "success": False,
                 "status": "error",
                 "message": "Invalid Token",
-                "error_code" : "Invalid or inactive token",
+                "error_code": "Invalid or inactive token",
                 "http_status_code": 401
             }
         # Check if token has expired
@@ -62,7 +62,7 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
                 "success": False,
                 "status": "error",
                 "message": "Invalid Token",
-                "error_code" : "Token expired",
+                "error_code": "Token expired",
                 "http_status_code": 401
             }
         
@@ -74,7 +74,7 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
                 "success": False,
                 "status": "error",
                 "message": "Invalid Token",
-                "error_code" : "Employee not active",
+                "error_code": "Employee not active",
                 "http_status_code": 401
             }
 
@@ -104,7 +104,7 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
             "success": False,
             "status": "error",
             "message": "Invalid Token",
-            "error_code" : "Token expired",
+            "error_code": "Token expired",
             "http_status_code": 401
         }
     except jwt.InvalidTokenError:
@@ -113,7 +113,7 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
             "success": False,
             "status": "error",
             "message": "Invalid token",
-            "error_code" : "Invalid token",
+            "error_code": "Invalid token",
             "http_status_code": 401
         }
     except Exception as e:
@@ -122,7 +122,7 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
             "success": False,
             "status": "error",
             "message": "Invalid Token",
-            "error_code" : "Error verifying token",
+            "error_code": "Error verifying token",
             "http_status_code": 401
         }
 
@@ -194,7 +194,7 @@ def create_attendance() -> Dict[str, Any]:
                          if not attendance_data.get(field)]
         
         if missing_fields:
-            frappe.response.status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "status": "error",
                 "message": "Missing required fields: {}".format(", ".join(missing_fields)),
@@ -208,7 +208,7 @@ def create_attendance() -> Dict[str, Any]:
         })
         
         if existing_attendance:
-            frappe.response.status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "status": "error",
                 "message": "Attendance already exists for this employee on this date",
@@ -218,7 +218,7 @@ def create_attendance() -> Dict[str, Any]:
         # Get employee details and validate status
         employee = frappe.get_doc("Employee", attendance_data.get("employee"))
         if not employee or employee.status != "Active":
-            frappe.response.status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "status": "error",
                 "message": "Employee is not active or does not exist",
@@ -277,7 +277,7 @@ def get_total_attendance_count_and_leave_count() -> Dict[str, Any]:
         is_valid, result = verify_dp_token(frappe.request.headers)
         
         if not is_valid:
-            frappe.response.status_code = result.get("http_status_code", 401)
+            frappe.local.response['http_status_code'] = result.get("http_status_code", 401)
             frappe.local.response['http_status_code'] = 401
             return result
 
@@ -347,11 +347,11 @@ def mobile_punch_in() -> Dict[str, Any]:
         is_valid, result = verify_dp_token(frappe.request.headers)
         
         if not is_valid:
-            frappe.response.status_code = result.get("http_status_code", 500)
+            frappe.local.response['http_status_code'] = result.get("http_status_code", 500)
             return result
 
         if not frappe.request.json:
-            frappe.response.status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "status": "error",
@@ -365,7 +365,7 @@ def mobile_punch_in() -> Dict[str, Any]:
         # Validate punch in time
         punch_in = data.get("custom_mobile_punch_in_at")
         if not punch_in:
-            frappe.response.status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "status": "error",
@@ -377,7 +377,7 @@ def mobile_punch_in() -> Dict[str, Any]:
         try:
             punch_in_dt = frappe.utils.get_datetime(punch_in)
         except Exception:
-            frappe.response.status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "status": "error",
@@ -400,7 +400,7 @@ def mobile_punch_in() -> Dict[str, Any]:
         )
         
         if not attendance:
-            frappe.response.status_code = 404
+            frappe.local.response['http_status_code'] = 404
             return {
                 "success": False,
                 "status": "error",
@@ -443,11 +443,11 @@ def mobile_punch_out() -> Dict[str, Any]:
         is_valid, result = verify_dp_token(frappe.request.headers)
         
         if not is_valid:
-            frappe.response.status_code = result.get("http_status_code", 500)
+            frappe.local.response['http_status_code'] = result.get("http_status_code", 500)
             return result
 
         if not frappe.request.json:
-            frappe.response.status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "status": "error",
@@ -461,7 +461,7 @@ def mobile_punch_out() -> Dict[str, Any]:
         # Validate punch out time
         punch_out = data.get("custom_mobile_punch_out_at")
         if not punch_out:
-            frappe.response.status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "status": "error",
@@ -473,7 +473,7 @@ def mobile_punch_out() -> Dict[str, Any]:
         try:
             punch_out_dt = frappe.utils.get_datetime(punch_out)
         except Exception:
-            frappe.response.status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "status": "error",
@@ -496,7 +496,7 @@ def mobile_punch_out() -> Dict[str, Any]:
         )
         
         if not attendance:
-            frappe.response.status_code = 404
+            frappe.local.response['http_status_code'] = 404
             return {
                 "success": False,
                 "status": "error",
@@ -507,7 +507,7 @@ def mobile_punch_out() -> Dict[str, Any]:
         # Validate punch out is after punch in
         punch_in_dt = frappe.utils.get_datetime(attendance.custom_mobile_punch_in_at)
         if punch_in_dt >= punch_out_dt:
-            frappe.response.status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "status": "error",
@@ -527,7 +527,7 @@ def mobile_punch_out() -> Dict[str, Any]:
         expected_deliveries = attendance.custom_total_deliveries or 0
 
         if actual_delivery_count != expected_deliveries:
-            frappe.response.status_code = 400
+            frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "status": "error",
@@ -551,7 +551,7 @@ def mobile_punch_out() -> Dict[str, Any]:
         # attendance_doc.docstatus = 1  # Submit when punch out is provided
         attendance_doc.save(ignore_permissions=True)
         
-        frappe.response.status_code = 201
+        frappe.local.response['http_status_code'] = 201
         return {
             "success": True,
             "status": "success",
