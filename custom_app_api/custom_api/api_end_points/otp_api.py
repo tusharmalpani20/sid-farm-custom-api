@@ -7,6 +7,7 @@ import jwt
 import urllib.request
 import urllib.parse
 import json
+import pytz
 
 @frappe.whitelist(allow_guest=True)
 def send_otp(phone_number):
@@ -43,7 +44,10 @@ def send_otp(phone_number):
                 "http_status_code": 400
             }
 
-        # Expire any existing active OTPs
+        # Expire any existing active OTPs by setting expires_at to current IST time
+        ist = pytz.timezone('Asia/Kolkata')
+        current_ist_time = datetime.now(ist)
+
         existing_otps = frappe.get_all("OTP",
             filters={
                 "phone": phone_number,
@@ -54,21 +58,23 @@ def send_otp(phone_number):
         )
         
         for otp in existing_otps:
-            frappe.db.set_value("OTP", otp.name, "is_expired", 1)
+            frappe.db.set_value("OTP", otp.name, {
+                "expires_at": current_ist_time,
+                "is_expired": 1
+            })
 
         # Generate 4-digit OTP
         otp_code = ''.join(random.choices('0123456789', k=4))
         
-        # Create OTP record
-        current_time = datetime.now()
+        # Create OTP record with IST timing
         otp_doc = frappe.get_doc({
             "doctype": "OTP",
-            "phone": phone_number,  # Plain 10-digit number
+            "phone": phone_number,
             "code": otp_code,
             "send_for": "Delivery Partner Mobile Auth",
             "provider": "Text Local",
-            "send_at": current_time,
-            "expires_at": current_time + timedelta(minutes=2),
+            "send_at": current_ist_time,
+            "expires_at": current_ist_time + timedelta(minutes=2),
             "is_expired": 0
         })
         otp_doc.insert()
@@ -160,7 +166,11 @@ def verify_otp(phone_number, otp_code):
             as_dict=1
         )
 
-        # 1. Delete all existing active tokens for this employee
+        # Get IST timezone
+        ist = pytz.timezone('Asia/Kolkata')
+        current_ist_time = datetime.now(ist)
+
+        # 1. Update existing active tokens for this employee to expired
         existing_tokens = frappe.get_all("DP Mobile Token",
             filters={
                 "employee": employee.name,
@@ -170,16 +180,19 @@ def verify_otp(phone_number, otp_code):
         )
         
         for token in existing_tokens:
-            frappe.delete_doc("DP Mobile Token", token.name)
+            frappe.db.set_value("DP Mobile Token", token.name, {
+                "status": "Expired",
+                "expires_at": current_ist_time
+            })
 
-        # 2. Create new token record
+        # 2. Create new token record with IST timing
         token_doc = frappe.get_doc({
             "doctype": "DP Mobile Token",
             "employee": employee.name,
             "status": "Active",
-            "created_at": datetime.now(),
-            "expires_at": datetime.now() + timedelta(days=30),
-            "last_login": datetime.now()
+            "created_at": current_ist_time,
+            "expires_at": current_ist_time + timedelta(days=30),
+            "last_login": current_ist_time
         })
         token_doc.insert()
         
