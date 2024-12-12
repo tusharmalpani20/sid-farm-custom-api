@@ -18,8 +18,10 @@ def send_otp(phone_number):
             frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
+                "status": "error",
                 "message": "Invalid phone number format. Please enter a valid 10-digit number",
-                "code": "INVALID_PHONE"
+                "code": "INVALID_PHONE",
+                "http_status_code": 400
             }
 
         # Check if employee exists and is active
@@ -35,8 +37,10 @@ def send_otp(phone_number):
             frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
+                "status": "error",
                 "message": "No active employee found with this number",
-                "code": "EMPLOYEE_NOT_FOUND"
+                "code": "EMPLOYEE_NOT_FOUND",
+                "http_status_code": 400
             }
 
         # Expire any existing active OTPs
@@ -74,8 +78,10 @@ def send_otp(phone_number):
 
         return {
             "success": True,
+            "status": "success",
             "message": "OTP sent successfully",
-            "code": "OTP_SENT"
+            "code": "OTP_SENT",
+            "http_status_code": 200
         }
 
     except Exception as e:
@@ -83,9 +89,11 @@ def send_otp(phone_number):
         frappe.local.response['http_status_code'] = 500
         return {
             "success": False,
+            "status": "error",
             "message": "Failed to send OTP",
             "code": "SYSTEM_ERROR",
-            "error": str(e)
+            "error": str(e),
+            "http_status_code": 500
         }
 
 @frappe.whitelist(allow_guest=True)
@@ -96,8 +104,10 @@ def verify_otp(phone_number, otp_code):
             frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
+                "status": "error",
                 "message": "Invalid phone number. Please enter 10 digits",
-                "code": "INVALID_PHONE"
+                "code": "INVALID_PHONE",
+                "http_status_code": 400
             }
 
         # Find valid OTP entry
@@ -116,8 +126,10 @@ def verify_otp(phone_number, otp_code):
             frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
+                "status": "error",
                 "message": "Invalid OTP",
-                "code": "INVALID_OTP"
+                "code": "INVALID_OTP",
+                "http_status_code": 400
             }
 
         # Check if OTP is expired
@@ -126,8 +138,10 @@ def verify_otp(phone_number, otp_code):
             frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
+                "status": "error",
                 "message": "OTP has expired",
-                "code": "OTP_EXPIRED"
+                "code": "OTP_EXPIRED",
+                "http_status_code": 400
             }
 
         # Mark OTP as verified
@@ -146,7 +160,7 @@ def verify_otp(phone_number, otp_code):
             as_dict=1
         )
 
-        # 1. Expire all existing active tokens for this employee
+        # 1. Delete all existing active tokens for this employee
         existing_tokens = frappe.get_all("DP Mobile Token",
             filters={
                 "employee": employee.name,
@@ -156,10 +170,7 @@ def verify_otp(phone_number, otp_code):
         )
         
         for token in existing_tokens:
-            frappe.db.set_value("DP Mobile Token", token.name, {
-                "status": "Expired",
-                "modified": datetime.now()
-            })
+            frappe.delete_doc("DP Mobile Token", token.name)
 
         # 2. Create new token record
         token_doc = frappe.get_doc({
@@ -183,10 +194,12 @@ def verify_otp(phone_number, otp_code):
 
         return {
             "success": True,
+            "status": "success",
             "message": "OTP verified successfully",
             "code": "OTP_VERIFIED",
             "employee": employee,
-            "token": jwt_token
+            "token": jwt_token,
+            "http_status_code": 200
         }
 
     except Exception as e:
@@ -194,9 +207,11 @@ def verify_otp(phone_number, otp_code):
         frappe.local.response['http_status_code'] = 500
         return {
             "success": False,
+            "status": "error",
             "message": "Failed to verify OTP",
             "code": "SYSTEM_ERROR",
-            "error": str(e)
+            "error": str(e),
+            "http_status_code": 500
         }
 
 @frappe.whitelist(allow_guest=True)
@@ -215,8 +230,10 @@ def resend_otp(phone_number):
             frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
+                "status": "error",
                 "message": "No active employee found with this number",
-                "code": "EMPLOYEE_NOT_FOUND"
+                "code": "EMPLOYEE_NOT_FOUND",
+                "http_status_code": 400
             }
 
         # Expire any existing active OTPs
@@ -240,9 +257,11 @@ def resend_otp(phone_number):
         frappe.local.response['http_status_code'] = 500
         return {
             "success": False,
+            "status": "error",
             "message": "Failed to resend OTP",
             "code": "SYSTEM_ERROR",
-            "error": str(e)
+            "error": str(e),
+            "http_status_code": 500
         }
 
 def standardize_phone_number(phone_number):

@@ -21,7 +21,7 @@ def record_delivery() -> Dict[str, Any]:
         # Verify token and authenticate
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
-            frappe.local.response['http_status_code'] = result.get("http_status_code", 500)
+            frappe.local.response['http_status_code'] = result.get("http_status_code", 401)
             return result
         
         employee = result["employee"]
@@ -33,6 +33,7 @@ def record_delivery() -> Dict[str, Any]:
                 "success": False,
                 "status": "error",
                 "message": "Request body is required",
+                "code": "REQUEST_BODY_REQUIRED",
                 "http_status_code": 400
             }
         
@@ -47,6 +48,7 @@ def record_delivery() -> Dict[str, Any]:
                     "success": False,
                     "status": "error",
                     "message": f"{field.replace('_', ' ').title()} is required",
+                    "code": "REQUEST_BODY_REQUIRED",
                     "http_status_code": 400
                 }
         
@@ -66,6 +68,7 @@ def record_delivery() -> Dict[str, Any]:
                     "success": False,
                     "status": "error",
                     "message": "No approved attendance found for today",
+                    "code": "NO_APPROVED_ATTENDANCE_FOUND_FOR_TODAY",
                     "http_status_code": 400
                 }
             
@@ -79,12 +82,12 @@ def record_delivery() -> Dict[str, Any]:
                 try:
                     image_data = base64.b64decode(image_string)
                 except Exception as e:
-                    frappe.local.response.http_status_code = 400
                     frappe.local.response['http_status_code'] = 400
                     return {
                         "success": False,
                         "status": "error",
                         "message": "Invalid base64 image data. Please check the image format.",
+                        "code": "INVALID_BASE64_IMAGE_DATA",
                         "http_status_code": 400,
                         "details": str(e)
                     }
@@ -106,6 +109,7 @@ def record_delivery() -> Dict[str, Any]:
                     "success": False,
                     "status": "error",
                     "message": "Invalid image data",
+                    "code": "INVALID_IMAGE_DATA",
                     "http_status_code": 400
                 }
             
@@ -129,11 +133,13 @@ def record_delivery() -> Dict[str, Any]:
                 "success": True,
                 "status": "success",
                 "message": "Delivery recorded successfully",
+                "code": "DELIVERY_RECORDED_SUCCESSFULLY",
                 "data": {
                     "name": delivery_record.name,
                     "recorded_at": delivery_record.recorded_at,
                     "image_url": delivery_record.image
-                }
+                },
+                "http_status_code": 201
             }
             
         except frappe.ValidationError as e:
@@ -142,6 +148,7 @@ def record_delivery() -> Dict[str, Any]:
                 "success": False,
                 "status": "error",
                 "message": str(e),
+                "code": "DELIVERY_RECORD_VALIDATION_ERROR",
                 "http_status_code": 400
             }
             

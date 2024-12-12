@@ -15,10 +15,9 @@ def logout():
         # Get the authorization header
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
-            return handle_error_response(
-                error=Exception(result.get("message", "Invalid token")),
-                error_message="Invalid token"
-            )
+            frappe.local.response['http_status_code'] = 401
+            return result
+        
         name = result["name"]
 
         # Delete the token from DP Mobile Token
@@ -31,11 +30,10 @@ def logout():
             "success": True,
             "status": "success",
             "message": "Logged out successfully",
+            "code": "LOGOUT_SUCCESS",
             "http_status_code": 200
         }
 
     except Exception as e:
-        return handle_error_response(
-            error=e,
-            error_message="Internal Server Error"
-        )
+        frappe.local.response['http_status_code'] = 500
+        return handle_error_response(e, "Error logging out")

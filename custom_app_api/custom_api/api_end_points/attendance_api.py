@@ -28,8 +28,8 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
             return False, {
                 "success": False,
                 "status": "error",
-                "error_code": "Missing or invalid authorization header",
-                "message": "Invalid Token",
+                "message": "Missing or invalid authorization header",
+                "code": "Invalid Token",
                 "http_status_code": 401
             }
         
@@ -48,8 +48,8 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
             return False, {
                 "success": False,
                 "status": "error",
-                "message": "Invalid Token",
-                "error_code": "Invalid or inactive token",
+                "code": "Invalid Token",
+                "message": "Invalid or inactive token",
                 "http_status_code": 401
             }
         # Check if token has expired
@@ -61,8 +61,8 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
             return False, {
                 "success": False,
                 "status": "error",
-                "message": "Invalid Token",
-                "error_code": "Token expired",
+                "code": "Invalid Token",
+                "message": "Token expired",
                 "http_status_code": 401
             }
         
@@ -73,8 +73,8 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
             return False, {
                 "success": False,
                 "status": "error",
-                "message": "Invalid Token",
-                "error_code": "Employee not active",
+                "code": "Invalid Token",
+                "message": "Employee not active",
                 "http_status_code": 401
             }
 
@@ -103,8 +103,8 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
         return False, {
             "success": False,
             "status": "error",
-            "message": "Invalid Token",
-            "error_code": "Token expired",
+            "code": "Invalid Token",
+            "message": "Token expired",
             "http_status_code": 401
         }
     except jwt.InvalidTokenError:
@@ -112,8 +112,8 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
         return False, {
             "success": False,
             "status": "error",
+            "code": "Invalid Token",
             "message": "Invalid token",
-            "error_code": "Invalid token",
             "http_status_code": 401
         }
     except Exception as e:
@@ -121,8 +121,8 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
         return False, {
             "success": False,
             "status": "error",
-            "message": "Invalid Token",
-            "error_code": "Error verifying token",
+            "code": "Invalid Token",
+            "message": "Error verifying token",
             "http_status_code": 401
         }
 
@@ -277,7 +277,6 @@ def get_total_attendance_count_and_leave_count() -> Dict[str, Any]:
         is_valid, result = verify_dp_token(frappe.request.headers)
         
         if not is_valid:
-            frappe.local.response['http_status_code'] = result.get("http_status_code", 401)
             frappe.local.response['http_status_code'] = 401
             return result
 
@@ -326,13 +325,15 @@ def get_total_attendance_count_and_leave_count() -> Dict[str, Any]:
 
         return {
             "status": "success",
+            "code": "DATA_RETRIEVED",
             "message": "Data retrieved successfully",
             "data": {
                 "employee": employee,
                 "current_month_attendance_count": attendance_count,
                 "total_remaining_leaves": total_remaining_leaves,
                 "today_attendance": today_attendance
-            }
+            },
+            "http_status_code": 200
         }
         
     except Exception as e:
@@ -356,6 +357,7 @@ def mobile_punch_in() -> Dict[str, Any]:
                 "success": False,
                 "status": "error",
                 "message": "Request body is required",
+                "code": "REQUEST_BODY_REQUIRED",
                 "http_status_code": 400
             }
 
@@ -370,6 +372,7 @@ def mobile_punch_in() -> Dict[str, Any]:
                 "success": False,
                 "status": "error",
                 "message": "Punch in time is required",
+                "code": "PUNCH_IN_TIME_REQUIRED",
                 "http_status_code": 400
             }
             
@@ -382,6 +385,7 @@ def mobile_punch_in() -> Dict[str, Any]:
                 "success": False,
                 "status": "error",
                 "message": "Invalid datetime format. Use YYYY-MM-DD HH:MM:SS",
+                "code": "INVALID_DATETIME_FORMAT",
                 "http_status_code": 400
             }
             
@@ -405,6 +409,7 @@ def mobile_punch_in() -> Dict[str, Any]:
                 "success": False,
                 "status": "error",
                 "message": "No attendance record found for the date",
+                "code": "NO_ATTENDANCE_RECORD_FOUND",
                 "http_status_code": 404
             }
             
@@ -422,6 +427,7 @@ def mobile_punch_in() -> Dict[str, Any]:
         return {
             "success": True,
             "status": "success",
+            "code": "PUNCH_IN_TIME_UPDATED",
             "message": "Punch in time updated successfully",
             "data": {
                 "name": attendance_doc.name,
@@ -429,7 +435,8 @@ def mobile_punch_in() -> Dict[str, Any]:
                 "attendance_date": attendance_doc.attendance_date,
                 "custom_mobile_punch_in_at": attendance_doc.custom_mobile_punch_in_at,
                 "docstatus": attendance_doc.docstatus
-            }
+            },
+            "http_status_code": 200
         }
         
     except Exception as e:
@@ -452,6 +459,7 @@ def mobile_punch_out() -> Dict[str, Any]:
                 "success": False,
                 "status": "error",
                 "message": "Request body is required",
+                "code": "REQUEST_BODY_REQUIRED",
                 "http_status_code": 400
             }
 
@@ -466,6 +474,7 @@ def mobile_punch_out() -> Dict[str, Any]:
                 "success": False,
                 "status": "error",
                 "message": "Punch out time is required",
+                "code": "PUNCH_OUT_TIME_REQUIRED",
                 "http_status_code": 400
             }
             
@@ -478,6 +487,7 @@ def mobile_punch_out() -> Dict[str, Any]:
                 "success": False,
                 "status": "error",
                 "message": "Invalid datetime format. Use YYYY-MM-DD HH:MM:SS",
+                "code": "INVALID_DATETIME_FORMAT",
                 "http_status_code": 400
             }
             
@@ -501,6 +511,7 @@ def mobile_punch_out() -> Dict[str, Any]:
                 "success": False,
                 "status": "error",
                 "message": "No attendance record found for the date",
+                "code": "NO_ATTENDANCE_RECORD_FOUND",
                 "http_status_code": 404
             }
         
@@ -512,6 +523,7 @@ def mobile_punch_out() -> Dict[str, Any]:
                 "success": False,
                 "status": "error",
                 "message": "Punch out time must be after punch in time",
+                "code": "PUNCH_OUT_TIME_MUST_BE_AFTER_PUNCH_IN_TIME",
                 "http_status_code": 400
             }
 
@@ -532,6 +544,7 @@ def mobile_punch_out() -> Dict[str, Any]:
                 "success": False,
                 "status": "error",
                 "message": f"Cannot punch out. Expected {expected_deliveries} deliveries but found {actual_delivery_count}",
+                "code": "INVALID_DELIVERY_COUNT",
                 "data": {
                     "expected_deliveries": expected_deliveries,
                     "actual_deliveries": actual_delivery_count
@@ -556,6 +569,7 @@ def mobile_punch_out() -> Dict[str, Any]:
             "success": True,
             "status": "success",
             "message": "Punch out time updated successfully",
+            "code": "PUNCH_OUT_TIME_UPDATED",
             "data": {
                 "name": attendance_doc.name,
                 "employee": attendance_doc.employee,
@@ -565,7 +579,8 @@ def mobile_punch_out() -> Dict[str, Any]:
                 "custom_total_deliveries": attendance_doc.custom_total_deliveries,
                 "actual_deliveries": actual_delivery_count,
                 "docstatus": attendance_doc.docstatus
-            }
+            },
+            "http_status_code": 200
         }
         
     except Exception as e:

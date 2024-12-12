@@ -19,7 +19,7 @@ def record_location() -> Dict[str, Any]:
         # Verify token and authenticate
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
-            frappe.local.response['http_status_code'] = result.get("http_status_code", 500)
+            frappe.local.response['http_status_code'] = result.get("http_status_code", 401)
             return result
         
         employee = result["employee"]
@@ -31,6 +31,7 @@ def record_location() -> Dict[str, Any]:
                 "success": False,
                 "status": "error",
                 "message": "Request body is required",
+                "code": "REQUEST_BODY_REQUIRED",
                 "http_status_code": 400
             }
         
@@ -45,6 +46,7 @@ def record_location() -> Dict[str, Any]:
                     "success": False,
                     "status": "error",
                     "message": f"{field.replace('_', ' ').title()} is required",
+                    "code": "REQUEST_BODY_REQUIRED",
                     "http_status_code": 400
                 }
         
@@ -64,6 +66,7 @@ def record_location() -> Dict[str, Any]:
                     "success": False,
                     "status": "error",
                     "message": "No approved attendance found for today",
+                    "code": "NO_APPROVED_ATTENDANCE_FOUND_FOR_TODAY",
                     "http_status_code": 400
                 }
             
@@ -96,6 +99,7 @@ def record_location() -> Dict[str, Any]:
                 "success": False,
                 "status": "error",
                 "message": str(e),
+                "code": "REQUEST_BODY_REQUIRED",
                 "http_status_code": 400
             }
             

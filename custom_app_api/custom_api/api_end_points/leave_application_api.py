@@ -19,7 +19,7 @@ def create_leave_application() -> Dict[str, Any]:
         # Verify token and authenticate
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
-            frappe.local.response['http_status_code'] = result.get("http_status_code", 500)
+            frappe.local.response['http_status_code'] = result.get("http_status_code", 401)
             return result
         
         employee = result["employee"]
@@ -31,6 +31,7 @@ def create_leave_application() -> Dict[str, Any]:
                 "success": False,
                 "status": "error",
                 "message": "Request body is required",
+                "code": "REQUEST_BODY_REQUIRED",
                 "http_status_code": 400
             }
         
@@ -45,6 +46,7 @@ def create_leave_application() -> Dict[str, Any]:
                     "success": False,
                     "status": "error",
                     "message": _(f"{field.replace('_', ' ').title()} is required"),
+                    "code": "REQUEST_BODY_REQUIRED",
                     "http_status_code": 400
                 }
         
@@ -67,13 +69,15 @@ def create_leave_application() -> Dict[str, Any]:
                 "success": True,
                 "status": "success",
                 "message": "Leave application created successfully",
+                "code": "LEAVE_APPLICATION_CREATED",
                 "data": {
                     "name": leave_application.name,
                     "from_date": leave_application.from_date,
                     "to_date": leave_application.to_date,
                     "total_leave_days": leave_application.total_leave_days,
                     "leave_balance": leave_application.leave_balance
-                }
+                },
+                "http_status_code": 201
             }
             
         except frappe.ValidationError as e:
@@ -83,6 +87,7 @@ def create_leave_application() -> Dict[str, Any]:
                 "success": False,
                 "status": "error",
                 "message": str(e),
+                "code": "INVALID_LEAVE_APPLICATION",
                 "http_status_code": 400
             }
             
@@ -99,7 +104,7 @@ def get_leave_types() -> Dict[str, Any]:
         # Verify token and authenticate
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
-            frappe.local.response['http_status_code'] = result.get("http_status_code", 500)
+            frappe.local.response['http_status_code'] = result.get("http_status_code", 401)
             return result
         
         employee = result["employee"]
@@ -146,9 +151,11 @@ def get_leave_types() -> Dict[str, Any]:
             "success": True,
             "status": "success",
             "message": "Leave types retrieved successfully",
+            "code": "LEAVE_TYPES_RETRIEVED",
             "data": {
                 "leave_types": formatted_types
-            }
+            },
+            "http_status_code": 200
         }
         
     except Exception as e:
@@ -164,7 +171,7 @@ def get_pending_leave_applications() -> Dict[str, Any]:
         # Verify token and authenticate
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
-            frappe.local.response['http_status_code'] = result.get("http_status_code", 500)
+            frappe.local.response['http_status_code'] = result.get("http_status_code", 401)
             return result
         
         employee = result["employee"]
@@ -237,9 +244,11 @@ def get_pending_leave_applications() -> Dict[str, Any]:
             "success": True,
             "status": "success",
             "message": "Leave applications retrieved successfully",
+            "code": "LEAVE_APPLICATIONS_RETRIEVED",
             "data": {
                 "leave_applications": merged_applications
-            }
+            },
+            "http_status_code": 200
         }
         
     except Exception as e:
