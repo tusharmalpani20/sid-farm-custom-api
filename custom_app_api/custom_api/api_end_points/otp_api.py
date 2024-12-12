@@ -46,7 +46,7 @@ def send_otp(phone_number):
 
         # Expire any existing active OTPs by setting expires_at to current IST time
         ist = pytz.timezone('Asia/Kolkata')
-        current_ist_time = datetime.now(ist)
+        current_ist_time = datetime.now(ist).replace(tzinfo=None)
 
         existing_otps = frappe.get_all("OTP",
             filters={
@@ -168,7 +168,7 @@ def verify_otp(phone_number, otp_code):
 
         # Get IST timezone
         ist = pytz.timezone('Asia/Kolkata')
-        current_ist_time = datetime.now(ist)
+        current_ist_time = datetime.now(ist).replace(tzinfo=None)
 
         # 1. Update existing active tokens for this employee to expired
         existing_tokens = frappe.get_all("DP Mobile Token",
@@ -253,7 +253,7 @@ def resend_otp(phone_number):
         existing_otps = frappe.get_all("OTP",
             filters={
                 "phone": phone_number,
-                "is_expired": 0,
+                "is_expired": 1,
                 "verified_at": None
             },
             fields=["name"]
