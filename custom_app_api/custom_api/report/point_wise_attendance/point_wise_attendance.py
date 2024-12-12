@@ -57,15 +57,25 @@ def get_columns():
     ]
 
 def get_point_wise_attendance(filters):
+    # First get allowed points based on permissions
+    allowed_points = frappe.get_list("Point", 
+        fields=["name"],
+        filters={"is_active": 1}
+    )
+    
     # Get all points and their employees
     point_filters = {
         "company": ("in", filters.companies),
-        "status": "Active"
+        "status": "Active",
+        "custom_point": ("in", [p.name for p in allowed_points])
     }
     
     # Add points filter if specified
     if filters.get("points"):
-        point_filters["custom_point"] = ("in", filters.get("points"))
+        point_filters["custom_point"] = ("in", [
+            p for p in filters.get("points") 
+            if p in [ap.name for ap in allowed_points]
+        ])
 
     points = frappe.get_all(
         "Employee",
