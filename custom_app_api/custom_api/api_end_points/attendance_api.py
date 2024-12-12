@@ -24,7 +24,7 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
         # Extract token from headers
         auth_header = headers.get('Auth-Token')
         if not auth_header or not auth_header.startswith('Bearer '):
-            frappe.response.status_code = 401
+            frappe.local.response['http_status_code'] = 401
             return False, {
                 "success": False,
                 "status": "error",
@@ -43,7 +43,7 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
         
         # Check if token exists and is active
         if not token_record or token_record.status != "Active":
-            frappe.response.status_code = 401
+            frappe.local.response['http_status_code'] = 401
             return False, {
                 "success": False,
                 "status": "error",
@@ -55,7 +55,7 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
             # Update token status to expired
             token_record.status = "Expired"
             token_record.save()
-            frappe.response.status_code = 401
+            frappe.local.response['http_status_code'] = 401
             return False, {
                 "success": False,
                 "status": "error",
@@ -66,7 +66,7 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
         # Check if employee is still active
         employee_status = frappe.db.get_value("Employee", token_record.employee, "status")
         if employee_status != "Active":
-            frappe.response.status_code = 401
+            frappe.local.response['http_status_code'] = 401
             return False, {
                 "success": False,
                 "status": "error",
@@ -95,7 +95,7 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
         }
         
     except jwt.ExpiredSignatureError:
-        frappe.response.status_code = 401
+        frappe.local.response['http_status_code'] = 401
         return False, {
             "success": False,
             "status": "error",
@@ -103,7 +103,7 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
             "http_status_code": 401
         }
     except jwt.InvalidTokenError:
-        frappe.response.status_code = 401
+        frappe.local.response['http_status_code'] = 401
         return False, {
             "success": False,
             "status": "error",
@@ -111,7 +111,7 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
             "http_status_code": 401
         }
     except Exception as e:
-        frappe.response.status_code = 401
+        frappe.local.response['http_status_code'] = 401
         return False, handle_error_response(e, "Error verifying token")
 
 
@@ -265,7 +265,8 @@ def get_total_attendance_count_and_leave_count() -> Dict[str, Any]:
         is_valid, result = verify_dp_token(frappe.request.headers)
         
         if not is_valid:
-            frappe.response.status_code = result.get("http_status_code", 500)
+            frappe.response.status_code = result.get("http_status_code", 401)
+            frappe.local.response['http_status_code'] = 401
             return result
 
         employee = result["employee"]  # Get employee from token verification result
