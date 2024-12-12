@@ -269,12 +269,12 @@ def get_point_wise_attendance(filters):
 
     # Add totals row
     data.append({
-        "point": "Total",
-        "total_employees": total_employees,
-        "present": total_present,
-        "absent": total_absent,
-        "on_leave": total_on_leave,
-        "attendance_percentage": overall_attendance_percentage
+        "point": "<b>Total</b>",
+        "total_employees": f"<b>{total_employees}</b>",
+        "present": f"<b>{total_present}</b>",
+        "absent": f"<b>{total_absent}</b>",
+        "on_leave": f"<b>{total_on_leave}</b>",
+        "attendance_percentage": f"<b>{overall_attendance_percentage:.1f}</b>"
     })
 
     return data
