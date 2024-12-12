@@ -12,15 +12,17 @@ frappe.query_reports["Point Wise Attendance"] = {
 			label: __("Points"),
 			fieldtype: "MultiSelectList",
 			get_data: function(txt) {
-				return frappe.db.get_list('Employee', {
-					fields: ['custom_point'],
+				return frappe.db.get_list('Point', {
+					fields: ['name', 'point_name'],
 					filters: {
-						custom_point: ['is', 'set']
+						disabled: 0
 					},
-					group_by: 'custom_point',
-					order_by: 'custom_point asc'
+					order_by: 'point_name asc'
 				}).then(result => {
-					return result.map(r => r.custom_point);
+					return result.map(r => ({
+						value: r.name,
+						description: r.point_name
+					}));
 				});
 			}
 		},
