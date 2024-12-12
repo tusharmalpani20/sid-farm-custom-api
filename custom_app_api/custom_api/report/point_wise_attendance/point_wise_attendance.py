@@ -70,13 +70,17 @@ def execute(filters=None):
     else:
         overall_attendance_percentage = (total_present / total_marked * 100) if total_marked else 0
         
-        # Create meaningful message
+        # Calculate percentages safely
+        present_percentage = f"{(total_present/total_marked*100):.1f}" if total_marked else "0.0"
+        absent_percentage = f"{(total_absent/total_marked*100):.1f}" if total_marked else "0.0"
+        leave_percentage = f"{(total_on_leave/total_marked*100):.1f}" if total_marked else "0.0"
+
         message = [
             f"Total Employees: {total_employees}",
             f"Overall Attendance: {overall_attendance_percentage:.1f}%",
-            f"Present: {total_present} ({(total_present/total_marked*100):.1f if total_marked else 0}%)",
-            f"Absent: {total_absent} ({(total_absent/total_marked*100):.1f if total_marked else 0}%)",
-            f"On Leave: {total_on_leave} ({(total_on_leave/total_marked*100):.1f if total_marked else 0}%)"
+            f"Present: {total_present} ({present_percentage}%)",
+            f"Absent: {total_absent} ({absent_percentage}%)",
+            f"On Leave: {total_on_leave} ({leave_percentage}%)"
         ]
 
         # Create pie chart
