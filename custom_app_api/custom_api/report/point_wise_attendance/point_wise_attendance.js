@@ -15,7 +15,7 @@ frappe.query_reports["Point Wise Attendance"] = {
 				return frappe.db.get_list('Point', {
 					fields: ['name', 'point_name'],
 					filters: {
-						disabled: 0
+						is_active: 1
 					},
 					order_by: 'point_name asc'
 				}).then(result => {
