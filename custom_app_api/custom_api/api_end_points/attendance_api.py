@@ -28,7 +28,8 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
             return False, {
                 "success": False,
                 "status": "error",
-                "message": "Missing or invalid authorization header",
+                "error_code" : "Missing or invalid authorization header"
+                "message": "Invalid Token",
                 "http_status_code": 401
             }
         
@@ -47,7 +48,8 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
             return False, {
                 "success": False,
                 "status": "error",
-                "message": "Invalid or inactive token",
+                "message": "Invalid Token",
+                "error_code" : "Invalid or inactive token",
                 "http_status_code": 401
             }
         # Check if token has expired
@@ -59,7 +61,8 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
             return False, {
                 "success": False,
                 "status": "error",
-                "message": "Token has expired",
+                "message": "Invalid Token",
+                "error_code" : "Token expired",
                 "http_status_code": 401
             }
         
@@ -70,7 +73,8 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
             return False, {
                 "success": False,
                 "status": "error",
-                "message": "Employee is not active",
+                "message": "Invalid Token",
+                "error_code" : "Employee not active",
                 "http_status_code": 401
             }
 
@@ -99,7 +103,8 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
         return False, {
             "success": False,
             "status": "error",
-            "message": "Token has expired",
+            "message": "Invalid Token",
+            "error_code" : "Token expired",
             "http_status_code": 401
         }
     except jwt.InvalidTokenError:
@@ -108,11 +113,18 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
             "success": False,
             "status": "error",
             "message": "Invalid token",
+            "error_code" : "Invalid token",
             "http_status_code": 401
         }
     except Exception as e:
         frappe.local.response['http_status_code'] = 401
-        return False, handle_error_response(e, "Error verifying token")
+        return False, {
+            "success": False,
+            "status": "error",
+            "message": "Invalid Token",
+            "error_code" : "Error verifying token",
+            "http_status_code": 401
+        }
 
 
 @frappe.whitelist()
