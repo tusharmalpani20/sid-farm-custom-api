@@ -74,9 +74,9 @@ def execute(filters=None):
         message = [
             f"Total Employees: {total_employees}",
             f"Overall Attendance: {overall_attendance_percentage:.1f}%",
-            f"Present: {total_present} ({(total_present/total_marked*100):.1f}% if total_marked else 0})",
-            f"Absent: {total_absent} ({(total_absent/total_marked*100):.1f}% if total_marked else 0})",
-            f"On Leave: {total_on_leave} ({(total_on_leave/total_marked*100):.1f}% if total_marked else 0})"
+            f"Present: {total_present} ({(total_present/total_marked*100):.1f if total_marked else 0}%)",
+            f"Absent: {total_absent} ({(total_absent/total_marked*100):.1f if total_marked else 0}%)",
+            f"On Leave: {total_on_leave} ({(total_on_leave/total_marked*100):.1f if total_marked else 0}%)"
         ]
 
         # Create pie chart
