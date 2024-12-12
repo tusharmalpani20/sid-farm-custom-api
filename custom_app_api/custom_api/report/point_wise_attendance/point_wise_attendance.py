@@ -14,7 +14,63 @@ def execute(filters=None):
     columns = get_columns()
     data = get_point_wise_attendance(filters)
 
-    return columns, data
+    # Calculate totals for summary and chart
+    total_employees = sum(row["total_employees"] for row in data[:-1])  # Exclude the total row
+    total_present = sum(row["present"] for row in data[:-1])
+    total_absent = sum(row["absent"] for row in data[:-1])
+    total_on_leave = sum(row["on_leave"] for row in data[:-1])
+    total_marked = total_present + total_absent + total_on_leave
+    overall_attendance_percentage = (total_present / total_marked * 100) if total_marked else 0
+
+    # Create report summary (shown at top)
+    report_summary = [
+        {
+            "value": total_employees,
+            "label": "Total Employees",
+            "datatype": "Int",
+            "indicator": "blue"
+        },
+        {
+            "value": total_present,
+            "label": "Present",
+            "datatype": "Int",
+            "indicator": "green"
+        },
+        {
+            "value": total_absent,
+            "label": "Absent",
+            "datatype": "Int",
+            "indicator": "red"
+        },
+        {
+            "value": total_on_leave,
+            "label": "On Leave",
+            "datatype": "Int",
+            "indicator": "orange"
+        },
+        {
+            "value": overall_attendance_percentage,
+            "label": "Attendance %",
+            "datatype": "Percent",
+            "indicator": "blue"
+        }
+    ]
+
+    # Create pie chart
+    chart = {
+        "data": {
+            "labels": ["Present", "Absent", "On Leave"],
+            "datasets": [{
+                "name": "Attendance Distribution",
+                "values": [total_present, total_absent, total_on_leave]
+            }]
+        },
+        "type": "pie",
+        "colors": ["#28a745", "#dc3545", "#ffc107"],  # Green, Red, Yellow
+        "height": 280
+    }
+
+    return columns, data, report_summary, chart
 
 def get_columns():
     return [
@@ -145,5 +201,23 @@ def get_point_wise_attendance(filters):
 
     # Sort by attendance percentage in descending order
     data.sort(key=lambda x: x["attendance_percentage"], reverse=True)
+
+    # Calculate totals
+    total_employees = sum(row["total_employees"] for row in data)
+    total_present = sum(row["present"] for row in data)
+    total_absent = sum(row["absent"] for row in data)
+    total_on_leave = sum(row["on_leave"] for row in data)
+    total_marked = total_present + total_absent + total_on_leave
+    overall_attendance_percentage = (total_present / total_marked * 100) if total_marked else 0
+
+    # Add totals row
+    data.append({
+        "point": "Total",
+        "total_employees": total_employees,
+        "present": total_present,
+        "absent": total_absent,
+        "on_leave": total_on_leave,
+        "attendance_percentage": overall_attendance_percentage
+    })
 
     return data
