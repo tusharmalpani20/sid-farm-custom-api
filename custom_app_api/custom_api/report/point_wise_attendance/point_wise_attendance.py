@@ -22,7 +22,30 @@ def execute(filters=None):
     total_marked = total_present + total_absent + total_on_leave
     overall_attendance_percentage = (total_present / total_marked * 100) if total_marked else 0
 
-    # Create report summary (shown at top)
+    # Create meaningful message
+    message = [
+        f"Total Employees: {total_employees}",
+        f"Overall Attendance: {overall_attendance_percentage:.1f}%",
+        f"Present: {total_present} ({(total_present/total_marked*100):.1f}%)",
+        f"Absent: {total_absent} ({(total_absent/total_marked*100):.1f}%)",
+        f"On Leave: {total_on_leave} ({(total_on_leave/total_marked*100):.1f}%)"
+    ]
+
+    # Create pie chart
+    chart = {
+        "data": {
+            "labels": ["Present", "Absent", "On Leave"],
+            "datasets": [{
+                "name": "Attendance Distribution",
+                "values": [total_present, total_absent, total_on_leave]
+            }]
+        },
+        "type": "pie",
+        "colors": ["#28a745", "#dc3545", "#ffc107"],  # Green, Red, Yellow
+        "height": 280
+    }
+
+    # Create report summary with indicators
     report_summary = [
         {
             "value": total_employees,
@@ -56,21 +79,7 @@ def execute(filters=None):
         }
     ]
 
-    # Create pie chart
-    chart = {
-        "data": {
-            "labels": ["Present", "Absent", "On Leave"],
-            "datasets": [{
-                "name": "Attendance Distribution",
-                "values": [total_present, total_absent, total_on_leave]
-            }]
-        },
-        "type": "pie",
-        "colors": ["#28a745", "#dc3545", "#ffc107"],  # Green, Red, Yellow
-        "height": 280
-    }
-
-    return columns, data, report_summary, chart
+    return columns, data, message, chart, report_summary
 
 def get_columns():
     return [
