@@ -20,64 +20,112 @@ def execute(filters=None):
     total_absent = sum(row["absent"] for row in data[:-1])
     total_on_leave = sum(row["on_leave"] for row in data[:-1])
     total_marked = total_present + total_absent + total_on_leave
-    overall_attendance_percentage = (total_present / total_marked * 100) if total_marked else 0
 
-    # Create meaningful message
-    message = [
-        f"Total Employees: {total_employees}",
-        f"Overall Attendance: {overall_attendance_percentage:.1f}%",
-        f"Present: {total_present} ({(total_present/total_marked*100):.1f}%)",
-        f"Absent: {total_absent} ({(total_absent/total_marked*100):.1f}%)",
-        f"On Leave: {total_on_leave} ({(total_on_leave/total_marked*100):.1f}%)"
-    ]
-
-    # Create pie chart
-    chart = {
-        "data": {
-            "labels": ["Present", "Absent", "On Leave"],
-            "datasets": [{
-                "name": "Attendance Distribution",
-                "values": [total_present, total_absent, total_on_leave]
-            }]
-        },
-        "type": "pie",
-        "colors": ["#28a745", "#dc3545", "#ffc107"],  # Green, Red, Yellow
-        "height": 280
-    }
-
-    # Create report summary with indicators
-    report_summary = [
-        {
-            "value": total_employees,
-            "label": "Total Employees",
-            "datatype": "Int",
-            "indicator": "blue"
-        },
-        {
-            "value": total_present,
-            "label": "Present",
-            "datatype": "Int",
-            "indicator": "green"
-        },
-        {
-            "value": total_absent,
-            "label": "Absent",
-            "datatype": "Int",
-            "indicator": "red"
-        },
-        {
-            "value": total_on_leave,
-            "label": "On Leave",
-            "datatype": "Int",
-            "indicator": "orange"
-        },
-        {
-            "value": overall_attendance_percentage,
-            "label": "Attendance %",
-            "datatype": "Percent",
-            "indicator": "blue"
+    # Handle case when there's no attendance data
+    if total_marked == 0:
+        message = ["No attendance records found for the selected date."]
+        # Create empty chart
+        chart = {
+            "data": {
+                "labels": ["Present", "Absent", "On Leave"],
+                "datasets": [{"name": "Attendance Distribution", "values": [0, 0, 0]}]
+            },
+            "type": "pie",
+            "colors": ["#28a745", "#dc3545", "#ffc107"],
+            "height": 280
         }
-    ]
+        # Create empty summary
+        report_summary = [
+            {
+                "value": total_employees,
+                "label": "Total Employees",
+                "datatype": "Int",
+                "indicator": "blue"
+            },
+            {
+                "value": 0,
+                "label": "Present",
+                "datatype": "Int",
+                "indicator": "green"
+            },
+            {
+                "value": 0,
+                "label": "Absent",
+                "datatype": "Int",
+                "indicator": "red"
+            },
+            {
+                "value": 0,
+                "label": "On Leave",
+                "datatype": "Int",
+                "indicator": "orange"
+            },
+            {
+                "value": 0,
+                "label": "Attendance %",
+                "datatype": "Percent",
+                "indicator": "blue"
+            }
+        ]
+    else:
+        overall_attendance_percentage = (total_present / total_marked * 100)
+        
+        # Create meaningful message
+        message = [
+            f"Total Employees: {total_employees}",
+            f"Overall Attendance: {overall_attendance_percentage:.1f}%",
+            f"Present: {total_present} ({(total_present/total_marked*100):.1f}%)",
+            f"Absent: {total_absent} ({(total_absent/total_marked*100):.1f}%)",
+            f"On Leave: {total_on_leave} ({(total_on_leave/total_marked*100):.1f}%)"
+        ]
+
+        # Create pie chart
+        chart = {
+            "data": {
+                "labels": ["Present", "Absent", "On Leave"],
+                "datasets": [{
+                    "name": "Attendance Distribution",
+                    "values": [total_present, total_absent, total_on_leave]
+                }]
+            },
+            "type": "pie",
+            "colors": ["#28a745", "#dc3545", "#ffc107"],  # Green, Red, Yellow
+            "height": 280
+        }
+
+        # Create report summary with indicators
+        report_summary = [
+            {
+                "value": total_employees,
+                "label": "Total Employees",
+                "datatype": "Int",
+                "indicator": "blue"
+            },
+            {
+                "value": total_present,
+                "label": "Present",
+                "datatype": "Int",
+                "indicator": "green"
+            },
+            {
+                "value": total_absent,
+                "label": "Absent",
+                "datatype": "Int",
+                "indicator": "red"
+            },
+            {
+                "value": total_on_leave,
+                "label": "On Leave",
+                "datatype": "Int",
+                "indicator": "orange"
+            },
+            {
+                "value": overall_attendance_percentage,
+                "label": "Attendance %",
+                "datatype": "Percent",
+                "indicator": "blue"
+            }
+        ]
 
     return columns, data, message, chart, report_summary
 
