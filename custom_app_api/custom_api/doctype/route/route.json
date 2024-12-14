@@ -58,7 +58,7 @@
    "reqd": 1
   },
   {
-   "fetch_from": "point_name.zone_name",
+   "fetch_from": "point_name.state_name",
    "fieldname": "state_name",
    "fieldtype": "Link",
    "label": "State Name",
