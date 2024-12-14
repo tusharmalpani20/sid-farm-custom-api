@@ -164,6 +164,9 @@ scheduler_events = {
 	"cron": {
 		"30 9 * * *": [
 			"custom_app_api.cron_functions.attendance_cron.auto_mark_employee_absent_and_submit_all_todays_attendance"
+		],
+		"0 23 * * *": [  # Runs at 11:00 PM (23:00) every day
+			"custom_app_api.cron_functions.import_routes.import_routes"
 		]
 	}
 	# "all": [
