@@ -166,8 +166,11 @@ scheduler_events = {
 		"30 9 * * *": [
 			"custom_app_api.cron_functions.attendance_cron.auto_mark_employee_absent_and_submit_all_todays_attendance"
 		],
+		"45 9 * * *": [
+			"custom_app_api.cron_functions.additional_salary_extra_km.calculate_extra_km_salary"
+		],
 		"0 23 * * *": [  # Runs at 11:00 PM (23:00) every day
-			"custom_app_api.cron_functions.import_routes.import_routes"
+			"custom_app_api.cron_functions.import_routes.import_routes",
 		]
 	}
 	# "all": [

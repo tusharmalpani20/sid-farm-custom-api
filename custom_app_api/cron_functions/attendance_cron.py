@@ -108,7 +108,7 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
                         total_distance = calculate_total_distance(coordinates)
                         
                         # Update the attendance record with total distance
-                        attendance_doc.kilometers_travelled = total_distance
+                        attendance_doc.custom_kilometers_travelled = total_distance
                     
                     # Only set punch out time if it hasn't been set yet
                     if not attendance_doc.custom_mobile_punch_out_at:
