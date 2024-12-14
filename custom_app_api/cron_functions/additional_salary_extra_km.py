@@ -39,12 +39,12 @@ def calculate_extra_km_salary():
 
                 # Create descriptive reason
                 reason = (
-                    f"Extra KM Allowance for {frappe.utils.formatdate(today())}\n"
+                    # f"Extra KM Allowance for {frappe.utils.formatdate(today())}\n"
                     f"Total KMs Travelled: {attendance.custom_kilometers_travelled} km\n"
                     f"Company Provision: {employee.custom_travel_limit} km\n"
                     f"Extra KMs: {extra_km} km\n"
                     f"Rate per Extra KM: Rs. 3\n"
-                    f"Total Amount: Rs. {amount}"
+                    # f"Total Amount: Rs. {amount}"
                 )
 
                 # Create Additional Salary entry
@@ -63,6 +63,7 @@ def calculate_extra_km_salary():
 
                 # Only save the document, don't submit
                 additional_salary.insert(ignore_permissions=True)
+                additional_salary.submit()
                 frappe.db.commit()
 
                 frappe.logger().info(

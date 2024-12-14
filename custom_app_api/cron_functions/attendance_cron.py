@@ -31,7 +31,7 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
             "Attendance",
             filters={
                 "attendance_date": today,
-                "docstatus": ["!=", 2]  # Not cancelled
+                "docstatus": ["=", 1]  # Not cancelled
             },
             fields=["*"]
         )
