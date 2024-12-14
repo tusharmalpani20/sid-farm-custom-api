@@ -31,7 +31,7 @@ def import_routes():
         existing_routes = {}
         routes = frappe.get_all("Route", fields=["name", "route_name", "branch"])
         for route in routes:
-            existing_routes[route.route_name] = route.name
+            existing_routes[route.name] = route.name
         
         frappe.logger().info(f"Found {len(existing_routes)} existing routes in system")
 
