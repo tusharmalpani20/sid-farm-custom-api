@@ -29,9 +29,14 @@ frappe.ui.form.on("Additional Salary", {
 			// Get first day of next month
 			let fromDate = frappe.datetime.add_months(frappe.datetime.month_start(), 1);
 			
-			// Get last day of the last installment month
+			// Calculate to_date by:
+			// 1. First adding (number_of_installments - 1) months to fromDate
+			// 2. Then getting the last day of that month
 			let toDate = frappe.datetime.add_months(fromDate, frm.doc.custom_number_of_installments - 1);
 			toDate = frappe.datetime.month_end(toDate);
+
+			console.log('From Date:', fromDate); // For debugging
+			console.log('To Date:', toDate);     // For debugging
 
 			// Set the from_date and to_date
 			frm.set_value('from_date', fromDate);
