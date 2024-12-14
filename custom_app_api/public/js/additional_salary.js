@@ -36,8 +36,8 @@ frappe.ui.form.on("Additional Salary", {
 			console.log('Intermediate toDate:', toDate);
 			console.log('Number of installments:', frm.doc.custom_number_of_installments);
 
-			// Get the last day of the final month
-			toDate = frappe.datetime.month_end(toDate);
+			// Get the last day of the final month using get_last_day
+			toDate = frappe.datetime.get_last_day(toDate);
 
 			console.log('Final toDate:', toDate);
 			console.log('Number of installments:', frm.doc.custom_number_of_installments);
