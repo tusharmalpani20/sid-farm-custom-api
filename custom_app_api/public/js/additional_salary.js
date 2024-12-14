@@ -29,20 +29,24 @@ frappe.ui.form.on("Additional Salary", {
 			// Get first day of next month
 			let fromDate = frappe.datetime.add_months(frappe.datetime.month_start(), 1);
 			
-			// Calculate to_date by:
-			// 1. First adding (number_of_installments - 1) months to fromDate
-			// 2. Then getting the last day of that month
+			// Calculate to_date by adding months to fromDate
 			let toDate = frappe.datetime.add_months(fromDate, frm.doc.custom_number_of_installments - 1);
+
+            console.log('From Date:', fromDate);
+			console.log('Intermediate toDate:', toDate);
+			console.log('Number of installments:', frm.doc.custom_number_of_installments);
+
+			// Get the last day of the final month
 			toDate = frappe.datetime.month_end(toDate);
 
-			console.log('From Date:', fromDate); // For debugging
-			console.log('To Date:', toDate);     // For debugging
+			console.log('Final toDate:', toDate);
+			console.log('Number of installments:', frm.doc.custom_number_of_installments);
 
 			// Set the from_date and to_date
 			frm.set_value('from_date', fromDate);
 			frm.set_value('to_date', toDate);
 
-			// Refresh the date fields
+			// Refresh the fields
 			frm.refresh_field('from_date');
 			frm.refresh_field('to_date');
 		}
