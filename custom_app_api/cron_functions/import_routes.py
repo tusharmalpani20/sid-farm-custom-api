@@ -38,51 +38,76 @@ def import_routes():
         # Process each row
         new_routes_count = 0
         skipped_points_count = 0
+        missing_points = set()  # To track unique missing points
         
         for row in rows:
-            # Get point details first (we need branch info from here)
-            point = frappe.get_doc("Point", {"point_name": row["delivery_point"], "city_name": row["city"]})
-            if not point:
-                skipped_points_count += 1
-                frappe.logger().warning(f"Skipping route creation: Point not found for {row['delivery_point']} in {row['city']}")
+            try:
+                # Get point details first (we need branch info from here)
+                point_filters = {
+                    "point_name": row["delivery_point"],
+                    "city_name": row["city"]
+                }
+                
+                # First check if point exists
+                if not frappe.db.exists("Point", point_filters):
+                    skipped_points_count += 1
+                    missing_points.add(f"{row['delivery_point']} - {row['city']}")
+                    frappe.logger().warning(
+                        f"Point not found: {row['delivery_point']} in {row['city']}"
+                    )
+                    continue
+                
+                point = frappe.get_doc("Point", point_filters)
+
+                # Create route key to check existence
+                route_key = f"{row['route']}-{point.branch}"
+                
+                # If route doesn't exist, create it
+                if route_key not in existing_routes:
+                    try:
+                        new_route = frappe.get_doc({
+                            "doctype": "Route",
+                            "route_name": row["route"],
+                            "point_name": point.name,
+                            "area_name": point.area_name,
+                            "zone_name": point.zone_name,
+                            "city_name": point.city_name,
+                            "state_name": point.state_name,
+                            "branch": point.branch,
+                            "total_delivery": 0
+                        })
+                        new_route.insert()
+                        frappe.db.commit()
+                        
+                        # Add to existing routes map
+                        existing_routes[route_key] = new_route.name
+                        new_routes_count += 1
+                        
+                    except Exception as e:
+                        frappe.logger().error(f"Error creating route {route_key}: {str(e)}")
+                        frappe.log_error(title="Route Import Error", message=f"Error creating route {route_key}: {str(e)}")
+
+            except Exception as e:
+                frappe.logger().error(f"Error processing row {row}: {str(e)}")
                 continue
 
-            # Create route key to check existence
-            route_key = f"{row['route']}-{point.branch}"
-            
-            # If route doesn't exist, create it
-            if route_key not in existing_routes:
-                try:
-                    new_route = frappe.get_doc({
-                        "doctype": "Route",
-                        "route_name": row["route"],
-                        "point_name": point.name,
-                        "area_name": point.area_name,
-                        "zone_name": point.zone_name,
-                        "city_name": point.city_name,
-                        "state_name": point.state_name,
-                        "branch": point.branch,
-                        "total_delivery": 0
-                    })
-                    new_route.insert()
-                    frappe.db.commit()
-                    
-                    # Add to existing routes map
-                    existing_routes[route_key] = new_route.name
-                    new_routes_count += 1
-                    
-                except Exception as e:
-                    frappe.logger().error(f"Error creating route {route_key}: {str(e)}")
-                    frappe.log_error(title="Route Import Error", message=f"Error creating route {route_key}: {str(e)}")
-
         # Log summary
-        frappe.logger().info(f"""
-            Route import completed:
-            - Total routes processed: {len(rows)}
-            - New routes created: {new_routes_count}
-            - Points not found (skipped): {skipped_points_count}
-            - Timestamp: {datetime.now()}
-        """)
+        summary = f"""
+Route import completed:
+- Total routes processed: {len(rows)}
+- New routes created: {new_routes_count}
+- Points not found (skipped): {skipped_points_count}
+- Missing Points: {', '.join(missing_points)}
+- Timestamp: {datetime.now()}
+"""
+        frappe.logger().info(summary)
+        
+        # If there were missing points, create an error log
+        if missing_points:
+            frappe.log_error(
+                title="Route Import - Missing Points",
+                message=f"The following points were missing:\n{', '.join(missing_points)}"
+            )
 
     except Exception as e:
         error_msg = f"Route import failed: {str(e)}"
