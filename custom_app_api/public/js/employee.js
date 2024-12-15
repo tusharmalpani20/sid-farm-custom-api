@@ -67,4 +67,50 @@ frappe.ui.form.on("Employee", {
 			}
 		});
 	},
+
+	custom_is_notice_period: function(frm) {
+		if (!frm.doc.custom_is_notice_period) {
+			frappe.db.get_list('Employee Separation', {
+				filters: {
+					'employee': frm.doc.name,
+					'docstatus': ['!=', 2]  // Not cancelled
+				}
+			}).then(separations => {
+				if (separations && separations.length > 0) {
+					// Reset the value back to true
+					frm.set_value('custom_is_notice_period', 1);
+					
+					frappe.throw(__(`
+						Cannot remove notice period status. 
+						Please delete or cancel existing Employee Separation records first.
+					`));
+				}
+			});
+		}
+	},
+
+	on_submit: function(frm) {
+		if (frm.doc.custom_is_notice_period) {
+			frappe.run_serially([
+				() => frappe.new_doc('Employee Separation', {
+					employee: frm.doc.name,
+					boarding_begins_on: frappe.datetime.nowdate()
+				}),
+				(doc) => {
+					if (doc) {
+						doc.submit()
+							.then(() => {
+								frappe.show_alert({
+									message: __(`Employee Separation created and submitted for ${frm.doc.employee_name}`),
+									indicator: 'green'
+								});
+							})
+							.catch((err) => {
+								frappe.throw(__(`Error submitting Employee Separation: ${err}`));
+							});
+					}
+				}
+			]);
+		}
+	}
 });
