@@ -157,7 +157,7 @@ doc_events = {
 	# 	"on_trash": "method"
 	# }
 	"Employee": {
-		"after_save": "custom_app_api.doc_events.employee.after_save"
+		"after_save": "custom_api.doc_events.employee.after_save"
 	}
 }
 
