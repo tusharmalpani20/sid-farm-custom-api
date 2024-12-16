@@ -96,7 +96,7 @@ frappe.ui.form.on("Employee", {
 			const newSeparation = frappe.new_doc('Employee Separation', {
 				employee: frm.doc.name,
 				company: frm.doc.company,
-				boarding_begins_on: frappe.date.today(),
+				boarding_begins_on: frappe.utils.getDate(),
 				docstatus: 1
 			});
 
