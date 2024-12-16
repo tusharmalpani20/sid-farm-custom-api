@@ -91,26 +91,21 @@ frappe.ui.form.on("Employee", {
 
 	on_submit: function(frm) {
 		if (frm.doc.custom_is_notice_period) {
-			frappe.run_serially([
-				() => frappe.new_doc('Employee Separation', {
-					employee: frm.doc.name,
-					boarding_begins_on: frappe.datetime.nowdate()
-				}),
-				(doc) => {
-					if (doc) {
-						doc.submit()
-							.then(() => {
-								frappe.show_alert({
-									message: __(`Employee Separation created and submitted for ${frm.doc.employee_name}`),
-									indicator: 'green'
-								});
-							})
-							.catch((err) => {
-								frappe.throw(__(`Error submitting Employee Separation: ${err}`));
-							});
-					}
-				}
-			]);
+			const newSeparation = frappe.new_doc('Employee Separation', {
+				employee: frm.doc.name,
+				boarding_begins_on: frappe.datetime.nowdate()
+			});
+			
+			newSeparation.submit()
+				.then(() => {
+					frappe.show_alert({
+						message: __(`Employee Separation created and submitted for ${frm.doc.employee_name}`),
+						indicator: 'green'
+					});
+				})
+				.catch((err) => {
+					frappe.throw(__(`Error submitting Employee Separation: ${err}`));
+				});
 		}
 	}
 });
