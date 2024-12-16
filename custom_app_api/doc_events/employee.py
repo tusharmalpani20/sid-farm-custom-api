@@ -5,6 +5,8 @@ import logging  # Import logging module
 logging.basicConfig(level=logging.INFO)  # Set logging level
 
 def after_save(doc, method):
+
+    frappe.msgprint(f"Employee Separation created and submitted for {doc.employee_name}")
     if doc.custom_is_notice_period:
         # Create a new Employee Separation document
         separation_doc = frappe.get_doc({
