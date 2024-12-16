@@ -91,10 +91,14 @@ frappe.ui.form.on("Employee", {
 
 	on_submit: function(frm) {
 		if (frm.doc.custom_is_notice_period) {
+
+			console.log("Creating new Employee Separation")
 			const newSeparation = frappe.new_doc('Employee Separation', {
 				employee: frm.doc.name,
 				boarding_begins_on: frappe.datetime.nowdate()
 			});
+
+			console.log("New Separation", newSeparation)
 			
 			newSeparation.submit()
 				.then(() => {
@@ -102,10 +106,15 @@ frappe.ui.form.on("Employee", {
 						message: __(`Employee Separation created and submitted for ${frm.doc.employee_name}`),
 						indicator: 'green'
 					});
+
+					console.log("Separation submitted")
 				})
 				.catch((err) => {
+					console.log("Error submitting Employee Separation", err)
 					frappe.throw(__(`Error submitting Employee Separation: ${err}`));
 				});
+
+			
 		}
 	}
 });
