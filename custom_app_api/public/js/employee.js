@@ -89,7 +89,7 @@ frappe.ui.form.on("Employee", {
 		}
 	},
 
-	on_submit: function(frm) {
+	on_save: function(frm) {
 		if (frm.doc.custom_is_notice_period) {
 
 			console.log("Creating new Employee Separation")
