@@ -93,10 +93,15 @@ frappe.ui.form.on("Employee", {
 		if (frm.doc.custom_is_notice_period) {
 
 			console.log("Creating new Employee Separation")
+
+			const todays_date = new Date()
+			todays_date.setHours(12)
+			const str_code =todays_date.toISOString().split('T')[0]
+
 			const newSeparation = frappe.new_doc('Employee Separation', {
 				employee: frm.doc.name,
 				company: frm.doc.company,
-				boarding_begins_on: frappe.utils.getDate(),
+				boarding_begins_on: str_code,
 				docstatus: 1
 			});
 
