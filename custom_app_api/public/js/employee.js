@@ -95,24 +95,28 @@ frappe.ui.form.on("Employee", {
 			console.log("Creating new Employee Separation")
 			const newSeparation = frappe.new_doc('Employee Separation', {
 				employee: frm.doc.name,
-				boarding_begins_on: frappe.datetime.nowdate()
+				company: frm.doc.company,
+				boarding_begins_on: frappe.date.today(),
+				docstatus: 1
 			});
+
+			newSeparation.save()
 
 			console.log("New Separation", newSeparation)
 			
-			newSeparation.submit()
-				.then(() => {
-					frappe.show_alert({
-						message: __(`Employee Separation created and submitted for ${frm.doc.employee_name}`),
-						indicator: 'green'
-					});
+			// newSeparation.submit()
+			// 	.then(() => {
+			// 		frappe.show_alert({
+			// 			message: __(`Employee Separation created and submitted for ${frm.doc.employee_name}`),
+			// 			indicator: 'green'
+			// 		});
 
-					console.log("Separation submitted")
-				})
-				.catch((err) => {
-					console.log("Error submitting Employee Separation", err)
-					frappe.throw(__(`Error submitting Employee Separation: ${err}`));
-				});
+			// 		console.log("Separation submitted")
+			// 	})
+			// 	.catch((err) => {
+			// 		console.log("Error submitting Employee Separation", err)
+			// 		frappe.throw(__(`Error submitting Employee Separation: ${err}`));
+			// 	});
 
 			
 		}
