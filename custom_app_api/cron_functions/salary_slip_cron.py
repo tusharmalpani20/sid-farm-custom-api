@@ -5,10 +5,10 @@ from ..custom_api.api_end_points.salary_slip_api import create_salary_slip
 
 def generate_salary_slips_for_active_employees():
     # Add time check
-    current_hour = datetime.now().hour
-    if current_hour < 23:  # Before 11:00 PM
-        print(f"Skipping salary slip generation. Current hour: {current_hour}. Will run after 11:00 PM")
-        return
+    # current_hour = datetime.now().hour
+    # if current_hour < 23:  # Before 11:00 PM
+    #     print(f"Skipping salary slip generation. Current hour: {current_hour}. Will run after 11:00 PM")
+    #     return
     
     try:
         # Get all active employees
