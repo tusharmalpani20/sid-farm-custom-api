@@ -98,14 +98,16 @@ frappe.ui.form.on("Employee", {
 			todays_date.setHours(12)
 			const str_code =todays_date.toISOString().split('T')[0]
 
-			const newSeparation = frappe.new_doc('Employee Separation', {
+			const newSeparation = frappe.get_doc({
+				doctype: 'Employee Separation',
 				employee: frm.doc.name,
 				company: frm.doc.company,
 				boarding_begins_on: str_code,
 				docstatus: 1
 			});
 
-			newSeparation.save()
+			newSeparation.insert()
+			newSeparation.submit()
 
 			console.log("New Separation", newSeparation)
 			
