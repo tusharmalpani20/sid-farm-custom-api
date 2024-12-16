@@ -87,45 +87,5 @@ frappe.ui.form.on("Employee", {
 				}
 			});
 		}
-	},
-
-	after_save: function(frm) {
-		if (frm.doc.custom_is_notice_period) {
-
-			console.log("Creating new Employee Separation")
-
-			const todays_date = new Date()
-			todays_date.setHours(12)
-			const str_code =todays_date.toISOString().split('T')[0]
-
-			const newSeparation = frappe.get_doc({
-				doctype: 'Employee Separation',
-				employee: frm.doc.name,
-				company: frm.doc.company,
-				boarding_begins_on: str_code,
-				docstatus: 1
-			});
-
-			newSeparation.insert()
-			newSeparation.submit()
-
-			console.log("New Separation", newSeparation)
-			
-			// newSeparation.submit()
-			// 	.then(() => {
-			// 		frappe.show_alert({
-			// 			message: __(`Employee Separation created and submitted for ${frm.doc.employee_name}`),
-			// 			indicator: 'green'
-			// 		});
-
-			// 		console.log("Separation submitted")
-			// 	})
-			// 	.catch((err) => {
-			// 		console.log("Error submitting Employee Separation", err)
-			// 		frappe.throw(__(`Error submitting Employee Separation: ${err}`));
-			// 	});
-
-			
-		}
 	}
 });
