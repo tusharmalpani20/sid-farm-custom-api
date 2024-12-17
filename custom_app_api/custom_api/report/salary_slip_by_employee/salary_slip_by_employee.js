@@ -60,16 +60,20 @@ frappe.query_reports["Salary Slip By Employee"] = {
 	],
 	onload: function(report) {
 		// Set year options dynamically
-		return frappe.call({
-			method: "custom_app_api.custom_app_api.custom_api.report.salary_slip_by_employee.salary_slip_by_employee.get_attendance_years",
-			callback: function(r) {
-				var year_filter = frappe.query_report.get_filter("year");
-				year_filter.df.options = r.message;
-				year_filter.df.default = r.message[0]; // First year in the list
-				year_filter.refresh();
-				year_filter.set_input(year_filter.df.default);
-			},
-		});
+		//TODO :FIX it later
+		/*
+		Failed to get method for command custom_app_api.custom_app_api.custom_api.report.salary_slip_by_employee.salary_slip_by_employee.get_attendance_years with No module named 'custom_app_api.custom_app_api'
+		*/
+		// return frappe.call({
+		// 	method: "custom_app_api.custom_app_api.custom_api.report.salary_slip_by_employee.salary_slip_by_employee.get_attendance_years",
+		// 	callback: function(r) {
+		// 		var year_filter = frappe.query_report.get_filter("year");
+		// 		year_filter.df.options = r.message;
+		// 		year_filter.df.default = r.message[0]; // First year in the list
+		// 		year_filter.refresh();
+		// 		year_filter.set_input(year_filter.df.default);
+		// 	},
+		// });
 	},
 	formatter: function(value, row, column, data, default_formatter) {
 		value = default_formatter(value, row, column, data);
