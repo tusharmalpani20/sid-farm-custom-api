@@ -172,7 +172,7 @@ def get_pending_advance_salary() -> Dict[str, Any]:
                 "to_date",
                 "creation",
                 "modified",
-                "workflow_state"
+                # "workflow_state"
             ]
         )
         
@@ -190,7 +190,7 @@ def get_pending_advance_salary() -> Dict[str, Any]:
                 "end_date": request.to_date,
                 "created_at": request.creation,
                 "last_modified": request.modified,
-                "workflow_state": request.workflow_state
+                # "workflow_state": request.workflow_state
             })
         
         return {
