@@ -51,7 +51,7 @@ def calculate_extra_km_salary():
                 additional_salary = frappe.get_doc({
                     "doctype": "Additional Salary",
                     "employee": attendance.employee,
-                    "salary_component": "Advance Salary",
+                    "salary_component": "Extra Travel",
                     "amount": amount,
                     "payroll_date": today(),
                     "company": employee.company,
