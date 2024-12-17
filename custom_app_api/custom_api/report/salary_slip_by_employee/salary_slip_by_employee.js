@@ -50,6 +50,12 @@ frappe.query_reports["Salary Slip By Employee"] = {
 					}));
 				});
 			}
+		},
+		{
+			fieldname: "include_draft",
+			label: __("Include Draft Slips"),
+			fieldtype: "Check",
+			default: 0
 		}
 	],
 	onload: function(report) {

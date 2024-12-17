@@ -14,6 +14,26 @@ def get_columns(filters):
     """Dynamic columns based on basic info and earning types"""
     columns = [
         {
+            "label": _("Salary Slip ID"),
+            "fieldname": "salary_slip_id",
+            "fieldtype": "Link",
+            "options": "Salary Slip",
+            "width": 140
+        }
+    ]
+
+    # Add status column if include_draft is checked
+    if filters.get("include_draft"):
+        columns.append({
+            "label": _("Status"),
+            "fieldname": "status",
+            "fieldtype": "Data",
+            "width": 100
+        })
+
+    # Add other basic columns
+    columns.extend([
+        {
             "label": _("Employee"),
             "fieldname": "employee",
             "fieldtype": "Link",
@@ -56,7 +76,7 @@ def get_columns(filters):
             "fieldtype": "Data",
             "width": 120
         }
-    ]
+    ])
 
     # Add columns for each earning type
     earning_types = get_earning_types(filters)
@@ -80,16 +100,18 @@ def get_columns(filters):
 
 def get_earning_types(filters):
     """Get all unique earning types from salary slips"""
+    docstatus_condition = "ss.docstatus IN (0, 1)" if filters.get("include_draft") else "ss.docstatus = 1"
+    
     query = """
         SELECT DISTINCT salary_component 
         FROM `tabSalary Detail` sd
         JOIN `tabSalary Slip` ss ON sd.parent = ss.name
-        WHERE ss.docstatus = 1
+        WHERE {docstatus_condition}
         AND MONTH(ss.posting_date) = %(month)s
         AND YEAR(ss.posting_date) = %(year)s
         AND sd.parentfield = 'earnings'
         ORDER BY salary_component
-    """
+    """.format(docstatus_condition=docstatus_condition)
     
     earning_types = frappe.db.sql(query, {
         'month': int(filters.month),
@@ -100,9 +122,12 @@ def get_earning_types(filters):
 
 def get_salary_slip_data(filters):
     """Get salary slip data with employee details and earnings"""
+    docstatus_condition = "ss.docstatus IN (0, 1)" if filters.get("include_draft") else "ss.docstatus = 1"
+    
     query = """
         SELECT 
-            ss.name,
+            ss.name as salary_slip_id,
+            ss.docstatus,
             ss.employee,
             ss.employee_name,
             e.custom_route,
@@ -112,10 +137,10 @@ def get_salary_slip_data(filters):
             e.branch
         FROM `tabSalary Slip` ss
         JOIN `tabEmployee` e ON ss.employee = e.name
-        WHERE ss.docstatus = 1
+        WHERE {docstatus_condition}
         AND MONTH(ss.posting_date) = %(month)s
         AND YEAR(ss.posting_date) = %(year)s
-    """
+    """.format(docstatus_condition=docstatus_condition)
 
     # Add point filter if specified
     if filters.get("points"):
@@ -145,7 +170,7 @@ def get_salary_slip_data(filters):
     """
 
     earnings = frappe.db.sql(earnings_query, {
-        'salary_slips': tuple([d.name for d in salary_slips]) or ("",)
+        'salary_slips': tuple([d.salary_slip_id for d in salary_slips]) or ("",)
     }, as_dict=1)
 
     # Organize earnings by salary slip
@@ -161,6 +186,7 @@ def get_salary_slip_data(filters):
     
     for slip in salary_slips:
         row = {
+            "salary_slip_id": slip.salary_slip_id,
             "employee": slip.employee,
             "employee_name": slip.employee_name,
             "route": slip.custom_route,
@@ -170,9 +196,13 @@ def get_salary_slip_data(filters):
             "branch": slip.branch
         }
 
+        # Add status if include_draft is checked
+        if filters.get("include_draft"):
+            row["status"] = "Draft" if slip.docstatus == 0 else "Submitted"
+
         # Add earnings
         total_earnings = 0
-        slip_earnings = earnings_data.get(slip.name, {})
+        slip_earnings = earnings_data.get(slip.salary_slip_id, {})
         
         for earning_type in earning_types:
             amount = slip_earnings.get(earning_type, 0)
