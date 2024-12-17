@@ -11,7 +11,7 @@ def execute(filters=None):
     return columns, data
 
 def get_columns(filters):
-    """Dynamic columns based on basic info and earning types"""
+    """Dynamic columns based on basic info, earnings, and deductions"""
     columns = [
         {
             "label": _("Salary Slip ID"),
@@ -96,6 +96,32 @@ def get_columns(filters):
         "width": 120
     })
 
+    # Add columns for each deduction type
+    deduction_types = get_deduction_types(filters)
+    for deduction_type in deduction_types:
+        columns.append({
+            "label": _(deduction_type),
+            "fieldname": frappe.scrub(deduction_type),
+            "fieldtype": "Currency",
+            "width": 120
+        })
+
+    # Add total deductions and net pay columns
+    columns.extend([
+        {
+            "label": _("Total Deductions"),
+            "fieldname": "total_deductions",
+            "fieldtype": "Currency",
+            "width": 120
+        },
+        {
+            "label": _("Net Pay"),
+            "fieldname": "net_pay",
+            "fieldtype": "Currency",
+            "width": 120
+        }
+    ])
+
     return columns
 
 def get_earning_types(filters):
@@ -120,8 +146,30 @@ def get_earning_types(filters):
 
     return [d.salary_component for d in earning_types]
 
+def get_deduction_types(filters):
+    """Get all unique deduction types from salary slips"""
+    docstatus_condition = "ss.docstatus IN (0, 1)" if filters.get("include_draft") else "ss.docstatus = 1"
+    
+    query = """
+        SELECT DISTINCT salary_component 
+        FROM `tabSalary Detail` sd
+        JOIN `tabSalary Slip` ss ON sd.parent = ss.name
+        WHERE {docstatus_condition}
+        AND MONTH(ss.posting_date) = %(month)s
+        AND YEAR(ss.posting_date) = %(year)s
+        AND sd.parentfield = 'deductions'
+        ORDER BY salary_component
+    """.format(docstatus_condition=docstatus_condition)
+    
+    deduction_types = frappe.db.sql(query, {
+        'month': int(filters.month),
+        'year': int(filters.year)
+    }, as_dict=1)
+
+    return [d.salary_component for d in deduction_types]
+
 def get_salary_slip_data(filters):
-    """Get salary slip data with employee details and earnings"""
+    """Get salary slip data with employee details, earnings, and deductions"""
     docstatus_condition = "ss.docstatus IN (0, 1)" if filters.get("include_draft") else "ss.docstatus = 1"
     
     query = """
@@ -130,6 +178,7 @@ def get_salary_slip_data(filters):
             ss.docstatus,
             ss.employee,
             ss.employee_name,
+            ss.net_pay,
             e.custom_route,
             e.custom_point,
             e.custom_area,
@@ -158,31 +207,40 @@ def get_salary_slip_data(filters):
     if not salary_slips:
         return []
 
-    # Get earnings data
-    earnings_query = """
+    # Get both earnings and deductions data
+    components_query = """
         SELECT 
             parent,
+            parentfield,
             salary_component,
             amount
         FROM `tabSalary Detail`
-        WHERE parentfield = 'earnings'
-        AND parent IN %(salary_slips)s
+        WHERE parent IN %(salary_slips)s
+        AND parentfield IN ('earnings', 'deductions')
     """
 
-    earnings = frappe.db.sql(earnings_query, {
+    components = frappe.db.sql(components_query, {
         'salary_slips': tuple([d.salary_slip_id for d in salary_slips]) or ("",)
     }, as_dict=1)
 
-    # Organize earnings by salary slip
+    # Organize components by salary slip
     earnings_data = {}
-    for earning in earnings:
-        if earning.parent not in earnings_data:
-            earnings_data[earning.parent] = {}
-        earnings_data[earning.parent][earning.salary_component] = earning.amount
+    deductions_data = {}
+    
+    for comp in components:
+        if comp.parentfield == 'earnings':
+            if comp.parent not in earnings_data:
+                earnings_data[comp.parent] = {}
+            earnings_data[comp.parent][comp.salary_component] = comp.amount
+        else:  # deductions
+            if comp.parent not in deductions_data:
+                deductions_data[comp.parent] = {}
+            deductions_data[comp.parent][comp.salary_component] = comp.amount
 
     # Prepare final data
     data = []
     earning_types = get_earning_types(filters)
+    deduction_types = get_deduction_types(filters)
     
     for slip in salary_slips:
         row = {
@@ -210,6 +268,19 @@ def get_salary_slip_data(filters):
             total_earnings += amount
 
         row["total_earnings"] = total_earnings
+
+        # Add deductions
+        total_deductions = 0
+        slip_deductions = deductions_data.get(slip.salary_slip_id, {})
+        
+        for deduction_type in deduction_types:
+            amount = slip_deductions.get(deduction_type, 0)
+            row[frappe.scrub(deduction_type)] = amount
+            total_deductions += amount
+
+        row["total_deductions"] = total_deductions
+        row["net_pay"] = slip.net_pay
+
         data.append(row)
 
     return data
