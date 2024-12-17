@@ -70,6 +70,51 @@ frappe.query_reports["Salary Slip By Employee"] = {
 				year_filter.set_input(year_filter.df.default);
 			},
 		});
+	},
+	formatter: function(value, row, column, data, default_formatter) {
+		value = default_formatter(value, row, column, data);
+
+		if (!value) {
+			return value;
+		}
+
+		// Color formatting for monetary columns
+		if (column.fieldtype == "Currency") {
+			// Total Earnings - A positive green shade
+			if (column.fieldname === "total_earnings") {
+				return `<span style="color: #38A169; font-weight: bold">${value}</span>`;
+			}
+			// Total Deductions - A warm red shade
+			else if (column.fieldname === "total_deductions") {
+				return `<span style="color: #E53E3E; font-weight: bold">${value}</span>`;
+			}
+			// Net Pay - A professional blue shade
+			else if (column.fieldname === "net_pay") {
+				return `<span style="color: #2B6CB0; font-weight: bold">${value}</span>`;
+			}
+			// Individual earnings - lighter green
+			else if (data && column.fieldname in data && 
+					column.fieldname !== "total_deductions" && 
+					column.fieldname !== "net_pay" &&
+					value > 0) {
+				return `<span style="color: #48BB78">${value}</span>`;
+			}
+			// Individual deductions - lighter red
+			else if (data && column.fieldname in data && value < 0) {
+				return `<span style="color: #FC8181">${value}</span>`;
+			}
+		}
+
+		// Status column formatting
+		if (column.fieldname === "status") {
+			if (value === "Draft") {
+				return `<span style="color: #B7791F; font-weight: bold">${value}</span>`;  // Amber
+			} else if (value === "Submitted") {
+				return `<span style="color: #2F855A; font-weight: bold">${value}</span>`;  // Green
+			}
+		}
+
+		return value;
 	}
 };
 
