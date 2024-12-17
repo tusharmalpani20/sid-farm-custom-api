@@ -1,18 +1,10 @@
 import frappe
 from frappe import _
 from frappe.utils import getdate
-from frappe.utils.nestedset import get_descendants_of
 
 def execute(filters=None):
-    if not filters:
-        filters = {}
-
-    if filters.get("company"):
-        filters.companies = [filters.get("company")]
-        if filters.get("include_company_descendants"):
-            filters.companies.extend(get_descendants_of("Company", filters.get("company")))
-
-    # Get columns and data
+    filters = frappe._dict(filters or {})
+    
     columns = get_columns(filters)
     data = get_salary_slip_data(filters)
 
@@ -88,31 +80,27 @@ def get_columns(filters):
 
 def get_earning_types(filters):
     """Get all unique earning types from salary slips"""
-    earning_types = frappe.db.sql("""
+    query = """
         SELECT DISTINCT salary_component 
         FROM `tabSalary Detail` sd
         JOIN `tabSalary Slip` ss ON sd.parent = ss.name
         WHERE ss.docstatus = 1
-        AND ss.company IN %(companies)s
-        AND MONTH(ss.start_date) = %(month)s
-        AND YEAR(ss.start_date) = %(year)s
+        AND MONTH(ss.posting_date) = %(month)s
+        AND YEAR(ss.posting_date) = %(year)s
         AND sd.parentfield = 'earnings'
         ORDER BY salary_component
-    """, {
-        'companies': filters.companies,
-        'month': filters.month,
-        'year': filters.year
+    """
+    
+    earning_types = frappe.db.sql(query, {
+        'month': int(filters.month),
+        'year': int(filters.year)
     }, as_dict=1)
 
     return [d.salary_component for d in earning_types]
 
 def get_salary_slip_data(filters):
     """Get salary slip data with employee details and earnings"""
-    # Get allowed employees based on permissions
-    allowed_employees = get_allowed_employees()
-
-    # Get all salary slips for the period
-    salary_slips = frappe.db.sql("""
+    query = """
         SELECT 
             ss.name,
             ss.employee,
@@ -125,37 +113,47 @@ def get_salary_slip_data(filters):
         FROM `tabSalary Slip` ss
         JOIN `tabEmployee` e ON ss.employee = e.name
         WHERE ss.docstatus = 1
-        AND ss.company IN %(companies)s
-        AND MONTH(ss.start_date) = %(month)s
-        AND YEAR(ss.start_date) = %(year)s
-        AND ss.employee IN %(employees)s
-    """, {
-        'companies': filters.companies,
-        'month': filters.month,
-        'year': filters.year,
-        'employees': allowed_employees
+        AND MONTH(ss.posting_date) = %(month)s
+        AND YEAR(ss.posting_date) = %(year)s
+    """
+
+    # Add point filter if specified
+    if filters.get("points"):
+        query += " AND e.custom_point IN %(points)s"
+
+    params = {
+        'month': int(filters.month),
+        'year': int(filters.year),
+        'points': tuple(filters.get("points")) if filters.get("points") else None
+    }
+
+    salary_slips = frappe.db.sql(query, params, as_dict=1)
+
+    # If no salary slips found, return empty list
+    if not salary_slips:
+        return []
+
+    # Get earnings data
+    earnings_query = """
+        SELECT 
+            parent,
+            salary_component,
+            amount
+        FROM `tabSalary Detail`
+        WHERE parentfield = 'earnings'
+        AND parent IN %(salary_slips)s
+    """
+
+    earnings = frappe.db.sql(earnings_query, {
+        'salary_slips': tuple([d.name for d in salary_slips]) or ("",)
     }, as_dict=1)
 
-    # Get all earnings for these salary slips
+    # Organize earnings by salary slip
     earnings_data = {}
-    if salary_slips:
-        earnings = frappe.db.sql("""
-            SELECT 
-                parent,
-                salary_component,
-                amount
-            FROM `tabSalary Detail`
-            WHERE parentfield = 'earnings'
-            AND parent IN %(salary_slips)s
-        """, {
-            'salary_slips': [d.name for d in salary_slips]
-        }, as_dict=1)
-
-        # Organize earnings by salary slip
-        for earning in earnings:
-            if earning.parent not in earnings_data:
-                earnings_data[earning.parent] = {}
-            earnings_data[earning.parent][earning.salary_component] = earning.amount
+    for earning in earnings:
+        if earning.parent not in earnings_data:
+            earnings_data[earning.parent] = {}
+        earnings_data[earning.parent][earning.salary_component] = earning.amount
 
     # Prepare final data
     data = []
@@ -185,10 +183,3 @@ def get_salary_slip_data(filters):
         data.append(row)
 
     return data
-
-def get_allowed_employees():
-    """Get list of employees that the current user has permission to see"""
-    return frappe.get_list("Employee", 
-        fields=["name"],
-        filters={"status": "Active"}
-    )
