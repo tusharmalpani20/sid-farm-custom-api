@@ -129,7 +129,7 @@ def get_salary_slip_history() -> Dict[str, Any]:
             filters=[
                 ["employee", "=", employee],
                 ["docstatus", "=", 1],  # 1 means submitted
-                ["start_date", ">=", six_months_ago]
+                ["start_date", ">=", "01-06-2024"]
             ],
             order_by="start_date desc"
         )
