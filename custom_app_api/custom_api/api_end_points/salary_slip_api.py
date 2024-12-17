@@ -108,8 +108,8 @@ def get_salary_slip_history() -> Dict[str, Any]:
         
         employee = result["employee"]
         
-        from frappe.utils import add_months
-        six_months_ago = add_months(today(), -6)
+        # from frappe.utils import add_months
+        # six_months_ago = add_months(today(), -6)
 
         # Get submitted salary slips
         salary_slips = frappe.get_all(
@@ -129,7 +129,7 @@ def get_salary_slip_history() -> Dict[str, Any]:
             filters=[
                 ["employee", "=", employee],
                 ["docstatus", "=", 1],  # 1 means submitted
-                ["start_date", ">=", "01-06-2024"]
+                # ["start_date", ">=", "01-06-2024"]
             ],
             order_by="start_date desc"
         )
