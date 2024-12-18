@@ -1,0 +1,58 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:BMC-{State}-{###}",
+ "creation": "2024-12-17 16:29:21.944488",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "bmc_name",
+  "state",
+  "location"
+ ],
+ "fields": [
+  {
+   "fieldname": "bmc_name",
+   "fieldtype": "Data",
+   "label": "BMC Name"
+  },
+  {
+   "fieldname": "state",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "State",
+   "options": "State",
+   "reqd": 1
+  },
+  {
+   "fieldname": "location",
+   "fieldtype": "Small Text",
+   "label": "Location"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-12-18 14:53:03.148870",
+ "modified_by": "Administrator",
+ "module": "Custom API",
+ "name": "BMC",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

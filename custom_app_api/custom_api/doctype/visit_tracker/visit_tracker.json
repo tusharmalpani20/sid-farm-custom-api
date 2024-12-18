@@ -1,0 +1,158 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:VISIT-{MM}-{YY}-{####}",
+ "creation": "2024-12-17 17:15:17.630260",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_kjez",
+  "amended_from",
+  "farmer",
+  "visit_date",
+  "village",
+  "column_break_ffyf",
+  "latitude",
+  "longitude",
+  "accuracy",
+  "map",
+  "visit_image",
+  "section_break_kxvh",
+  "requested_revisit",
+  "is_revist",
+  "revisit_on",
+  "visit_reason",
+  "comments",
+  "last_visit"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_kjez",
+   "fieldtype": "Section Break",
+   "label": "Record"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Visit Tracker",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "farmer",
+   "fieldtype": "Link",
+   "label": "Farmer",
+   "options": "Farmer Details"
+  },
+  {
+   "fieldname": "visit_date",
+   "fieldtype": "Datetime",
+   "label": "Visit Date"
+  },
+  {
+   "fieldname": "village",
+   "fieldtype": "Link",
+   "label": "Village",
+   "options": "Village"
+  },
+  {
+   "fieldname": "column_break_ffyf",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "latitude",
+   "fieldtype": "Float",
+   "label": "Latitude"
+  },
+  {
+   "fieldname": "longitude",
+   "fieldtype": "Float",
+   "label": "Longitude"
+  },
+  {
+   "fieldname": "accuracy",
+   "fieldtype": "Float",
+   "label": "Accuracy"
+  },
+  {
+   "fieldname": "map",
+   "fieldtype": "Geolocation",
+   "label": "Map"
+  },
+  {
+   "fieldname": "visit_image",
+   "fieldtype": "Attach Image",
+   "label": "Visit Image"
+  },
+  {
+   "fieldname": "section_break_kxvh",
+   "fieldtype": "Section Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "requested_revisit",
+   "fieldtype": "Check",
+   "label": "Requested Revisit"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_revist",
+   "fieldtype": "Check",
+   "label": "Is Revist"
+  },
+  {
+   "fieldname": "revisit_on",
+   "fieldtype": "Date",
+   "label": "Revisit On"
+  },
+  {
+   "fieldname": "visit_reason",
+   "fieldtype": "Select",
+   "label": "Visit Reason",
+   "options": "\nFollow-Up\nClarification\nSupport"
+  },
+  {
+   "fieldname": "comments",
+   "fieldtype": "Small Text",
+   "label": "Comments"
+  },
+  {
+   "description": "This is the record of the revisit request made by the farmer to the BDE.",
+   "fieldname": "last_visit",
+   "fieldtype": "Link",
+   "label": "Last Visit",
+   "options": "Visit Tracker"
+  }
+ ],
+ "image_field": "visit_image",
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2024-12-18 14:53:50.792374",
+ "modified_by": "Administrator",
+ "module": "Custom API",
+ "name": "Visit Tracker",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

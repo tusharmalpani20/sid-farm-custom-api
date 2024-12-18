@@ -1,0 +1,204 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:SIDS-FRM-{YY}-{####}",
+ "creation": "2024-12-17 16:27:24.761570",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_7suo",
+  "amended_from",
+  "first_name",
+  "last_name",
+  "age",
+  "family_background",
+  "financial_status",
+  "educational_qualification",
+  "column_break_wccq",
+  "contact_number",
+  "address",
+  "prospect_type",
+  "work_details_section",
+  "bmc",
+  "does_the_farmer_have_5_acres_of_land",
+  "is_there_year_round_water_facility",
+  "is_there_an_electricity_supply",
+  "is_there_a_proper_access_to_road",
+  "does_the_farmer_agree_to_construct_a_shed_as_per_our_standards",
+  "is_the_farmer_considered_innovative",
+  "is_the_family_willing_to_work",
+  "has_the_farmer_applied_for_pmegp",
+  "is_the_farmer_interested_in_working_with_us",
+  "can_the_farmer_maintain_the_capacity_of_animals_as_promised"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_7suo",
+   "fieldtype": "Section Break",
+   "label": "Personal Details"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "hidden": 1,
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Farmer Details",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "first_name",
+   "fieldtype": "Data",
+   "label": "First Name"
+  },
+  {
+   "fieldname": "last_name",
+   "fieldtype": "Data",
+   "label": "Last Name"
+  },
+  {
+   "fieldname": "age",
+   "fieldtype": "Int",
+   "label": "Age"
+  },
+  {
+   "fieldname": "family_background",
+   "fieldtype": "Select",
+   "label": "Family Background",
+   "options": "Agricultural Background\nBusiness Background\nService Background"
+  },
+  {
+   "fieldname": "financial_status",
+   "fieldtype": "Select",
+   "label": "Financial Status",
+   "options": "\nGood\nAverage\nWeak"
+  },
+  {
+   "fieldname": "educational_qualification",
+   "fieldtype": "Select",
+   "label": "Educational Qualification",
+   "options": "\nUneducated\nHigh School\nDiploma\nBachelor's Degree\nMaster's Degree"
+  },
+  {
+   "fieldname": "column_break_wccq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "+91-",
+   "fieldname": "contact_number",
+   "fieldtype": "Phone",
+   "label": "Contact Number"
+  },
+  {
+   "fieldname": "address",
+   "fieldtype": "Small Text",
+   "label": "Address"
+  },
+  {
+   "fieldname": "prospect_type",
+   "fieldtype": "Select",
+   "label": "Prospect Type",
+   "options": "Warm\nCold\nHot\nLost"
+  },
+  {
+   "fieldname": "work_details_section",
+   "fieldtype": "Section Break",
+   "label": "Work Details"
+  },
+  {
+   "fieldname": "bmc",
+   "fieldtype": "Link",
+   "label": "BMC",
+   "options": "BMC"
+  },
+  {
+   "fieldname": "does_the_farmer_have_5_acres_of_land",
+   "fieldtype": "Select",
+   "label": "Does the farmer have 5 acres of land?",
+   "options": "\nYes\nNo"
+  },
+  {
+   "fieldname": "is_there_year_round_water_facility",
+   "fieldtype": "Select",
+   "label": "Is there year round water facility?",
+   "options": "\nYes\nNo"
+  },
+  {
+   "fieldname": "is_there_an_electricity_supply",
+   "fieldtype": "Select",
+   "label": "Is there an electricity supply?",
+   "options": "\nYes\nNo"
+  },
+  {
+   "fieldname": "is_there_a_proper_access_to_road",
+   "fieldtype": "Select",
+   "label": "Is there a proper access to road?",
+   "options": "\nYes\nNo"
+  },
+  {
+   "fieldname": "does_the_farmer_agree_to_construct_a_shed_as_per_our_standards",
+   "fieldtype": "Select",
+   "label": "Does the farmer agree to construct a shed as per our standards?",
+   "options": "\nYes\nNo"
+  },
+  {
+   "fieldname": "is_the_farmer_considered_innovative",
+   "fieldtype": "Select",
+   "label": "Is the farmer considered innovative?",
+   "options": "\nYes\nNo"
+  },
+  {
+   "fieldname": "is_the_family_willing_to_work",
+   "fieldtype": "Select",
+   "label": "Is the family willing to work?",
+   "options": "\nYes\nNo"
+  },
+  {
+   "fieldname": "has_the_farmer_applied_for_pmegp",
+   "fieldtype": "Select",
+   "label": "Has the farmer applied for PMEGP?",
+   "options": "\nYes\nNo"
+  },
+  {
+   "fieldname": "is_the_farmer_interested_in_working_with_us",
+   "fieldtype": "Select",
+   "label": "Is the farmer interested in working with us?",
+   "options": "\nYes\nNo"
+  },
+  {
+   "fieldname": "can_the_farmer_maintain_the_capacity_of_animals_as_promised",
+   "fieldtype": "Select",
+   "label": "Can the farmer maintain the capacity of animals as promised?",
+   "options": "\nYes\nNo"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2024-12-18 14:53:21.915314",
+ "modified_by": "Administrator",
+ "module": "Custom API",
+ "name": "Farmer Details",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
