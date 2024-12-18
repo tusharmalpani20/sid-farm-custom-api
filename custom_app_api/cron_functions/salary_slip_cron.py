@@ -120,8 +120,8 @@ def generate_salary_slips_for_active_employees():
                 error_count += 1
                 print(f"❌ Error processing {employee_id}: {str(e)}")
                 frappe.log_error(
-                    f"Salary slip creation failed for employee {employee.name}: {str(e)}",
-                    "Bulk Salary Slip Creation Error"
+                    message=f"Salary slip creation failed for employee {employee.name}: {str(e)}",
+                    title="Salary Slip Creation Error"
                 )
 
         print("\n=== Summary ===")
@@ -133,6 +133,6 @@ def generate_salary_slips_for_active_employees():
     except Exception as e:
         print(f"❌ Major error in salary slip generation: {str(e)}")
         frappe.log_error(
-            frappe.get_traceback(),
-            "Bulk Salary Slip Generation Failed"
+            message=frappe.get_traceback(),
+            title="Salary Slip Generation Error"
         )
