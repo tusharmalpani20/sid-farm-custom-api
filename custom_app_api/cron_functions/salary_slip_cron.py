@@ -66,7 +66,8 @@ def generate_salary_slips_for_active_employees():
                         "employee": employee_id,
                         "start_date": [">=", frappe.utils.get_first_day(frappe.utils.today())],
                         "end_date": ["<=", frappe.utils.get_last_day(frappe.utils.today())],
-                        "docstatus": 1  # Only check for submitted slips
+                        # "docstatus": 1  # Only check for submitted slips
+                        "workflow_state": ["not in", ["Pending"]]
                     }
                 )
                 
@@ -80,7 +81,8 @@ def generate_salary_slips_for_active_employees():
                     "Salary Slip",
                     {
                         "employee": employee_id,
-                        "docstatus": 0,  # Check for draft
+                        # "docstatus": 0,  # Check for draft
+                        "workflow_state": ["in", ["Pending"]],
                         "start_date": [">=", frappe.utils.get_first_day(frappe.utils.today())],
                         "end_date": ["<=", frappe.utils.get_last_day(frappe.utils.today())]
                     },

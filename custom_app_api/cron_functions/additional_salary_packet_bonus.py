@@ -35,11 +35,11 @@ def calculate_packet_bonus():
         # Create API data map (route_name + city as key)
         api_bonus_map = {}
         for row in bonus_rows:
-            if row["bonus_amount"] <= 0:  # Skip negative or zero bonus
+            if row["bonus amount"] <= 0:  # Using correct key name with space
                 continue
-            key = f"{row['Route name']}_{row['city']}"
+            key = f"{row['Route name']}_{row['city_cd']}"  # Using city_cd instead of city
             api_bonus_map[key] = {
-                "bonus_amount": row["bonus_amount"],
+                "bonus_amount": row["bonus amount"],
                 "warehouse": row["warehouse"],
                 "zone": row["zone"],
                 "area": row["area"]
@@ -47,8 +47,7 @@ def calculate_packet_bonus():
 
         # Get all routes from system
         routes = frappe.get_all("Route", 
-            fields=["name", "route_name", "city_name", "branch"],
-            filters={"disabled": 0}
+            fields=["name", "route_name", "city_name", "branch"]
         )
 
         # Create route maps
@@ -165,12 +164,13 @@ Employee Distribution:
                                 "salary_component": "Packet Bonus",
                                 "amount": employee_bonus,
                                 "payroll_date": last_day,
-                                "company": frappe.get_default("company"),
+                                "company": emp_doc.company,
                                 "custom_route": route_data.name,
                                 "custom_attendance_days": days,
-                                "reason": reason
+                                "custom_reason": reason
                             })
                             additional_salary.insert()
+                            additional_salary.submit()
                             bonus_entries_created += 1
 
                             frappe.logger().info(

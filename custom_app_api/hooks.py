@@ -174,7 +174,8 @@ scheduler_events = {
 		],
 		"0 23 * * *": [  # Runs at 11:00 PM (23:00) every day
 			"custom_app_api.cron_functions.import_routes.import_routes",
-			"custom_app_api.cron_functions.salary_slip_cron.generate_salary_slips_for_active_employees"
+			"custom_app_api.cron_functions.salary_slip_cron.generate_salary_slips_for_active_employees",
+			# "custom_app_api.cron_functions.additional_salary_packet_bonus.calculate_packet_bonus"
 		]
 	}
 	# "all": [

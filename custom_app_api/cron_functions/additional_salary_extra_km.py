@@ -59,7 +59,6 @@ def calculate_extra_km_salary():
                     "ref_docname": attendance.name,
                     "custom_reason": reason,
                     "overwrite_salary_structure_amount": 1,
-                    "created_on" : today()
                 })
 
                 # Only save the document, don't submit
