@@ -282,6 +282,44 @@ def get_total_attendance_count_and_leave_count() -> Dict[str, Any]:
 
         employee = result["employee"]  # Get employee from token verification result
         
+        # Get employee details
+        employee_details = frappe.db.get_value(
+            "Employee",
+            employee,
+            [
+                "employee_name",
+                "cell_number",
+                "custom_aadhaar_card_number",
+                "custom_pan",
+                "reports_to"
+            ],
+            as_dict=True
+        )
+
+        # Get reporting manager details if exists
+        reporting_manager = {}
+        if employee_details.reports_to:
+            reporting_manager = frappe.db.get_value(
+                "Employee",
+                employee_details.reports_to,
+                ["employee_name", "cell_number"],
+                as_dict=True
+            )
+
+        # Get current month's salary slip
+        current_month = frappe.utils.today()
+        salary_slip = frappe.db.get_value(
+            "Salary Slip",
+            {
+                "employee": employee,
+                "start_date": frappe.utils.get_first_day(current_month),
+                "end_date": frappe.utils.get_last_day(current_month),
+                "docstatus": ["in", [0, 1]]  # Draft or Submitted
+            },
+            "rounded_total",
+            as_dict=True
+        )
+
         # Get current month's attendance count
         month_start = frappe.utils.get_first_day(frappe.utils.nowdate())
         month_end = frappe.utils.get_last_day(frappe.utils.nowdate())
@@ -329,6 +367,14 @@ def get_total_attendance_count_and_leave_count() -> Dict[str, Any]:
             "message": "Data retrieved successfully",
             "data": {
                 "employee": employee,
+                "employee_details": {
+                    "name": employee_details.employee_name,
+                    "cell_number": employee_details.cell_number,
+                    "aadhaar": employee_details.custom_aadhaar_card_number,
+                    "pan": employee_details.custom_pan,
+                    "reporting_manager": reporting_manager if reporting_manager else None
+                },
+                "current_month_salary": salary_slip.rounded_total if salary_slip else 0,
                 "current_month_attendance_count": attendance_count,
                 "total_remaining_leaves": total_remaining_leaves,
                 "today_attendance": today_attendance
