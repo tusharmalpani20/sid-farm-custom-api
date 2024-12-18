@@ -157,7 +157,8 @@ def get_pending_advance_salary() -> Dict[str, Any]:
             filters={
                 "employee": employee,
                 "salary_component": "Advance Salary",
-                "docstatus": 0,  # Draft/Pending
+                # "docstatus": 0,  # Draft/Pending
+                "workflow_state": "Pending",
                 # "to_date": [">=", date.today()]
                 # since we are only allowing one request at a time, we don't need to check for to_date
             },

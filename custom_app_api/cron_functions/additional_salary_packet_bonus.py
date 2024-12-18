@@ -167,8 +167,12 @@ Employee Distribution:
                                 "company": emp_doc.company,
                                 "custom_route": route_data.name,
                                 "custom_attendance_days": days,
-                                "custom_reason": reason
+                                "custom_reason": reason,
+                                "overwrite_salary_structure_amount": 1,
+                                "workflow_state": "Submitted"  # Set the workflow state
                             })
+                            additional_salary.flags.ignore_permissions = True
+                            additional_salary.flags.ignore_workflow = True  # Skip workflow validation
                             additional_salary.insert()
                             additional_salary.submit()
                             bonus_entries_created += 1

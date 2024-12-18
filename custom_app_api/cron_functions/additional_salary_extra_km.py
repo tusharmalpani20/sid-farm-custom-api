@@ -59,10 +59,13 @@ def calculate_extra_km_salary():
                     "ref_docname": attendance.name,
                     "custom_reason": reason,
                     "overwrite_salary_structure_amount": 1,
+                    "workflow_state": "Submitted"  # Set the workflow state
                 })
 
-                # Only save the document, don't submit
-                additional_salary.insert(ignore_permissions=True)
+                # Save and submit the document
+                additional_salary.flags.ignore_permissions = True
+                additional_salary.flags.ignore_workflow = True  # Skip workflow validation
+                additional_salary.insert()
                 additional_salary.submit()
                 frappe.db.commit()
 
