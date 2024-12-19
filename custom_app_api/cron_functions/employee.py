@@ -1,6 +1,6 @@
 import frappe
 from frappe.utils import today, date_diff, add_days, getdate, now_datetime
-from custom_app_api.custom_app_api.doc_events.employee import create_job_opening_for_route
+from custom_app_api.doc_events.employee import create_job_opening_for_route
 
 def check_notice_period_completion():
     """
