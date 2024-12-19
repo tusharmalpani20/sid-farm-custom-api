@@ -54,7 +54,8 @@ def process_referral_bonuses():
     Runs daily.
     """
     try:
-        # Get unpaid referrals
+        frappe.logger().info("Starting referral bonus processing")
+        
         unpaid_referrals = frappe.get_all(
             "Employee Referral",
             filters={
@@ -63,8 +64,12 @@ def process_referral_bonuses():
             },
             fields=["name", "email", "contact_no", "referrer"]
         )
+        
+        frappe.logger().info(f"Found {len(unpaid_referrals)} unpaid referrals to process")
 
         for referral in unpaid_referrals:
+            frappe.logger().info(f"Processing referral {referral.name} for referrer {referral.referrer}")
+            
             # Find if referred person is an employee
             referred_employee = frappe.db.get_value(
                 "Employee",
@@ -79,6 +84,7 @@ def process_referral_bonuses():
             )
 
             if not referred_employee:
+                frappe.logger().info(f"No matching L5 grade employee found for referral {referral.name}")
                 continue
 
             # Check if employee has completed 3 months
@@ -88,6 +94,10 @@ def process_referral_bonuses():
             ) / 30.0
 
             if months_employed < 3:
+                frappe.logger().info(
+                    f"Employee {referred_employee.name} has only completed {int(months_employed)} months. "
+                    "Minimum 3 months required."
+                )
                 continue
 
             # Check if referrer is still an active employee
@@ -102,7 +112,13 @@ def process_referral_bonuses():
             )
 
             if not referrer:
+                frappe.logger().info(f"Referrer {referral.referrer} is not an active employee")
                 continue
+
+            frappe.logger().info(
+                f"Creating referral bonus for {referrer.employee_name}. "
+                f"Referred employee: {referred_employee.name}, Months completed: {int(months_employed)}"
+            )
 
             # Create Additional Salary for referrer
             bonus_amount = 500  # Set your bonus amount here
