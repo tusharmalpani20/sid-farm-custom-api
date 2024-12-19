@@ -12,7 +12,7 @@ def update_delivery_count_for_routes():
         
         # Fetch data from API
         api_url = frappe.conf.get('analytics_api_url_for_delivery_counts')
-        api_key = frappe.conf.get('analytics_api_key')
+        api_key = frappe.conf.get('analytics_api_key_for_delivery_counts')
         
         if not api_url or not api_key:
             frappe.throw("Analytics API configuration missing in site config")
