@@ -2,6 +2,8 @@ import frappe
 from frappe.utils import now_datetime, today
 
 def after_save(doc, method):
+    frappe.msgprint("Employee after_save triggered")  # Debug print
+
     # Case 1: Reverting to Active or removing notice period
     if (doc.status == "Active" or not doc.custom_is_notice_period) and (
         doc.custom_is_notice_period or 
@@ -9,6 +11,7 @@ def after_save(doc, method):
         doc.custom_notice_period_marked_at or 
         doc.status == "Left"
     ):
+        frappe.msgprint("Case 1: Reverting to Active")  # Debug print
         # Reset all notice period related fields
         doc.db_set({
             'custom_is_notice_period': 0,
@@ -25,6 +28,7 @@ def after_save(doc, method):
 
     # Case 2: Direct status change to Left
     if doc.status == "Left" and not doc.custom_is_notice_period:
+        frappe.msgprint("Case 2: Direct status change to Left")  # Debug print
         doc.db_set({
             'custom_is_notice_period': 1,
             'custom_notice_period_marked_at': now_datetime(),
@@ -39,6 +43,7 @@ def after_save(doc, method):
 
     # Case 3: Normal notice period flow
     if doc.custom_is_notice_period:
+        frappe.msgprint("Case 3: Normal notice period flow")  # Debug print
         # Update notice period marked timestamp
         doc.db_set('custom_notice_period_marked_at', now_datetime(), update_modified=False)
         
