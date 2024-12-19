@@ -8,7 +8,7 @@ def check_routes_for_vacancies():
         
         # Get all routes excluding ones with 'default' in their name (case insensitive)
         routes = frappe.get_all(
-            "Travel Route",
+            "Route",
             filters=[
                 ["route_name", "NOT LIKE", "%default%"],
                 ["route_name", "NOT LIKE", "%DEFAULT%"]
