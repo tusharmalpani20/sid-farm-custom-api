@@ -33,7 +33,7 @@ def check_routes_for_vacancies():
                     "Employee",
                     filters={
                         "status": "Active",
-                        "custom_travel_route": route.name,
+                        "custom_route": route.name,
                         "grade": "L5"
                     }
                 )
@@ -71,6 +71,7 @@ def check_routes_for_vacancies():
                         "Employee",
                         filters={
                             "custom_route": route.name,
+                            "grade": "L5",
                             "status": "Left"
                         },
                         fields=["designation", "name"],
