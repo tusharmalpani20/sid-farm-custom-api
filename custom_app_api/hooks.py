@@ -157,7 +157,7 @@ doc_events = {
 	# 	"on_trash": "method"
 	# }
 	"Employee": {
-		"after_save": ["custom_app_api.doc_events.employee.after_save"]
+		"on_update": ["custom_app_api.doc_events.employee.after_save"]
 	},
 	"Job Applicant": {
         "after_insert": "custom_app_api.cron_functions.create_employee_referral_and_additional_salary.create_employee_referral_for_job_applicant"
