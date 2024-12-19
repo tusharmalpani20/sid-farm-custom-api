@@ -47,6 +47,8 @@ def create_employee_referral_for_job_applicant(doc, method):
     # Update Job Applicant with the created Employee Referral
     frappe.db.set_value('Job Applicant', doc.name, 'employee_referral', employee_referral.name)
 
+    # Update employee referral status to In Process
+    frappe.db.set_value('Employee Referral', employee_referral.name, 'status', 'In Process')
 def process_referral_bonuses():
     """
     Cron job to process referral bonuses for employees who referred L5 grade employees
@@ -159,7 +161,7 @@ def process_referral_bonuses():
             additional_salary.submit()
 
             # Update referral status to Paid
-            frappe.db.set_value("Employee Referral", referral.name, "status", "Paid")
+            frappe.db.set_value("Employee Referral", referral.name, "referral_payment_status", "Paid")
             frappe.db.commit()
 
             frappe.logger().info(
