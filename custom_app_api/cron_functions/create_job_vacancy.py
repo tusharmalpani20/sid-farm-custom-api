@@ -76,48 +76,68 @@ def check_routes_for_vacancies():
                             print("Job opening already exists - skipping creation", flush=True)
                         continue
 
-                    # Get designation from previous employee if exists
-                    previous_employee = frappe.get_all(
-                        "Employee",
-                        filters={
-                            "custom_route": route.name,
-                            "grade": "L5",
-                            "status": "Left"
-                        },
-                        fields=["designation", "name"],
-                        order_by="modified DESC",
-                        limit=1
-                    )
+                    if not existing_opening:
+                        if is_target_route:
+                            print("No existing job opening found - proceeding to create new one", flush=True)
+                        
+                        # Get designation from previous employee if exists
+                        previous_employee = frappe.get_all(
+                            "Employee",
+                            filters={
+                                "custom_route": route.name,
+                                "grade": "L5",
+                                "status": "Left"
+                            },
+                            fields=["designation", "name"],
+                            order_by="modified DESC",
+                            limit=1
+                        )
 
-                    designation = (
-                        previous_employee[0].designation 
-                        if previous_employee 
-                        else "Delivery Partner"
-                    )
-                    
-                    if previous_employee:
-                        info_logs.append(f"Using designation '{designation}' from previous employee {previous_employee[0].name}")
-                    else:
-                        info_logs.append(f"No previous employee found, using default designation 'Delivery Partner'")
+                        designation = (
+                            previous_employee[0].designation 
+                            if previous_employee 
+                            else "Delivery Partner"
+                        )
+                        
+                        if is_target_route:
+                            if previous_employee:
+                                print(f"Using designation '{designation}' from previous employee {previous_employee[0].name}", flush=True)
+                            else:
+                                print(f"No previous employee found, using default designation 'Delivery Partner'", flush=True)
 
-                    # Create job opening
-                    job_opening = frappe.get_doc({
-                        "doctype": "Job Opening",
-                        "job_title": f"Vacancy for {route.name}",
-                        "designation": designation,
-                        "status": "Open",
-                        "posted_on": now_datetime(),
-                        "company": "SIDS FARM PRIVATE LIMITED",
-                        "custom_travel_route": route.name,
-                        "location": route.branch
-                    })
+                        try:
+                            # Create job opening
+                            job_opening = frappe.get_doc({
+                                "doctype": "Job Opening",
+                                "job_title": f"Vacancy for {route.name}",
+                                "designation": designation,
+                                "status": "Open",
+                                "posted_on": now_datetime(),
+                                "company": "SIDS FARM PRIVATE LIMITED",
+                                "custom_travel_route": route.name,
+                                "location": route.branch
+                            })
 
-                    job_opening.insert(ignore_permissions=True)
-                    frappe.db.commit()
-                    
-                    job_openings_created += 1
-                    info_logs.append(f"Created job opening for route: {route.name}")
-                    print(f"Created job opening for route: {route.name}", flush=True)
+                            if is_target_route:
+                                print(f"Attempting to create job opening with data:", flush=True)
+                                print(f"Route: {route.name}", flush=True)
+                                print(f"Branch: {route.branch}", flush=True)
+                                print(f"Designation: {designation}", flush=True)
+
+                            job_opening.insert(ignore_permissions=True)
+                            frappe.db.commit()
+                            
+                            job_openings_created += 1
+                            if is_target_route:
+                                print(f"Successfully created job opening!", flush=True)
+
+                        except Exception as job_error:
+                            if is_target_route:
+                                print(f"Failed to create job opening: {str(job_error)}", flush=True)
+                            frappe.log_error(
+                                message=f"Error creating job opening: {frappe.get_traceback()}",
+                                title=f"Job Opening Creation Error - {route.name}"
+                            )
 
             except Exception as route_error:
                 error_msg = f"Error processing route {route.name}: {str(route_error)}"
