@@ -59,7 +59,8 @@ def process_referral_bonuses():
         unpaid_referrals = frappe.get_all(
             "Employee Referral",
             filters={
-                "status": "Unpaid",
+                "status": "Accepted",
+                "referral_payment_status": "Unpaid",
                 "is_applicable_for_referral_bonus": 1
             },
             fields=["name", "email", "contact_no", "referrer"]
