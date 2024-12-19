@@ -27,7 +27,7 @@ def check_routes_for_vacancies():
                     "Employee",
                     filters={
                         "status": "Active",
-                        "custom_travel_route": route.name,
+                        "custom_route": route.name,
                         "grade": "L5"
                     }
                 )
@@ -52,7 +52,7 @@ def check_routes_for_vacancies():
                     previous_employee = frappe.get_all(
                         "Employee",
                         filters={
-                            "custom_travel_route": route.name,
+                            "custom_route": route.name,
                             "status": "Left"
                         },
                         fields=["designation", "name"],
