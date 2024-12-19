@@ -111,8 +111,7 @@ Timestamp: {now_datetime()}
         # Create an info log with all information
         frappe.log_error(
             message="\n".join(info_logs),
-            title="Route Vacancy Check Info Log",
-            level="Info"
+            title="Route Vacancy Check Info Log"
         )
 
     except Exception as e:
