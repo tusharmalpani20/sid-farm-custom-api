@@ -150,14 +150,13 @@ def process_referral_bonuses():
             additional_salary.flags.ignore_validate = True
             additional_salary.flags.ignore_mandatory = True
             additional_salary.flags.ignore_workflow = True
+            additional_salary.flags.ignore_version = True
             
             # Insert without triggering workflow
             additional_salary.insert()
             
-            # Force update workflow state in database directly
-            frappe.db.set_value('Additional Salary', additional_salary.name, 'workflow_state', 'Submitted')
-            
-            # Now submit the document
+            # Update workflow state and submit in a single transaction
+            additional_salary.db_set('workflow_state', 'Submitted', update_modified=False)
             additional_salary.submit()
 
             # Update referral status to Paid
