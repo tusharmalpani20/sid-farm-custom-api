@@ -9,20 +9,32 @@ def create_employee_referral_for_job_applicant(doc, method):
     if not doc.source_name:
         return
 
-    # Split the applicant name into first and last name
-    name_parts = (doc.applicant_name or "").split(maxsplit=1)
-    first_name = name_parts[0] if name_parts else ""
-    last_name = name_parts[1] if len(name_parts) > 1 else ""
+    # Handle the name splitting with better fallbacks
+    full_name = (doc.applicant_name or "").strip()
+    name_parts = full_name.split(maxsplit=1)
+    
+    if len(name_parts) > 1:
+        first_name = name_parts[0]
+        last_name = name_parts[1]
+    else:
+        # If only one name provided (e.g., "Test")
+        first_name = full_name
+        last_name = full_name  # Option 1: Use same name
+        # OR
+        # last_name = "." # Option 2: Use a period
+        # OR
+        # last_name = "NA" # Option 3: Use NA
+        # OR
+        # last_name = first_name + " (LN)" # Option 4: Add a suffix
 
-    # Create Employee Referral with default designation if none provided
     employee_referral = frappe.get_doc({
         "doctype": "Employee Referral",
         "first_name": first_name,
         "last_name": last_name,
-        "full_name": doc.applicant_name,
+        "full_name": full_name,
         "date": now_datetime(),
         "status": "Pending",
-        "for_designation": doc.designation or "Delivery Partner",  # Default to Delivery Partner if no designation
+        "for_designation": doc.designation or "Delivery Partner",
         "email": doc.email_id,
         "contact_no": doc.phone_number,
         "referrer": doc.source_name,
