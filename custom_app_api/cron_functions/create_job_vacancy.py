@@ -1,9 +1,10 @@
 import frappe
 from frappe.utils import now_datetime
+import sys
 
 def check_routes_for_vacancies():
     try:
-        print("Starting route vacancy check...")
+        print("Starting route vacancy check...", flush=True)
         info_logs = []
         
         # Get all routes excluding ones with 'default' in their name (case insensitive)
@@ -17,7 +18,7 @@ def check_routes_for_vacancies():
         )
         
         info_logs.append(f"Found {len(routes)} routes to check")
-        print(f"Found {len(routes)} routes to check")
+        print(f"Found {len(routes)} routes to check", flush=True)
         
         job_openings_created = 0
         for route in routes:
@@ -26,7 +27,7 @@ def check_routes_for_vacancies():
                 is_target_route = route.name == "JUBILEE_HILLS_CHECKPOST_FAS-Hyderabad"
                 if is_target_route:
                     info_logs.append(f"\n=== Detailed check for {route.name} ===")
-                    print(f"Checking target route: {route.name}")
+                    print(f"\n=== Detailed check for {route.name} ===", flush=True)
 
                 # Check if route has any active L5 grade employee
                 active_l5_employees = frappe.get_all(
@@ -40,12 +41,18 @@ def check_routes_for_vacancies():
 
                 if is_target_route:
                     info_logs.append(f"Active L5 employees found: {len(active_l5_employees)}")
+                    print(f"Active L5 employees found: {len(active_l5_employees)}", flush=True)
                     if active_l5_employees:
                         info_logs.append(f"Active L5 employee details: {active_l5_employees}")
+                        print(f"Active L5 employee details: {active_l5_employees}", flush=True)
+                    else:
+                        info_logs.append("No active L5 employee found")
+                        print("No active L5 employee found", flush=True)
 
                 if not active_l5_employees:
                     if is_target_route:
                         info_logs.append("No active L5 employee found - checking for existing job opening")
+                        print("No active L5 employee found - checking for existing job opening", flush=True)
                     
                     # Check if job opening already exists for this route
                     existing_opening = frappe.get_all(
@@ -58,12 +65,15 @@ def check_routes_for_vacancies():
 
                     if is_target_route:
                         info_logs.append(f"Existing job openings found: {len(existing_opening)}")
+                        print(f"Existing job openings found: {len(existing_opening)}", flush=True)
                         if existing_opening:
                             info_logs.append(f"Existing job opening details: {existing_opening}")
+                            print(f"Existing job opening details: {existing_opening}", flush=True)
 
                     if existing_opening:
                         if is_target_route:
                             info_logs.append("Job opening already exists - skipping creation")
+                            print("Job opening already exists - skipping creation", flush=True)
                         continue
 
                     # Get designation from previous employee if exists
@@ -107,7 +117,7 @@ def check_routes_for_vacancies():
                     
                     job_openings_created += 1
                     info_logs.append(f"Created job opening for route: {route.name}")
-                    print(f"Created job opening for route: {route.name}")
+                    print(f"Created job opening for route: {route.name}", flush=True)
 
             except Exception as route_error:
                 error_msg = f"Error processing route {route.name}: {str(route_error)}"
@@ -125,7 +135,7 @@ Job openings created: {job_openings_created}
 Timestamp: {now_datetime()}
         """
         info_logs.append(summary)
-        print(summary)
+        print(summary, flush=True)
 
         # Create an info log with all information
         frappe.log_error(
@@ -135,7 +145,7 @@ Timestamp: {now_datetime()}
 
     except Exception as e:
         error_msg = f"Major error in route vacancy check: {str(e)}"
-        print(error_msg)
+        print(error_msg, flush=True)
         frappe.log_error(
             message=f"Error in route vacancy check:\n{frappe.get_traceback()}\nPartial Info Log:\n{chr(10).join(info_logs)}",
             title="Route Vacancy Check Error"
