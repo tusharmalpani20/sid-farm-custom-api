@@ -14,7 +14,7 @@ def create_employee_referral_for_job_applicant(doc, method):
     first_name = name_parts[0] if name_parts else ""
     last_name = name_parts[1] if len(name_parts) > 1 else ""
 
-    # Create Employee Referral
+    # Create Employee Referral with default designation if none provided
     employee_referral = frappe.get_doc({
         "doctype": "Employee Referral",
         "first_name": first_name,
@@ -22,7 +22,7 @@ def create_employee_referral_for_job_applicant(doc, method):
         "full_name": doc.applicant_name,
         "date": now_datetime(),
         "status": "Pending",
-        "for_designation": doc.designation,
+        "for_designation": doc.designation or "Delivery Partner",  # Default to Delivery Partner if no designation
         "email": doc.email_id,
         "contact_no": doc.phone_number,
         "referrer": doc.source_name,
