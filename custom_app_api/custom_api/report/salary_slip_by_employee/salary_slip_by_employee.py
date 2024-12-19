@@ -170,12 +170,23 @@ def get_deduction_types(filters):
 
 def get_salary_slip_data(filters):
     """Get salary slip data with employee details, earnings, and deductions"""
-    docstatus_condition = "ss.docstatus IN (0, 1)" if filters.get("include_draft") else "ss.docstatus = 1"
+    # Modify docstatus condition based on workflow states
+    if filters.get("include_draft"):
+        workflow_states = (
+            "'Pending', 'Approved by LMH', 'Approved', 'Rejected by LMH', "
+            "'Rejected', 'Approved by LMM', 'Rejected by LMM'"
+        )
+        docstatus_condition = "ss.docstatus in (0, 1, 2)"
+    else:
+        # Only show approved documents
+        workflow_states = "'Approved by LMH', 'Approved'"
+        docstatus_condition = "ss.docstatus = 1"
     
     query = """
         SELECT 
             ss.name as salary_slip_id,
             ss.docstatus,
+            ss.workflow_state,
             ss.employee,
             ss.employee_name,
             ss.net_pay,
@@ -187,9 +198,13 @@ def get_salary_slip_data(filters):
         FROM `tabSalary Slip` ss
         JOIN `tabEmployee` e ON ss.employee = e.name
         WHERE {docstatus_condition}
+        AND ss.workflow_state IN ({workflow_states})
         AND MONTH(ss.posting_date) = %(month)s
         AND YEAR(ss.posting_date) = %(year)s
-    """.format(docstatus_condition=docstatus_condition)
+    """.format(
+        docstatus_condition=docstatus_condition,
+        workflow_states=workflow_states
+    )
 
     # Add point filter if specified
     if filters.get("points"):
@@ -256,7 +271,17 @@ def get_salary_slip_data(filters):
 
         # Add status if include_draft is checked
         if filters.get("include_draft"):
-            row["status"] = "Draft" if slip.docstatus == 0 else "Submitted"
+            # Map workflow states to display status
+            status_map = {
+                "Pending": "Pending",
+                "Approved by LMH": "Approved by LMH",
+                "Approved": "Approved",
+                "Rejected by LMH": "Rejected by LMH",
+                "Rejected": "Rejected",
+                "Approved by LMM": "Pending LMH Approval",
+                "Rejected by LMM": "Rejected by LMM"
+            }
+            row["status"] = status_map.get(slip.workflow_state, slip.workflow_state)
 
         # Add earnings
         total_earnings = 0
