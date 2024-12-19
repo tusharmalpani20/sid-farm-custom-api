@@ -158,7 +158,10 @@ doc_events = {
 	# }
 	"Employee": {
 		"after_save": "custom_app_api.doc_events.employee.after_save"
-	}
+	},
+	"Job Applicant": {
+        "after_insert": "custom_app_api.cron_functions.create_employee_referral_and_additional_salary.create_employee_referral_for_job_applicant"
+    }
 }
 
 # Scheduled Tasks
@@ -166,6 +169,10 @@ doc_events = {
 
 scheduler_events = {
 	"cron": {
+		"*/30 * * * *": [
+            "custom_app_api.custom_app_api.cron_functions.create_job_vacancy.check_routes_for_vacancies",
+			"custom_app_api.cron_functions.import_routes.import_routes",
+        ],
 		"30 9 * * *": [
 			"custom_app_api.cron_functions.attendance_cron.auto_mark_employee_absent_and_submit_all_todays_attendance"
 		],
@@ -173,8 +180,8 @@ scheduler_events = {
 			"custom_app_api.cron_functions.additional_salary_extra_km.calculate_extra_km_salary"
 		],
 		"0 23 * * *": [  # Runs at 11:00 PM (23:00) every day
-			"custom_app_api.cron_functions.import_routes.import_routes",
 			"custom_app_api.cron_functions.salary_slip_cron.generate_salary_slips_for_active_employees",
+			"custom_app_api.cron_functions.update_delivery_count_for_each_route.update_delivery_count_for_routes",
 			# "custom_app_api.cron_functions.additional_salary_packet_bonus.calculate_packet_bonus"
 		]
 	}
