@@ -170,7 +170,7 @@ doc_events = {
 scheduler_events = {
 	"cron": {
 		"*/30 * * * *": [
-            "custom_app_api.custom_app_api.cron_functions.create_job_vacancy.check_routes_for_vacancies",
+            "custom_app_api.cron_functions.create_job_vacancy.check_routes_for_vacancies",
 			"custom_app_api.cron_functions.import_routes.import_routes",
         ],
 		"30 9 * * *": [
