@@ -30,6 +30,108 @@ def create_employee_referral_for_job_applicant(doc, method):
     })
 
     employee_referral.insert(ignore_permissions=True)
+    employee_referral.submit()
 
     # Update Job Applicant with the created Employee Referral
     frappe.db.set_value('Job Applicant', doc.name, 'employee_referral', employee_referral.name)
+
+def process_referral_bonuses():
+    """
+    Cron job to process referral bonuses for employees who referred L5 grade employees
+    that have completed 3 months with the company.
+    Runs daily.
+    """
+    try:
+        # Get unpaid referrals
+        unpaid_referrals = frappe.get_all(
+            "Employee Referral",
+            filters={
+                "status": "Unpaid",
+                "is_applicable_for_referral_bonus": 1
+            },
+            fields=["name", "email", "contact_no", "referrer"]
+        )
+
+        for referral in unpaid_referrals:
+            # Find if referred person is an employee
+            referred_employee = frappe.db.get_value(
+                "Employee",
+                {
+                    "personal_email": referral.email,
+                    "cell_number": referral.contact_no,
+                    "grade": "L5",
+                    "status": "Active"
+                },
+                ["name", "date_of_joining", "company"],
+                as_dict=1
+            )
+
+            if not referred_employee:
+                continue
+
+            # Check if employee has completed 3 months
+            months_employed = frappe.utils.date_diff(
+                frappe.utils.today(),
+                referred_employee.date_of_joining
+            ) / 30.0
+
+            if months_employed < 3:
+                continue
+
+            # Check if referrer is still an active employee
+            referrer = frappe.db.get_value(
+                "Employee",
+                {
+                    "name": referral.referrer,
+                    "status": "Active"
+                },
+                ["name", "employee_name"],
+                as_dict=1
+            )
+
+            if not referrer:
+                continue
+
+            # Create Additional Salary for referrer
+            bonus_amount = 500  # Set your bonus amount here
+
+            reason = (
+                f"Referral Bonus for referring {referred_employee.name}\n"
+                f"Referred Employee Join Date: {referred_employee.date_of_joining}\n"
+                f"Months Completed: {int(months_employed)}"
+            )
+
+            additional_salary = frappe.get_doc({
+                "doctype": "Additional Salary",
+                "employee": referrer.name,
+                "salary_component": "Referral Bonus",
+                "amount": bonus_amount,
+                "payroll_date": frappe.utils.today(),
+                "company": referred_employee.company,
+                "ref_doctype": "Employee Referral",
+                "ref_docname": referral.name,
+                "custom_reason": reason,
+                "overwrite_salary_structure_amount": 1,
+                "workflow_state": "Submitted"
+            })
+
+            # Save and submit the document
+            additional_salary.flags.ignore_permissions = True
+            additional_salary.flags.ignore_workflow = True
+            additional_salary.insert()
+            additional_salary.submit()
+
+            # Update referral status to Paid
+            frappe.db.set_value("Employee Referral", referral.name, "status", "Paid")
+            frappe.db.commit()
+
+            frappe.logger().info(
+                f"Referral bonus created for {referrer.employee_name} "
+                f"for referring {referred_employee.name}. Amount: Rs. {bonus_amount}"
+            )
+
+    except Exception as e:
+        frappe.logger().error(f"Error in process_referral_bonuses: {str(e)}")
+        frappe.log_error(frappe.get_traceback(), "Process Referral Bonuses Error")
+
+

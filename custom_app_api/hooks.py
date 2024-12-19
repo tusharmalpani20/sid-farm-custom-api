@@ -157,7 +157,7 @@ doc_events = {
 	# 	"on_trash": "method"
 	# }
 	"Employee": {
-		"after_save": "custom_app_api.doc_events.employee.after_save"
+		#"after_save": "custom_app_api.doc_events.employee.after_save"
 	},
 	"Job Applicant": {
         "after_insert": "custom_app_api.cron_functions.create_employee_referral_and_additional_salary.create_employee_referral_for_job_applicant"
@@ -178,6 +178,9 @@ scheduler_events = {
 		],
 		"45 9 * * *": [
 			"custom_app_api.cron_functions.additional_salary_extra_km.calculate_extra_km_salary"
+		],
+		"0 22 * * *": [
+			"custom_app_api.cron_functions.create_employee_referral_and_additional_salary.process_referral_bonuses"
 		],
 		"0 23 * * *": [  # Runs at 11:00 PM (23:00) every day
 			"custom_app_api.cron_functions.salary_slip_cron.generate_salary_slips_for_active_employees",
