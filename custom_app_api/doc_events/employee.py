@@ -2,8 +2,6 @@ import frappe
 from frappe.utils import now_datetime, today
 
 def after_save(doc, method):
-    frappe.msgprint("Employee after_save triggered")  # Debug print
-
     # Case 1: Reverting to Active or removing notice period
     if (doc.status == "Active" or not doc.custom_is_notice_period) and (
         doc.custom_is_notice_period or 
@@ -11,12 +9,10 @@ def after_save(doc, method):
         doc.custom_notice_period_marked_at or 
         doc.status == "Left"
     ):
-        frappe.msgprint("Case 1: Reverting to Active")  # Debug print
         # Reset all notice period related fields
         doc.db_set({
             'custom_is_notice_period': 0,
             'custom_notice_period_marked_at': None,
-            'custom_notice_number_of_days': 0,
             'relieving_date': None,
             'status': 'Active'
         }, update_modified=False)
@@ -28,11 +24,9 @@ def after_save(doc, method):
 
     # Case 2: Direct status change to Left
     if doc.status == "Left" and not doc.custom_is_notice_period:
-        frappe.msgprint("Case 2: Direct status change to Left")  # Debug print
         doc.db_set({
             'custom_is_notice_period': 1,
             'custom_notice_period_marked_at': now_datetime(),
-            'custom_notice_number_of_days': 0,
             'relieving_date': today()
         }, update_modified=False)
         
@@ -43,12 +37,11 @@ def after_save(doc, method):
 
     # Case 3: Normal notice period flow
     if doc.custom_is_notice_period:
-        frappe.msgprint("Case 3: Normal notice period flow")  # Debug print
         # Update notice period marked timestamp
         doc.db_set('custom_notice_period_marked_at', now_datetime(), update_modified=False)
         
         # If notice days is zero, set relieving date and status
-        if doc.custom_notice_number_of_days == 0:
+        if doc.notice_number_of_days == 0:
             doc.db_set({
                 'relieving_date': today(),
                 'status': 'Left'
