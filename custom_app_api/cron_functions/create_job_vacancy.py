@@ -22,18 +22,30 @@ def check_routes_for_vacancies():
         job_openings_created = 0
         for route in routes:
             try:
+                # Add detailed logging for specific route
+                is_target_route = route.name == "JUBILEE_HILLS_CHECKPOST_FAS-Hyderabad"
+                if is_target_route:
+                    info_logs.append(f"\n=== Detailed check for {route.name} ===")
+                    print(f"Checking target route: {route.name}")
+
                 # Check if route has any active L5 grade employee
                 active_l5_employees = frappe.get_all(
                     "Employee",
                     filters={
                         "status": "Active",
-                        "custom_route": route.name,
+                        "custom_travel_route": route.name,
                         "grade": "L5"
                     }
                 )
 
+                if is_target_route:
+                    info_logs.append(f"Active L5 employees found: {len(active_l5_employees)}")
+                    if active_l5_employees:
+                        info_logs.append(f"Active L5 employee details: {active_l5_employees}")
+
                 if not active_l5_employees:
-                    info_logs.append(f"No active L5 employee found for route: {route.name}")
+                    if is_target_route:
+                        info_logs.append("No active L5 employee found - checking for existing job opening")
                     
                     # Check if job opening already exists for this route
                     existing_opening = frappe.get_all(
@@ -44,8 +56,14 @@ def check_routes_for_vacancies():
                         }
                     )
 
+                    if is_target_route:
+                        info_logs.append(f"Existing job openings found: {len(existing_opening)}")
+                        if existing_opening:
+                            info_logs.append(f"Existing job opening details: {existing_opening}")
+
                     if existing_opening:
-                        info_logs.append(f"Job opening already exists for route: {route.name}")
+                        if is_target_route:
+                            info_logs.append("Job opening already exists - skipping creation")
                         continue
 
                     # Get designation from previous employee if exists
