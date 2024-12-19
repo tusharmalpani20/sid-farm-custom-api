@@ -2,13 +2,23 @@ import frappe
 from frappe.utils import now_datetime, today
 
 def after_save(doc, method):
-    # Case 1: Reverting to Active or removing notice period
-    if (doc.status == "Active" or not doc.custom_is_notice_period) and (
-        doc.custom_is_notice_period or 
-        doc.relieving_date or 
-        doc.custom_notice_period_marked_at or 
-        doc.status == "Left"
+    frappe.msgprint("Employee after_save triggered")
+
+    # Get the previous document state
+    old_doc = doc.get_doc_before_save()
+    if not old_doc:
+        return
+
+    # Case 1: Reset fields only when:
+    # - Status is being changed TO Active FROM something else, OR
+    # - Notice period is being unchecked (changed from checked to unchecked)
+    if (
+        (doc.status == "Active" and old_doc.status != "Active") or
+        (doc.custom_is_notice_period == 0 and old_doc.custom_is_notice_period == 1)
     ):
+        frappe.msgprint(f"Case 1: Resetting notice period fields. Old status: {old_doc.status}, New status: {doc.status}")
+        frappe.msgprint(f"Old notice period: {old_doc.custom_is_notice_period}, New notice period: {doc.custom_is_notice_period}")
+        
         # Reset all notice period related fields
         doc.db_set({
             'custom_is_notice_period': 0,
