@@ -448,7 +448,7 @@ def mobile_punch_in() -> Dict[str, Any]:
                 "status": "Present",
                 "docstatus": ["in", [0, 1]]
             },
-            ["name", "docstatus"],
+            ["name", "docstatus", "custom_mobile_punch_in_at"],
             as_dict=True
         )
         
@@ -460,6 +460,20 @@ def mobile_punch_in() -> Dict[str, Any]:
                 "message": "No attendance record found for the date",
                 "code": "NO_ATTENDANCE_RECORD_FOUND",
                 "http_status_code": 404
+            }
+
+        # Check if already punched in
+        if attendance.custom_mobile_punch_in_at:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Already punched in for today",
+                "code": "ALREADY_PUNCHED_IN",
+                "data": {
+                    "punch_in_time": attendance.custom_mobile_punch_in_at
+                },
+                "http_status_code": 400
             }
             
         # Update attendance
@@ -550,7 +564,7 @@ def mobile_punch_out() -> Dict[str, Any]:
                 "status": "Present",
                 "docstatus": ["in", [0, 1]]
             },
-            ["name", "docstatus", "custom_mobile_punch_in_at", "custom_total_deliveries"],
+            ["name", "docstatus", "custom_mobile_punch_in_at", "custom_mobile_punch_out_at", "custom_total_deliveries"],
             as_dict=True
         )
         
@@ -562,6 +576,31 @@ def mobile_punch_out() -> Dict[str, Any]:
                 "message": "No attendance record found for the date",
                 "code": "NO_ATTENDANCE_RECORD_FOUND",
                 "http_status_code": 404
+            }
+
+        # Check if punch in exists first
+        if not attendance.custom_mobile_punch_in_at:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Cannot punch out without punching in first",
+                "code": "NO_PUNCH_IN",
+                "http_status_code": 400
+            }
+
+        # Check if already punched out
+        if attendance.custom_mobile_punch_out_at:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Already punched out for today",
+                "code": "ALREADY_PUNCHED_OUT",
+                "data": {
+                    "punch_out_time": attendance.custom_mobile_punch_out_at
+                },
+                "http_status_code": 400
             }
         
         # Validate punch out is after punch in
