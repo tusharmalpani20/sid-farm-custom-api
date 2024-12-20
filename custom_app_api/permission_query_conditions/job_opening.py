@@ -8,30 +8,39 @@ def get_permission_query_conditions(user):
     Returns: string - SQL condition
     """
     
-    frappe.msgprint(f"Checking Job Opening permissions for user: {user}")
-    
-    # Skip for System Manager or Administrator
-    if "System Manager" in frappe.get_roles(user) or user == "Administrator":
-        frappe.msgprint("User is System Manager or Administrator - No restrictions")
+    try:
+        frappe.msgprint(f"Checking Job Opening permissions for user: {user}")
+        frappe.log_error(f"Checking Job Opening permissions for user: {user}", "Job Opening Permission Check")
+        
+        # Skip for System Manager or Administrator
+        if "System Manager" in frappe.get_roles(user) or user == "Administrator":
+            frappe.log_error("User is System Manager or Administrator - No restrictions", "Job Opening Permission Check")
+            return ""
+        
+        # Get the routes accessible to the user
+        frappe.log_error("Fetching Route conditions...", "Job Opening Permission Check")
+        route_condition = frappe.get_attr("custom_app_api.custom_app_api.permission_query_conditions.Route.get_permission_query_conditions")(user)
+        
+        frappe.log_error(f"Route condition received: {route_condition}", "Job Opening Permission Check")
+        
+        if route_condition == "1=1" or not route_condition:
+            frappe.log_error("No specific Route conditions - Using default permissions", "Job Opening Permission Check")
+            return ""
+        
+        # Create condition to join Job Opening with Route
+        condition = f"""exists (
+            select name from `tabRoute` 
+            where name = `tabJob Opening`.custom_travel_route 
+            and {route_condition}
+        )"""
+        
+        frappe.log_error(f"Final Job Opening condition: {condition}", "Job Opening Permission Check")
+        
+        return condition
+        
+    except Exception as e:
+        frappe.log_error(
+            message=f"Error in Job Opening permissions:\n{frappe.get_traceback()}",
+            title="Job Opening Permission Error"
+        )
         return ""
-    
-    # Get the routes accessible to the user
-    frappe.msgprint("Fetching Route conditions...")
-    route_condition = frappe.get_attr("custom_app_api.custom_app_api.permission_query_conditions.Route.get_permission_query_conditions")(user)
-    
-    frappe.msgprint(f"Route condition received: {route_condition}")
-    
-    if route_condition == "1=1" or not route_condition:
-        frappe.msgprint("No specific Route conditions - Using default permissions")
-        return ""
-    
-    # Create condition to join Job Opening with Route
-    condition = f"""exists (
-        select name from `tabRoute` 
-        where name = `tabJob Opening`.custom_travel_route 
-        and {route_condition}
-    )"""
-    
-    frappe.msgprint(f"Final Job Opening condition: {condition}")
-    
-    return condition
