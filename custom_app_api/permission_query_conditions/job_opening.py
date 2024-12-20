@@ -19,6 +19,6 @@ def get_permission_query_conditions(user):
         return ""
     
     # Replace table name from Route to Job Opening and field reference
-    job_condition = route_condition.replace("`tabRoute`.", "`tabJob Opening`.custom_travel_")
+    job_condition = route_condition.replace("`tabRoute`.", "`tabJob Opening`.custom_travel_route")
     
     return job_condition
