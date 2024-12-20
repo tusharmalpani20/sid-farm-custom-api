@@ -464,14 +464,14 @@ def mobile_punch_in() -> Dict[str, Any]:
             
         # Update attendance
         attendance_doc = frappe.get_doc("Attendance", attendance.name)
+        attendance_doc.db_set('custom_mobile_punch_in_at', punch_in, update_modified=True)
+        # # If document is already submitted, cancel it first
+        # if attendance_doc.docstatus == 1:
+        #     attendance_doc.cancel()
+        #     attendance_doc.reload()
         
-        # If document is already submitted, cancel it first
-        if attendance_doc.docstatus == 1:
-            attendance_doc.cancel()
-            attendance_doc.reload()
-        
-        attendance_doc.custom_mobile_punch_in_at = punch_in
-        attendance_doc.save(ignore_permissions=True)
+        # attendance_doc.custom_mobile_punch_in_at = punch_in
+        # attendance_doc.save(ignore_permissions=True)
         
         return {
             "success": True,
@@ -603,17 +603,19 @@ def mobile_punch_out() -> Dict[str, Any]:
             
         # Update attendance
         attendance_doc = frappe.get_doc("Attendance", attendance.name)
+
+        attendance_doc.db_set('custom_mobile_punch_out_at', punch_out, update_modified=True)
         
-        # If document is already submitted, cancel it first
-        if attendance_doc.docstatus == 1:
-            attendance_doc.cancel()
-            attendance_doc.reload()
+        # # If document is already submitted, cancel it first
+        # if attendance_doc.docstatus == 1:
+        #     attendance_doc.cancel()
+        #     attendance_doc.reload()
         
-        attendance_doc.custom_mobile_punch_out_at = punch_out
-        # attendance_doc.docstatus = 1  # Submit when punch out is provided
-        attendance_doc.save(ignore_permissions=True)
+        # attendance_doc.custom_mobile_punch_out_at = punch_out
+        # # attendance_doc.docstatus = 1  # Submit when punch out is provided
+        # attendance_doc.save(ignore_permissions=True)
         
-        frappe.local.response['http_status_code'] = 201
+        frappe.local.response['http_status_code'] = 200
         return {
             "success": True,
             "status": "success",
