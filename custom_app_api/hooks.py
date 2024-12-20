@@ -131,7 +131,9 @@ permission_query_conditions = {
 	"Point": "custom_app_api.permission_query_conditions.Point.get_permission_query_conditions",
 	"Area": "custom_app_api.permission_query_conditions.Area.get_permission_query_conditions",
 	"Zone": "custom_app_api.permission_query_conditions.Zone.get_permission_query_conditions",
-	"Attendance": "custom_app_api.permission_query_conditions.Attendance.get_permission_query_conditions"
+	"Attendance": "custom_app_api.permission_query_conditions.Attendance.get_permission_query_conditions",
+	"Job Applicant": "custom_app_api.permission_query_conditions.job_applicant.get_permission_query_conditions",
+	"Job Opening": "custom_app_api.permission_query_conditions.job_opening.get_permission_query_conditions"
 }
 #
 # has_permission = {
