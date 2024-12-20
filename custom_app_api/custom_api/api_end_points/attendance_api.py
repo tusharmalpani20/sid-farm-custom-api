@@ -368,11 +368,14 @@ def get_total_attendance_count_and_leave_count() -> Dict[str, Any]:
             "data": {
                 "employee": employee,
                 "employee_details": {
-                    "name": employee_details.employee_name,
-                    "cell_number": employee_details.cell_number,
-                    "aadhaar": employee_details.custom_aadhaar_card_number,
-                    "pan": employee_details.custom_pan,
-                    "reporting_manager": reporting_manager if reporting_manager else None
+                    "name": employee_details.employee_name or "N/A",
+                    "cell_number": employee_details.cell_number or "N/A",
+                    "aadhaar": employee_details.custom_aadhaar_card_number or "N/A",
+                    "pan": employee_details.custom_pan or "N/A",
+                    "reporting_manager": reporting_manager if reporting_manager else {
+                        "employee_name": "N/A",
+                        "cell_number": "N/A"
+                    }
                 },
                 "current_month_salary": salary_slip.rounded_total if salary_slip else 0,
                 "current_month_attendance_count": attendance_count,
