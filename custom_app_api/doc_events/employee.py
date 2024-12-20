@@ -112,7 +112,7 @@ def create_job_opening_for_route(employee_doc):
                 "company": "SIDS FARM PRIVATE LIMITED",
                 "custom_travel_route": employee_doc.custom_route,
                 "location": employee_doc.branch,
-                "route": f"jobs/sids_farm_private_limited/{employee_doc.custom_route.lower()}"
+                #"route": f"jobs/sids_farm_private_limited/{employee_doc.custom_route.lower()}"
             })
 
             job_opening.insert(ignore_permissions=True)

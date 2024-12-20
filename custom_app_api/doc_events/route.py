@@ -16,7 +16,7 @@ def after_insert(doc, method):
             "company": "SIDS FARM PRIVATE LIMITED",
             "custom_travel_route": doc.name,
             "location": doc.branch,
-            "route": f"jobs/sids_farm_private_limited/{doc.name.lower()}"
+            #"route": f"jobs/sids_farm_private_limited/{doc.name.lower()}"
         })
 
         job_opening.insert(ignore_permissions=True)
