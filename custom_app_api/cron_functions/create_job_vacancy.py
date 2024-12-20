@@ -70,10 +70,15 @@ def check_routes_for_vacancies():
                                 "company": "SIDS FARM PRIVATE LIMITED",
                                 "custom_travel_route": route.name,
                                 "location": route.branch,
-                                #"route": f"jobs/sids_farm_private_limited/{route.name.lower()}"
+                                # "route": f"jobs/sids_farm_private_limited/{route.name.lower()}"
                             })
 
                             job_opening.insert(ignore_permissions=True)
+
+
+                            job_opening.route = f"jobs/sids_farm_private_limited/{job_opening.name}"
+                            job_opening.save(ignore_permissions=True)
+
                             frappe.db.commit()
                             job_openings_created += 1
 

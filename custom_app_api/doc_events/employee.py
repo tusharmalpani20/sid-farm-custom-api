@@ -103,19 +103,25 @@ def create_job_opening_for_route(employee_doc):
         )
 
         if not existing_opening:
+            # First create the doc
             job_opening = frappe.get_doc({
                 "doctype": "Job Opening",
                 "job_title": f"Vacancy for {employee_doc.custom_route}",
                 "designation": employee_doc.designation or "Delivery Partner",
                 "status": "Open",
-                "posted_on": now_datetime(),
+                "posted_on": frappe.utils.now_datetime(),
                 "company": "SIDS FARM PRIVATE LIMITED",
                 "custom_travel_route": employee_doc.custom_route,
-                "location": employee_doc.branch,
-                #"route": f"jobs/sids_farm_private_limited/{employee_doc.custom_route.lower()}"
+                "location": employee_doc.branch
             })
 
+            # Insert it to get the ID
             job_opening.insert(ignore_permissions=True)
+            
+            # Now update the route with the unique ID
+            job_opening.route = f"jobs/sids_farm_private_limited/{job_opening.name}"
+            job_opening.save(ignore_permissions=True)
+            
             frappe.db.commit()
 
             frappe.logger().info(
