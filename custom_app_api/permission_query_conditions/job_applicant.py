@@ -5,6 +5,7 @@ def get_permission_query_conditions(user):
     Adds permission conditions for Job Applicant doctype based on employee's route access:
     - System Manager/Administrator: No restrictions
     - Last Mile Head/Zonal Head/Lead: Access to job applicants based on their assigned routes via Job Opening
+    - Everyone can see job applicants with no job_title
     Returns: string - SQL condition
     """
     
@@ -18,11 +19,14 @@ def get_permission_query_conditions(user):
     if not job_opening_condition:
         return ""
     
-    # Create condition to join Job Applicant with Job Opening
-    condition = f"""exists (
-        select name from `tabJob Opening` 
-        where name = `tabJob Applicant`.job_title 
-        and {job_opening_condition}
+    # Create condition to join Job Applicant with Job Opening, including null job_title
+    condition = f"""(
+        `tabJob Applicant`.job_title is null 
+        or exists (
+            select name from `tabJob Opening` 
+            where name = `tabJob Applicant`.job_title 
+            and {job_opening_condition}
+        )
     )"""
     
     return condition
