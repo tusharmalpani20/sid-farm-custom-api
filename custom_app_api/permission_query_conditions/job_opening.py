@@ -19,7 +19,7 @@ def get_permission_query_conditions(user):
         
         # Get the routes accessible to the user
         frappe.log_error("Fetching Route conditions...", "Job Opening Permission Check")
-        route_condition = frappe.get_attr("custom_app_api.custom_app_api.permission_query_conditions.Route.get_permission_query_conditions")(user)
+        route_condition = frappe.get_attr("custom_app_api.permission_query_conditions.Route.get_permission_query_conditions")(user)
         
         frappe.log_error(f"Route condition received: {route_condition}", "Job Opening Permission Check")
         
