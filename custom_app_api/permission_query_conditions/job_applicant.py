@@ -8,21 +8,32 @@ def get_permission_query_conditions(user):
     Returns: string - SQL condition
     """
     
+    frappe.msgprint(f"Checking Job Applicant permissions for user: {user}")
+    
     # Skip for System Manager or Administrator
     if "System Manager" in frappe.get_roles(user) or user == "Administrator":
+        frappe.msgprint("User is System Manager or Administrator - No restrictions")
         return ""
     
-    # Get the route condition from Job Opening
-    job_opening_condition = frappe.get_attr("custom_app_api.custom_app_api.permission_query_conditions.job_opening.get_permission_query_conditions")(user)
+    # Get the routes accessible to the user
+    frappe.msgprint("Fetching Route conditions...")
+    route_condition = frappe.get_attr("custom_app_api.custom_app_api.permission_query_conditions.Route.get_permission_query_conditions")(user)
     
-    if job_opening_condition == "" or not job_opening_condition:
+    frappe.msgprint(f"Route condition received: {route_condition}")
+    
+    if route_condition == "1=1" or not route_condition:
+        frappe.msgprint("No specific Route conditions - Using default permissions")
         return ""
     
-    # Create condition to join Job Applicant with Job Opening
+    # Create nested condition to join Job Applicant with Job Opening and Route
     condition = f"""exists (
-        select name from `tabJob Opening` 
-        where name = `tabJob Applicant`.job_title 
-        and {job_opening_condition}
+        select jo.name 
+        from `tabJob Opening` jo
+        inner join `tabRoute` r on r.name = jo.custom_travel_route
+        where jo.name = `tabJob Applicant`.job_title 
+        and {route_condition.replace('`tabRoute`', 'r')}
     )"""
+    
+    frappe.msgprint(f"Final Job Applicant condition: {condition}")
     
     return condition
