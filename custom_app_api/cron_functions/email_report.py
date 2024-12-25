@@ -25,29 +25,52 @@ def send_point_wise_attendance_report():
         # Generate report content
         report = frappe.get_doc('Report', 'Point Wise Attendance')
         result = report.get_data(filters=filters, as_dict=True)
-        
-        # Handle different return formats
-        if isinstance(result, tuple):
-            columns = result[0]
-            data = result[1]
-        else:
-            data = result
-            columns = report.get_columns()
 
-        # Prepare HTML for PDF
+        # Prepare HTML for PDF using Frappe's standard report print format
         html = frappe.render_template(
-            "frappe/templates/emails/auto_email_report.html",
+            "frappe/templates/print_formats/standard_no_letterhead.html",
             {
-                "title": f"Point Wise Attendance Report - {today}",
-                "description": f"Point Wise Attendance Report for {today}",
-                "columns": columns,
-                "data": data,
-                "report_url": get_url_to_report('Point Wise Attendance', 'Script Report', filters)
+                "title": "Point Wise Attendance",
+                "print_heading": f"Point Wise Attendance Report - {today}",
+                "filters": {
+                    "Date": today,
+                    "Points": "",
+                    "Company": "SIDS FARM PRIVATE LIMITED",
+                    "Include Company Descendants": "✓"
+                },
+                "columns": report.get_columns(),
+                "data": result,
+                "report": report,
+                "report_url": get_url_to_report('Point Wise Attendance', 'Script Report', filters),
+                "css": """
+                    .print-format {
+                        padding: 20px;
+                    }
+                    .print-format table {
+                        width: 100%;
+                        border-collapse: collapse;
+                    }
+                    .print-format th {
+                        background-color: #f8f9fa;
+                        font-weight: bold;
+                    }
+                    .print-format th, .print-format td {
+                        padding: 8px;
+                        border: 1px solid #dfe2e5;
+                        text-align: left;
+                    }
+                    .print-format tr:nth-child(even) {
+                        background-color: #f8f9fa;
+                    }
+                    .print-format tr:last-child {
+                        font-weight: bold;
+                    }
+                """
             }
         )
 
         # Generate PDF
-        pdf_data = get_pdf(html)
+        pdf_data = get_pdf(html, {'orientation': 'Landscape'})
 
         # Prepare email content
         report_url = get_url_to_report('Point Wise Attendance', 'Script Report', filters)
