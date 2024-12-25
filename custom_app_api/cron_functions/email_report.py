@@ -26,7 +26,19 @@ def send_point_wise_attendance_report():
         report = frappe.get_doc('Report', 'Point Wise Attendance')
         result = report.get_data(filters=filters, as_dict=True)
 
-        # Prepare HTML for PDF using Frappe's standard report print format
+        # Extract columns and data properly
+        if isinstance(result, tuple):
+            columns = result[0]
+            data = result[1]
+        else:
+            columns = report.get_columns()
+            data = result
+
+        # Debug log to check data
+        frappe.logger().debug(f"Report Data: {data}")
+        frappe.logger().debug(f"Report Columns: {columns}")
+
+        # Prepare HTML for PDF
         html = frappe.render_template(
             "templates/print_formats/standard.html",
             {
@@ -34,17 +46,18 @@ def send_point_wise_attendance_report():
                 "print_heading": f"Point Wise Attendance Report - {today}",
                 "filters": {
                     "Date": today,
-                    "Points": "",
                     "Company": "SIDS FARM PRIVATE LIMITED",
                     "Include Company Descendants": "✓"
                 },
-                "columns": report.get_columns(),
-                "data": result[1] if isinstance(result, tuple) else result,
-                "report": report,
+                "columns": columns,
+                "data": data,
                 "no_letterhead": 1,
+                "print_format_builder": 0,
+                "align_labels_right": 0,
                 "css": """
                     .print-format {
                         padding: 20px;
+                        font-size: 12px;
                     }
                     .print-format table {
                         width: 100%;
@@ -54,8 +67,11 @@ def send_point_wise_attendance_report():
                     .print-format th {
                         background-color: #f8f9fa;
                         font-weight: bold;
+                        padding: 8px;
+                        border: 1px solid #dfe2e5;
+                        text-align: left;
                     }
-                    .print-format th, .print-format td {
+                    .print-format td {
                         padding: 8px;
                         border: 1px solid #dfe2e5;
                         text-align: left;
@@ -71,16 +87,28 @@ def send_point_wise_attendance_report():
                         margin-bottom: 20px;
                     }
                     .report-title {
-                        font-size: 20px;
+                        font-size: 18px;
                         font-weight: bold;
                         margin-bottom: 10px;
                     }
-                """
+                """,
+                "print_style": True
             }
         )
 
-        # Generate PDF
-        pdf_data = get_pdf(html, {'orientation': 'Landscape'})
+        # For debugging - save HTML to a file
+        with open('/tmp/report.html', 'w') as f:
+            f.write(html)
+
+        # Generate PDF with landscape orientation and specific page size
+        pdf_data = get_pdf(html, {
+            'orientation': 'Landscape',
+            'page-size': 'A4',
+            'margin-top': '15mm',
+            'margin-right': '15mm',
+            'margin-bottom': '15mm',
+            'margin-left': '15mm'
+        })
 
         # Prepare email content
         report_url = get_url_to_report('Point Wise Attendance', 'Script Report', filters)
