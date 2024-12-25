@@ -157,8 +157,8 @@ def send_point_wise_attendance_report():
             data = result
 
         # Generate reports in different formats
-        csv_content = generate_csv_report(columns, data)
-        excel_content = generate_excel_report(columns, data)
+        # csv_content = generate_csv_report(columns, data)
+        # excel_content = generate_excel_report(columns, data)
         pdf_content = generate_pdf_report(columns, data, today)
 
         # Prepare email content
@@ -172,7 +172,7 @@ def send_point_wise_attendance_report():
             <li>Excel format for analysis and filtering</li>
             <li>PDF format for printing and sharing</li>
         </ul>
-        <p>You can also view the report online at: <a href="{report_url}">{report_url}</a></p>
+        <p>You can also view the report online at: <a href="https://sf.hopnet.co.in/app/query-report/Point%20Wise%20Attendance">{report_url}</a></p>
         <br>
         <p>This is an automated message.</p>
         """
@@ -183,14 +183,14 @@ def send_point_wise_attendance_report():
             subject=f"Point Wise Attendance Report - {today}",
             message=message,
             attachments=[
-                {
-                    'fname': f'Point_Wise_Attendance_{today}.csv',
-                    'fcontent': csv_content
-                },
-                {
-                    'fname': f'Point_Wise_Attendance_{today}.xlsx',
-                    'fcontent': excel_content
-                },
+                # {
+                #     'fname': f'Point_Wise_Attendance_{today}.csv',
+                #     'fcontent': csv_content
+                # },
+                # {
+                #     'fname': f'Point_Wise_Attendance_{today}.xlsx',
+                #     'fcontent': excel_content
+                # },
                 {
                     'fname': f'Point_Wise_Attendance_{today}.pdf',
                     'fcontent': pdf_content
