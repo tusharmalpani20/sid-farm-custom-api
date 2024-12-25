@@ -1,6 +1,7 @@
 import frappe
 from frappe.utils import now_datetime, get_url_to_report
-from frappe.utils.pdf import get_pdf
+import pandas as pd
+from io import BytesIO
 
 def send_point_wise_attendance_report():
     """Send Point Wise Attendance report daily at 10 PM"""
@@ -26,7 +27,7 @@ def send_point_wise_attendance_report():
         report = frappe.get_doc('Report', 'Point Wise Attendance')
         result = report.get_data(filters=filters, as_dict=True)
 
-        # Extract columns and data properly
+        # Extract columns and data
         if isinstance(result, tuple):
             columns = result[0]
             data = result[1]
@@ -34,81 +35,52 @@ def send_point_wise_attendance_report():
             columns = report.get_columns()
             data = result
 
-        # Debug log to check data
-        frappe.logger().debug(f"Report Data: {data}")
-        frappe.logger().debug(f"Report Columns: {columns}")
+        # Create DataFrame
+        df = pd.DataFrame(data)
 
-        # Prepare HTML for PDF
-        html = frappe.render_template(
-            "templates/print_formats/standard.html",
-            {
-                "title": "Point Wise Attendance",
-                "print_heading": f"Point Wise Attendance Report - {today}",
-                "filters": {
-                    "Date": today,
-                    "Company": "SIDS FARM PRIVATE LIMITED",
-                    "Include Company Descendants": "✓"
-                },
-                "columns": columns,
-                "data": data,
-                "no_letterhead": 1,
-                "print_format_builder": 0,
-                "align_labels_right": 0,
-                "css": """
-                    .print-format {
-                        padding: 20px;
-                        font-size: 12px;
-                    }
-                    .print-format table {
-                        width: 100%;
-                        border-collapse: collapse;
-                        margin-top: 20px;
-                    }
-                    .print-format th {
-                        background-color: #f8f9fa;
-                        font-weight: bold;
-                        padding: 8px;
-                        border: 1px solid #dfe2e5;
-                        text-align: left;
-                    }
-                    .print-format td {
-                        padding: 8px;
-                        border: 1px solid #dfe2e5;
-                        text-align: left;
-                    }
-                    .print-format tr:nth-child(even) {
-                        background-color: #f8f9fa;
-                    }
-                    .print-format tr:last-child {
-                        font-weight: bold;
-                        background-color: #f8f9fa;
-                    }
-                    .filter-section {
-                        margin-bottom: 20px;
-                    }
-                    .report-title {
-                        font-size: 18px;
-                        font-weight: bold;
-                        margin-bottom: 10px;
-                    }
-                """,
-                "print_style": True
-            }
-        )
+        # Create Excel file in memory
+        excel_buffer = BytesIO()
+        
+        # Write to Excel with formatting
+        with pd.ExcelWriter(excel_buffer, engine='xlsxwriter') as writer:
+            df.to_excel(writer, sheet_name='Attendance Report', index=False)
+            
+            # Get workbook and worksheet objects for formatting
+            workbook = writer.book
+            worksheet = writer.sheets['Attendance Report']
+            
+            # Add formats
+            header_format = workbook.add_format({
+                'bold': True,
+                'bg_color': '#F8F9FA',
+                'border': 1,
+                'border_color': '#DFE2E5'
+            })
+            
+            cell_format = workbook.add_format({
+                'border': 1,
+                'border_color': '#DFE2E5'
+            })
+            
+            # Apply header format
+            for col_num, value in enumerate(df.columns.values):
+                worksheet.write(0, col_num, value, header_format)
+            
+            # Apply cell format to data
+            for row_num in range(len(df)):
+                for col_num in range(len(df.columns)):
+                    worksheet.write(row_num + 1, col_num, df.iloc[row_num, col_num], cell_format)
+            
+            # Auto-adjust columns width
+            for idx, col in enumerate(df.columns):
+                max_length = max(
+                    df[col].astype(str).apply(len).max(),
+                    len(str(col))
+                )
+                worksheet.set_column(idx, idx, max_length + 2)
 
-        # For debugging - save HTML to a file
-        with open('/tmp/report.html', 'w') as f:
-            f.write(html)
-
-        # Generate PDF with landscape orientation and specific page size
-        pdf_data = get_pdf(html, {
-            'orientation': 'Landscape',
-            'page-size': 'A4',
-            'margin-top': '15mm',
-            'margin-right': '15mm',
-            'margin-bottom': '15mm',
-            'margin-left': '15mm'
-        })
+        # Get the Excel file content
+        excel_content = excel_buffer.getvalue()
 
         # Prepare email content
         report_url = get_url_to_report('Point Wise Attendance', 'Script Report', filters)
@@ -121,14 +93,14 @@ def send_point_wise_attendance_report():
         <p>This is an automated message.</p>
         """
 
-        # Send email with PDF attachment
+        # Send email with Excel attachment
         frappe.sendmail(
             recipients=recipients,
             subject=f"Point Wise Attendance Report - {today}",
             message=message,
             attachments=[{
-                'fname': f'Point_Wise_Attendance_{today}.pdf',
-                'fcontent': pdf_data
+                'fname': f'Point_Wise_Attendance_{today}.xlsx',
+                'fcontent': excel_content
             }]
         )
 
