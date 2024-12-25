@@ -68,12 +68,12 @@ def execute(filters=None):
             }
         ]
     else:
-        overall_attendance_percentage = (total_present / total_marked * 100) if total_marked else 0
+        overall_attendance_percentage = (total_present / total_employees * 100) if total_employees else 0
         
         # Calculate percentages safely
-        present_percentage = f"{(total_present/total_marked*100):.1f}" if total_marked else "0.0"
-        absent_percentage = f"{(total_absent/total_marked*100):.1f}" if total_marked else "0.0"
-        leave_percentage = f"{(total_on_leave/total_marked*100):.1f}" if total_marked else "0.0"
+        present_percentage = f"{(total_present/total_employees*100):.1f}" if total_employees else "0.0"
+        absent_percentage = f"{(total_absent/total_employees*100):.1f}" if total_employees else "0.0"
+        leave_percentage = f"{(total_on_leave/total_employees*100):.1f}" if total_employees else "0.0"
 
         message = [
             f"Total Employees: {total_employees}",
@@ -246,9 +246,8 @@ def get_zone_wise_attendance(filters):
             elif count_data.status == "On Leave":
                 on_leave = count_data.count
 
-        # Calculate attendance percentage
-        total_marked = present + absent + on_leave
-        attendance_percentage = (present / total_marked * 100) if total_marked else 0
+        # Calculate attendance percentage based on total employees instead of marked attendance
+        attendance_percentage = (present / zone_data.total_employees * 100) if zone_data.total_employees else 0
 
         data.append({
             "zone": zone_data.zone,
@@ -267,8 +266,9 @@ def get_zone_wise_attendance(filters):
     total_present = sum(row["present"] for row in data)
     total_absent = sum(row["absent"] for row in data)
     total_on_leave = sum(row["on_leave"] for row in data)
-    total_marked = total_present + total_absent + total_on_leave
-    overall_attendance_percentage = (total_present / total_marked * 100) if total_marked else 0
+
+    # Calculate overall attendance percentage based on total employees
+    overall_attendance_percentage = (total_present / total_employees * 100) if total_employees else 0
 
     # Add totals row
     data.append({
