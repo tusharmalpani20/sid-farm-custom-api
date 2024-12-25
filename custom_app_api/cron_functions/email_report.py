@@ -24,10 +24,15 @@ def send_point_wise_attendance_report():
 
         # Generate report content
         report = frappe.get_doc('Report', 'Point Wise Attendance')
-        columns, data, message, chart, report_summary = report.get_data(
-            filters=filters,
-            as_dict=True
-        )
+        result = report.get_data(filters=filters, as_dict=True)
+        
+        # Handle different return formats
+        if isinstance(result, tuple):
+            columns = result[0]
+            data = result[1]
+        else:
+            data = result
+            columns = report.get_columns()
 
         # Prepare HTML for PDF
         html = frappe.render_template(
