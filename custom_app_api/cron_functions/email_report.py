@@ -107,7 +107,8 @@ def generate_excel_report(columns, data):
         }
     }], 'Point Wise Attendance')
     
-    return xlsx_data
+    # Get the bytes from BytesIO object
+    return xlsx_data.getvalue()
 
 def generate_pdf_report(columns, data, date):
     """Generate PDF report content with custom HTML template"""
