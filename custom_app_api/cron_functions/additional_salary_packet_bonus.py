@@ -12,7 +12,8 @@ def calculate_packet_bonus():
     try:
         current_date = getdate()
         # Get last month's date range since we're calculating for previous month
-        first_day = get_first_day(add_months(current_date, -1))
+        # first_day = get_first_day(add_months(current_date, -1))
+        first_day = get_first_day(current_date)
         last_day = get_last_day(first_day)
         
         frappe.logger().info(f"Starting packet bonus calculation for period: {first_day} to {last_day}")

@@ -184,17 +184,22 @@ scheduler_events = {
 		"45 9 * * *": [
 			"custom_app_api.cron_functions.additional_salary_extra_km.calculate_extra_km_salary"
 		],
+		"0 10 * * *": [
+			"custom_app_api.cron_functions.email_report.send_point_wise_attendance_report"
+		],
 		"0 22 * * *": [
 			"custom_app_api.cron_functions.create_employee_referral_and_additional_salary.process_referral_bonuses"
 		],
 		"0 23 * * *": [  # Runs at 11:00 PM (23:00) every day
 			"custom_app_api.cron_functions.salary_slip_cron.generate_salary_slips_for_active_employees",
-			"custom_app_api.cron_functions.update_delivery_count_for_each_route.update_delivery_count_for_routes",
-			# "custom_app_api.cron_functions.additional_salary_packet_bonus.calculate_packet_bonus"
+			"custom_app_api.cron_functions.update_delivery_count_for_each_route.update_delivery_count_for_routes"
 		],
 		"0 0 * * *": [
 			"custom_app_api.cron_functions.employee.check_notice_period_completion"
-		]
+		],
+		"0 11 L * *": [
+            "custom_app_api.cron_functions.additional_salary_packet_bonus.calculate_packet_bonus"
+        ],
 	}
 	# "all": [
 	# 	"custom_app_api.tasks.all"

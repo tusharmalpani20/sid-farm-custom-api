@@ -44,6 +44,14 @@ HTML_TEMPLATE = """
             color: #666;
             margin-bottom: 20px;
         }
+        .report-footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            color: #666;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -76,6 +84,11 @@ HTML_TEMPLATE = """
             {% endfor %}
         </tbody>
     </table>
+
+    <div class="report-footer">
+        SIDS FARM PRIVATE LIMITED<br>
+        Generated on {{ date }} at {{ time }}
+    </div>
 </body>
 </html>
 """
