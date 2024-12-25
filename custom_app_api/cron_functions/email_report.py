@@ -41,7 +41,6 @@ def send_point_wise_attendance_report():
                 "columns": report.get_columns(),
                 "data": result[1] if isinstance(result, tuple) else result,
                 "report": report,
-                "letter_head": frappe.get_doc("Letter Head", "Standard"),
                 "no_letterhead": 1,
                 "css": """
                     .print-format {
