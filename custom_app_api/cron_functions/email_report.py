@@ -1,7 +1,6 @@
 import frappe
 from frappe.utils import now_datetime, get_url_to_report
 from frappe.utils.pdf import get_pdf
-from frappe.email.doctype.auto_email_report.auto_email_report import send_report_email
 
 def send_point_wise_attendance_report():
     """Send Point Wise Attendance report daily at 10 PM"""
