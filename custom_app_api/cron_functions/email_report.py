@@ -167,7 +167,7 @@ def send_point_wise_attendance_report():
         message = f"""
         <p>Dear Team,</p>
         <p>Please find attached the Point Wise Attendance Report for SIDS FARM PRIVATE LIMITED dated {today}.</p>
-        <p>For interactive viewing and additional analysis, you can access the report online at: <a href=" <a href="https://sf.hopnet.co.in/app/query-report/Point%20Wise%20Attendance">">Click here to view online report</a></p>
+        <p>For interactive viewing and additional analysis, you can access the report online at: <a href="https://sf.hopnet.co.in/app/query-report/Point%20Wise%20Attendance">Click here to view online report</a></p>
         <br>
         <p>Best regards,</p>
         <p>SIDS FARM HR System</p>
