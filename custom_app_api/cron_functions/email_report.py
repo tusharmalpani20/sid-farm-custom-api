@@ -1,5 +1,7 @@
 import frappe
 from frappe.utils import now_datetime, get_url_to_report
+import csv
+from io import StringIO
 
 def send_point_wise_attendance_report():
     """Send Point Wise Attendance report daily at 10 PM"""
@@ -23,9 +25,30 @@ def send_point_wise_attendance_report():
 
         # Generate report content
         report = frappe.get_doc('Report', 'Point Wise Attendance')
-        
-        # Get the CSV content directly from the report
-        csv_content = report.get_csv()
+        result = report.get_data(filters=filters, as_dict=True)
+
+        # Extract columns and data
+        if isinstance(result, tuple):
+            columns = result[0]
+            data = result[1]
+        else:
+            columns = report.get_columns()
+            data = result
+
+        # Create CSV in memory
+        output = StringIO()
+        writer = csv.writer(output)
+
+        # Write headers
+        headers = [col.get('label') for col in columns]
+        writer.writerow(headers)
+
+        # Write data rows
+        for row in data:
+            writer.writerow([row.get(col.get('fieldname')) for col in columns])
+
+        # Get CSV content
+        csv_content = output.getvalue()
 
         # Prepare email content
         report_url = get_url_to_report('Point Wise Attendance', 'Script Report', filters)
