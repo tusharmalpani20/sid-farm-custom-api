@@ -28,7 +28,7 @@ def send_point_wise_attendance_report():
 
         # Prepare HTML for PDF using Frappe's standard report print format
         html = frappe.render_template(
-            "frappe/templates/print_formats/standard_no_letterhead.html",
+            "templates/print_formats/standard.html",
             {
                 "title": "Point Wise Attendance",
                 "print_heading": f"Point Wise Attendance Report - {today}",
@@ -39,9 +39,10 @@ def send_point_wise_attendance_report():
                     "Include Company Descendants": "✓"
                 },
                 "columns": report.get_columns(),
-                "data": result,
+                "data": result[1] if isinstance(result, tuple) else result,
                 "report": report,
-                "report_url": get_url_to_report('Point Wise Attendance', 'Script Report', filters),
+                "letter_head": frappe.get_doc("Letter Head", "Standard"),
+                "no_letterhead": 1,
                 "css": """
                     .print-format {
                         padding: 20px;
@@ -49,6 +50,7 @@ def send_point_wise_attendance_report():
                     .print-format table {
                         width: 100%;
                         border-collapse: collapse;
+                        margin-top: 20px;
                     }
                     .print-format th {
                         background-color: #f8f9fa;
@@ -64,6 +66,15 @@ def send_point_wise_attendance_report():
                     }
                     .print-format tr:last-child {
                         font-weight: bold;
+                        background-color: #f8f9fa;
+                    }
+                    .filter-section {
+                        margin-bottom: 20px;
+                    }
+                    .report-title {
+                        font-size: 20px;
+                        font-weight: bold;
+                        margin-bottom: 10px;
                     }
                 """
             }
