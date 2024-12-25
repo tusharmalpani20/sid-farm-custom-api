@@ -166,15 +166,13 @@ def send_point_wise_attendance_report():
         
         message = f"""
         <p>Dear Team,</p>
-        <p>Please find attached today's Point Wise Attendance Report in multiple formats:</p>
-        <ul>
-            <li>CSV format for easy data import</li>
-            <li>Excel format for analysis and filtering</li>
-            <li>PDF format for printing and sharing</li>
-        </ul>
-        <p>You can also view the report online at: <a href="https://sf.hopnet.co.in/app/query-report/Point%20Wise%20Attendance">{report_url}</a></p>
+        <p>Please find attached the Point Wise Attendance Report for SIDS FARM PRIVATE LIMITED dated {today}.</p>
+        <p>For interactive viewing and additional analysis, you can access the report online at: <a href=" <a href="https://sf.hopnet.co.in/app/query-report/Point%20Wise%20Attendance">">Click here to view online report</a></p>
         <br>
-        <p>This is an automated message.</p>
+        <p>Best regards,</p>
+        <p>SIDS FARM HR System</p>
+        <br>
+        <p><small>This is an automated message. Please do not reply to this email.</small></p>
         """
 
         # Send email with all attachments
