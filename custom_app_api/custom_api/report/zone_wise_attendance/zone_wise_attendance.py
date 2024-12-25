@@ -174,10 +174,9 @@ def get_columns():
     ]
 
 def get_zone_wise_attendance(filters):
-    # First get allowed zones based on permissions
+    # First get all zones (removed is_active filter since the column doesn't exist)
     allowed_zones = frappe.get_list("Zone", 
-        fields=["name"],
-        filters={"is_active": 1}
+        fields=["name"]
     )
     
     # Get all zones and their employees
