@@ -1,13 +1,22 @@
 import frappe
 from frappe.email.doctype.auto_email_report.auto_email_report import send_now
 from datetime import datetime
+from frappe.utils import get_time_zone
 
 def send_custom_time_reports():
     """Check and send reports scheduled for the current hour"""
     
-    # Get current time in 12-hour format (e.g., "10 AM", "2 PM")
-    current_time = datetime.now().strftime("%I %p").lstrip("0")  # lstrip("0") removes leading zero
-    frappe.log_error(f"Checking reports for time: {current_time}", "Auto Email Report Debug")
+    # Get current time in system timezone (IST)
+    time_zone = get_time_zone()
+    current_datetime = datetime.now(time_zone)
+    current_time = current_datetime.strftime("%I %p").lstrip("0")  # lstrip("0") removes leading zero
+    
+    frappe.log_error(
+        f"Checking reports for time: {current_time}\n"
+        f"Timezone: {time_zone}\n"
+        f"Full datetime: {current_datetime}",
+        "Auto Email Report Debug"
+    )
     
     # Get all enabled reports scheduled for current time
     enabled_reports = frappe.get_all(
