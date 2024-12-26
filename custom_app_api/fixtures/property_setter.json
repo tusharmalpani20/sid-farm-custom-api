@@ -1,0 +1,18 @@
+[
+    {
+        "doctype": "Property Setter",
+        "name": "Auto Email Report-frequency-options",
+        "doctype_or_field": "DocField",
+        "doc_type": "Auto Email Report",
+        "field_name": "frequency",
+        "property": "options",
+        "property_type": "Text",
+        "value": "Daily\nDaily at Custom Time\nWeekdays\nWeekly\nMonthly",
+        "creation": "2024-02-05 10:00:00.000000",
+        "modified": "2024-02-05 10:00:00.000000",
+        "modified_by": "Administrator",
+        "owner": "Administrator",
+        "idx": 0,
+        "is_system_generated": 0
+    }
+]
