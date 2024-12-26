@@ -1,5 +1,5 @@
 import frappe
-from frappe.email.doctype.auto_email_report.auto_email_report import AutoEmailReport
+from frappe.email.doctype.auto_email_report.auto_email_report import send_now
 from datetime import datetime
 
 def send_custom_time_reports():
@@ -20,7 +20,6 @@ def send_custom_time_reports():
 
     for report in enabled_reports:
         try:
-            auto_email_report = frappe.get_doc("Auto Email Report", report.name)
-            auto_email_report.send()
+            send_now(report.name)  # Using the proper whitelist method
         except Exception:
-            auto_email_report.log_error(f"Failed to send {auto_email_report.name} Auto Email Report")
+            frappe.log_error(f"Failed to send {report.name} Auto Email Report")
