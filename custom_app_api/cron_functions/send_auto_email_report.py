@@ -1,13 +1,13 @@
 import frappe
 from frappe.email.doctype.auto_email_report.auto_email_report import send_now
 from datetime import datetime
-from frappe.utils import get_time_zone
+import pytz
 
 def send_custom_time_reports():
     """Check and send reports scheduled for the current hour"""
     
     # Get current time in system timezone (IST)
-    time_zone = get_time_zone()
+    time_zone = pytz.timezone(frappe.utils.get_system_timezone())
     current_datetime = datetime.now(time_zone)
     current_time = current_datetime.strftime("%I %p").lstrip("0")  # lstrip("0") removes leading zero
     
