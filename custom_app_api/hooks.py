@@ -200,7 +200,7 @@ scheduler_events = {
 		"0 11 L * *": [
             "custom_app_api.cron_functions.additional_salary_packet_bonus.calculate_packet_bonus"
         ],
-	}
+	},
 	# "all": [
 	# 	"custom_app_api.tasks.all"
 	# ],
