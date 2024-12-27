@@ -38,7 +38,7 @@ def execute(filters=None):
         filters={
             "company": ("in", filters.companies),
             "status": "Active",
-            "point": ("in", [row["point"] for row in data if row.get("point")])  # Only consider employees from points in report
+            "custom_point": ("in", [row["point"] for row in data if row.get("point")])  # Changed from point to custom_point
         }
     )
 
