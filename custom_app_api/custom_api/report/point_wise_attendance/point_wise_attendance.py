@@ -14,14 +14,66 @@ def execute(filters=None):
     columns = get_columns()
     data = get_point_wise_attendance(filters)
 
-    # Calculate totals for summary and chart
-    total_employees = sum(row["total_employees"] for row in data[:-1])  # Exclude the last (Total) row
+    # Get all unique designations
+    designations = frappe.get_all(
+        "Employee",
+        fields=["designation"],
+        filters={"status": "Active"},
+        distinct=True,
+        order_by="designation"
+    )
+
+    # Initialize designation-wise totals
+    designation_totals = {}
+    for designation in designations:
+        designation_totals[designation.designation] = {
+            "total": 0,
+            "present": 0,
+            "absent": 0,
+            "on_leave": 0
+        }
+
+    # Calculate totals for each designation
+    for point in data[:-1]:  # Exclude the last (Total) row
+        employees = frappe.get_all(
+            "Employee",
+            fields=["designation", "name"],
+            filters={
+                "custom_point": point["point"],
+                "status": "Active",
+                "company": ("in", filters.companies)
+            }
+        )
+
+        # Group employees by designation
+        for emp in employees:
+            designation_totals[emp.designation]["total"] += 1
+            
+            # Get attendance for this employee
+            attendance = frappe.get_value(
+                "Attendance",
+                {
+                    "employee": emp.name,
+                    "attendance_date": filters.date,
+                    "docstatus": 1
+                },
+                "status"
+            )
+            
+            if attendance in ["Present", "Work From Home"]:
+                designation_totals[emp.designation]["present"] += 1
+            elif attendance == "Absent":
+                designation_totals[emp.designation]["absent"] += 1
+            elif attendance == "On Leave":
+                designation_totals[emp.designation]["on_leave"] += 1
+
+    # Calculate overall totals
+    total_employees = sum(row["total_employees"] for row in data[:-1])
     total_present = sum(row["present"] for row in data[:-1])
     total_absent = sum(row["absent"] for row in data[:-1])
     total_on_leave = sum(row["on_leave"] for row in data[:-1])
     total_marked = total_present + total_absent + total_on_leave
 
-    # Handle case when there's no attendance data
     if total_marked == 0:
         message = ["No attendance records found for the selected date."]
         # Create empty chart
@@ -70,6 +122,83 @@ def execute(filters=None):
     else:
         overall_attendance_percentage = (total_present / total_marked * 100) if total_marked else 0
         
+        # Create expanded report summary
+        report_summary = [
+            {
+                "value": total_employees,
+                "label": "Total Employees",
+                "datatype": "Int",
+                "indicator": "blue"
+            }
+        ]
+
+        # Add designation-wise summaries
+        for designation in designations:
+            d_totals = designation_totals[designation.designation]
+            d_marked = d_totals["present"] + d_totals["absent"] + d_totals["on_leave"]
+            d_percentage = (d_totals["present"] / d_marked * 100) if d_marked else 0
+
+            report_summary.extend([
+                {
+                    "value": d_totals["total"],
+                    "label": f"Total {designation.designation}",
+                    "datatype": "Int",
+                    "indicator": "gray"
+                },
+                {
+                    "value": d_totals["present"],
+                    "label": f"Present {designation.designation}",
+                    "datatype": "Int",
+                    "indicator": "green"
+                },
+                {
+                    "value": d_totals["absent"],
+                    "label": f"Absent {designation.designation}",
+                    "datatype": "Int",
+                    "indicator": "red"
+                },
+                {
+                    "value": d_totals["on_leave"],
+                    "label": f"On Leave {designation.designation}",
+                    "datatype": "Int",
+                    "indicator": "orange"
+                },
+                {
+                    "value": d_percentage,
+                    "label": f"Attendance % {designation.designation}",
+                    "datatype": "Percent",
+                    "indicator": "blue"
+                }
+            ])
+
+        # Add overall totals at the end
+        report_summary.extend([
+            {
+                "value": total_present,
+                "label": "Total Present",
+                "datatype": "Int",
+                "indicator": "green"
+            },
+            {
+                "value": total_absent,
+                "label": "Total Absent",
+                "datatype": "Int",
+                "indicator": "red"
+            },
+            {
+                "value": total_on_leave,
+                "label": "Total On Leave",
+                "datatype": "Int",
+                "indicator": "orange"
+            },
+            {
+                "value": overall_attendance_percentage,
+                "label": "Overall Attendance %",
+                "datatype": "Percent",
+                "indicator": "blue"
+            }
+        ])
+
         # Calculate percentages safely
         present_percentage = f"{(total_present/total_marked*100):.1f}" if total_marked else "0.0"
         absent_percentage = f"{(total_absent/total_marked*100):.1f}" if total_marked else "0.0"
@@ -96,40 +225,6 @@ def execute(filters=None):
             "colors": ["#36a2eb", "#ff6384", "#ffcd56"],  # Professional blue, soft red, muted yellow
             "height": 280
         }
-
-        # Create report summary with indicators
-        report_summary = [
-            {
-                "value": total_employees,
-                "label": "Total Employees",
-                "datatype": "Int",
-                "indicator": "gray"
-            },
-            {
-                "value": total_present,
-                "label": "Present",
-                "datatype": "Int",
-                "indicator": "gray"
-            },
-            {
-                "value": total_absent,
-                "label": "Absent",
-                "datatype": "Int",
-                "indicator": "gray"
-            },
-            {
-                "value": total_on_leave,
-                "label": "On Leave",
-                "datatype": "Int",
-                "indicator": "gray"
-            },
-            {
-                "value": overall_attendance_percentage,
-                "label": "Attendance %",
-                "datatype": "Percent",
-                "indicator": "gray"
-            }
-        ]
 
     return columns, data, None, chart, report_summary
 
