@@ -75,47 +75,13 @@ def execute(filters=None):
         absent_percentage = f"{(total_absent/total_marked*100):.1f}" if total_marked else "0.0"
         leave_percentage = f"{(total_on_leave/total_marked*100):.1f}" if total_marked else "0.0"
 
-        # Get designation-wise totals from the last row (grand totals)
-        grand_totals = data[-1]
-        
         message = [
-            f"Total Employees: {total_employees}\n",
-            f"Overall Attendance: {overall_attendance_percentage:.1f}%\n",
-            f"\nOverall Attendance Breakdown:\n",
-            f"• Present: {total_present} ({present_percentage}%)\n",
-            f"• Absent: {total_absent} ({absent_percentage}%)\n",
-            f"• On Leave: {total_on_leave} ({leave_percentage}%)\n",
-            f"\nDesignation-wise Breakdown:\n"
+            f"Total Employees: {total_employees}",
+            f"Overall Attendance: {overall_attendance_percentage:.1f}%",
+            f"Present: {total_present} ({present_percentage}%)",
+            f"Absent: {total_absent} ({absent_percentage}%)",
+            f"On Leave: {total_on_leave} ({leave_percentage}%)"
         ]
-
-        # Add designation-wise breakdown
-        designations = frappe.get_all(
-            "Employee",
-            fields=["designation"],
-            filters={"status": "Active"},
-            distinct=True,
-            order_by="designation"
-        )
-
-        for designation in designations:
-            designation_key = designation.designation.replace(" ", "_").lower()
-            total = grand_totals[f"total_{designation_key}"]
-            present = grand_totals[f"present_{designation_key}"]
-            absent = grand_totals[f"absent_{designation_key}"]
-            on_leave = grand_totals[f"on_leave_{designation_key}"]
-            marked = present + absent + on_leave
-            
-            # Calculate percentages
-            present_pct = f"{(present/marked*100):.1f}" if marked else "0.0"
-            absent_pct = f"{(absent/marked*100):.1f}" if marked else "0.0"
-            leave_pct = f"{(on_leave/marked*100):.1f}" if marked else "0.0"
-            
-            message.extend([
-                f"\n{designation.designation} ({total} employees):\n",
-                f"• Present: {present} ({present_pct}%)\n",
-                f"• Absent: {absent} ({absent_pct}%)\n",
-                f"• On Leave: {on_leave} ({leave_pct}%)"
-            ])
 
         # Create pie chart
         chart = {
