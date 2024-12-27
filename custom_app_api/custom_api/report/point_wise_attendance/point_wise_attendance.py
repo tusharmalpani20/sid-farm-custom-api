@@ -31,11 +31,70 @@ def execute(filters=None):
     absent_percentage = f"{(total_absent/total_marked*100):.1f}" if total_marked else "0.0"
     leave_percentage = f"{(total_on_leave/total_marked*100):.1f}" if total_marked else "0.0"
 
-    # Create message
+    # Get designation-wise breakdown for employees in considered points
+    point_employees = frappe.get_all(
+        "Employee",
+        fields=["name", "designation"],
+        filters={
+            "company": ("in", filters.companies),
+            "status": "Active",
+            "point": ("in", [row["point"] for row in data if row.get("point")])  # Only consider employees from points in report
+        }
+    )
+
+    # Create designation-wise mapping
+    designation_map = {}
+    for emp in point_employees:
+        designation_map.setdefault(emp.designation, []).append(emp.name)
+
+    # Get attendance for these employees
+    designation_attendance = {}
+    for designation, employees in designation_map.items():
+        attendance = frappe.get_all(
+            "Attendance",
+            fields=["status", "count(*) as count"],
+            filters={
+                "attendance_date": filters.date,
+                "employee": ("in", employees),
+                "docstatus": 1
+            },
+            group_by="status"
+        )
+        
+        present = sum(a.count for a in attendance if a.status in ["Present", "Work From Home"])
+        absent = sum(a.count for a in attendance if a.status == "Absent")
+        on_leave = sum(a.count for a in attendance if a.status == "On Leave")
+        marked = present + absent + on_leave
+        
+        designation_attendance[designation] = {
+            "total": len(employees),
+            "present": present,
+            "absent": absent,
+            "on_leave": on_leave,
+            "marked": marked
+        }
+
+    # Create the main message
     message = (
         f"Total Employees: {total_employees} Overall Attendance: {overall_attendance_percentage:.1f}% "
         f"Attendance Breakdown: • Present: {total_present} ({present_percentage}%) • Absent: {total_absent} ({absent_percentage}%) • On Leave: {total_on_leave} ({leave_percentage}%)"
     )
+
+    # Add designation breakdown to message
+    if designation_attendance:
+        message += "\n\nDesignation-wise Breakdown:"
+        for designation, data in designation_attendance.items():
+            if data["marked"] > 0:
+                present_pct = (data["present"] / data["marked"] * 100) if data["marked"] else 0
+                absent_pct = (data["absent"] / data["marked"] * 100) if data["marked"] else 0
+                leave_pct = (data["on_leave"] / data["marked"] * 100) if data["marked"] else 0
+                
+                message += (
+                    f"\n{designation} ({data['total']}): "
+                    f"Present: {data['present']} ({present_pct:.1f}%), "
+                    f"Absent: {data['absent']} ({absent_pct:.1f}%), "
+                    f"On Leave: {data['on_leave']} ({leave_pct:.1f}%)"
+                )
 
     # Create chart
     chart = {
