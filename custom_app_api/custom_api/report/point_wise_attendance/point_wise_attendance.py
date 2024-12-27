@@ -71,19 +71,27 @@ def execute(filters=None):
     absent_percentage = f"{(total_absent/total_marked*100):.1f}" if total_marked else "0.0"
     leave_percentage = f"{(total_on_leave/total_marked*100):.1f}" if total_marked else "0.0"
 
-    # Create the main message
-    message = (
-        f"Total Employees: {total_employees}\n"
-        f"Overall Attendance: {overall_attendance_percentage:.1f}%\n"
-        f"Attendance Breakdown:\n"
-        f"• Present: {total_present} ({present_percentage}%)\n"
-        f"• Absent: {total_absent} ({absent_percentage}%)\n"
-        f"• On Leave: {total_on_leave} ({leave_percentage}%)"
-    )
+    # Create the main message with HTML formatting
+    message = [
+        "<div style='font-family: Arial; padding: 10px;'>",
+        "<h3 style='color: #1F497D; margin-bottom: 15px;'>Overall Attendance Summary</h3>",
+        f"<div style='margin-bottom: 15px;'><b>Total Employees:</b> {total_employees}</div>",
+        f"<div style='margin-bottom: 15px;'><b>Overall Attendance:</b> {overall_attendance_percentage:.1f}%</div>",
+        "<div style='margin-bottom: 15px;'>",
+        "<b>Attendance Breakdown:</b>",
+        f"<div style='margin-left: 20px; margin-top: 5px;'>• Present: <b>{total_present}</b> ({present_percentage}%)</div>",
+        f"<div style='margin-left: 20px;'>• Absent: <b>{total_absent}</b> ({absent_percentage}%)</div>",
+        f"<div style='margin-left: 20px;'>• On Leave: <b>{total_on_leave}</b> ({leave_percentage}%)</div>",
+        "</div>"
+    ]
 
-    # Add designation-wise breakdown
+    # Add designation-wise breakdown if data exists
     if designation_data:
-        message += "\n\nDesignation-wise Breakdown:"
+        message.extend([
+            "<div style='margin-top: 20px;'>",
+            "<h3 style='color: #1F497D; margin-bottom: 15px;'>Designation-wise Breakdown</h3>"
+        ])
+        
         for desig in designation_data:
             # Get attendance for this designation
             attendance = frappe.get_all(
@@ -108,13 +116,12 @@ def execute(filters=None):
                 group_by="status"
             )
 
-            # Calculate attendance counts
+            # Calculate attendance counts and percentages
             present = sum(a.count for a in attendance if a.status in ["Present", "Work From Home"])
             absent = sum(a.count for a in attendance if a.status == "Absent")
             on_leave = sum(a.count for a in attendance if a.status == "On Leave")
             marked = present + absent + on_leave
-
-            # Calculate percentages
+            
             if marked > 0:
                 present_pct = (present / marked * 100)
                 absent_pct = (absent / marked * 100)
@@ -122,12 +129,17 @@ def execute(filters=None):
             else:
                 present_pct = absent_pct = leave_pct = 0
 
-            message += (
-                f"\n\n{desig.designation} ({desig.total} employees):\n"
-                f"• Present: {present} ({present_pct:.1f}%)\n"
-                f"• Absent: {absent} ({absent_pct:.1f}%)\n"
-                f"• On Leave: {on_leave} ({leave_pct:.1f}%)"
-            )
+            message.extend([
+                f"<div style='margin-bottom: 15px; padding-left: 10px;'>",
+                f"<div style='font-weight: bold; color: #4472C4; margin-bottom: 8px;'>{desig.designation} ({desig.total} employees)</div>",
+                f"<div style='margin-left: 20px;'>• Present: <b>{present}</b> ({present_pct:.1f}%)</div>",
+                f"<div style='margin-left: 20px;'>• Absent: <b>{absent}</b> ({absent_pct:.1f}%)</div>", 
+                f"<div style='margin-left: 20px;'>• On Leave: <b>{on_leave}</b> ({leave_pct:.1f}%)</div>",
+                "</div>"
+            ])
+
+        message.append("</div>")
+    message.append("</div>")
 
     # Create chart
     chart = {
