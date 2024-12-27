@@ -189,13 +189,21 @@ def get_point_wise_attendance(filters):
     if filters.get("zones"):
         point_filters["custom_zone"] = ("in", filters.get("zones"))
     
+    # Get points with their zone information
     allowed_points = frappe.get_list("Point", 
-        fields=["name", "zone"],
+        fields=["name", "custom_zone", "point_name"],
         filters=point_filters
     )
     
+    # Get zone names for mapping
+    zones = frappe.get_list("Zone", 
+        fields=["name", "zone_name"],
+        as_list=False
+    )
+    zone_map = {zone.name: zone.zone_name for zone in zones}
+    
     # Create point to zone mapping
-    point_zone_map = {p.name: p.zone for p in allowed_points}
+    point_zone_map = {p.name: zone_map.get(p.custom_zone, "") for p in allowed_points}
     
     # Get all points and their employees
     point_filters = {
@@ -298,8 +306,8 @@ def get_point_wise_attendance(filters):
         zone_wise_data[zone]["absent"] += absent
         zone_wise_data[zone]["on_leave"] += on_leave
 
-    # Sort by zone and then attendance percentage
-    data.sort(key=lambda x: (x["zone"] or "", x["attendance_percentage"]), reverse=True)
+    # Sort by zone and then point
+    data.sort(key=lambda x: (x["zone"] or "", x["point"] or ""))
 
     # Add zone subtotals
     final_data = []
