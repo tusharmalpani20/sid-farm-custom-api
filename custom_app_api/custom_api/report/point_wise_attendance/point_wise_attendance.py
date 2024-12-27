@@ -190,7 +190,7 @@ def get_point_wise_attendance(filters):
         point_filters["custom_zone"] = ("in", filters.get("zones"))
     
     allowed_points = frappe.get_list("Point", 
-        fields=["name", "custom_zone as zone"],
+        fields=["name", "zone"],
         filters=point_filters
     )
     
@@ -311,7 +311,7 @@ def get_point_wise_attendance(filters):
                 zone_total = zone_wise_data[current_zone]
                 zone_marked = zone_total["present"] + zone_total["absent"] + zone_total["on_leave"]
                 final_data.append({
-                    "zone": f"<b>Total for {current_zone}</b>",
+                    "zone": current_zone + " Total",
                     "point": "",
                     "total_employees": zone_total["total_employees"],
                     "present": zone_total["present"],
@@ -322,12 +322,12 @@ def get_point_wise_attendance(filters):
             current_zone = row["zone"]
         final_data.append(row)
 
-    # Add last zone total
+    # Add last zone total if exists
     if current_zone:
         zone_total = zone_wise_data[current_zone]
         zone_marked = zone_total["present"] + zone_total["absent"] + zone_total["on_leave"]
         final_data.append({
-            "zone": f"<b>Total for {current_zone}</b>",
+            "zone": current_zone + " Total",
             "point": "",
             "total_employees": zone_total["total_employees"],
             "present": zone_total["present"],
@@ -344,7 +344,7 @@ def get_point_wise_attendance(filters):
     total_marked = total_present + total_absent + total_on_leave
     
     final_data.append({
-        "zone": "<b>Grand Total</b>",
+        "zone": "Grand Total",
         "point": "",
         "total_employees": total_employees,
         "present": total_present,
