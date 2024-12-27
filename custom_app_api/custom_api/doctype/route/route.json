@@ -13,7 +13,9 @@
   "city_name",
   "state_name",
   "branch",
-  "total_delivery"
+  "total_delivery",
+  "has_additional_payout",
+  "payout_amount"
  ],
  "fields": [
   {
@@ -78,6 +80,19 @@
    "fieldname": "total_delivery",
    "fieldtype": "Int",
    "label": "Total Delivery"
+  },
+  {
+   "default": "0",
+   "fieldname": "has_additional_payout",
+   "fieldtype": "Check",
+   "label": "Has Additional Payout"
+  },
+  {
+   "depends_on": "eval:doc.has_additional_payout==1",
+   "fieldname": "payout_amount",
+   "fieldtype": "Currency",
+   "label": "Payout Amount",
+   "mandatory_depends_on": "eval:doc.has_additional_payout==1"
   }
  ],
  "index_web_pages_for_search": 1,

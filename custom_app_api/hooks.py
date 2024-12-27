@@ -186,6 +186,7 @@ scheduler_events = {
 		],
 		"0 10 * * *": [
 			#"custom_app_api.cron_functions.email_report.send_point_wise_attendance_report"
+			"custom_app_api.cron_functions.additional_salary_route_bonus.generate_route_payout"
 		],
 		"0 22 * * *": [
 			"custom_app_api.cron_functions.create_employee_referral_and_additional_salary.process_referral_bonuses"
