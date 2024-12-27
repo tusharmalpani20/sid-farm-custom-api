@@ -344,11 +344,11 @@ def get_point_wise_attendance(filters):
             "attendance_percentage": (zone_total["present"] / zone_marked * 100) if zone_marked else 0
         })
 
-    # Add grand total
-    total_employees = sum(row["total_employees"] for row in data)
-    total_present = sum(row["present"] for row in data)
-    total_absent = sum(row["absent"] for row in data)
-    total_on_leave = sum(row["on_leave"] for row in data)
+    # Get totals from the last row (Grand Total)
+    total_employees = data[-1]["total_employees"]
+    total_present = data[-1]["present"]
+    total_absent = data[-1]["absent"]
+    total_on_leave = data[-1]["on_leave"]
     total_marked = total_present + total_absent + total_on_leave
     
     final_data.append({
