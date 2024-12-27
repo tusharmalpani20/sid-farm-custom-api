@@ -14,37 +14,17 @@ def execute(filters=None):
     columns = get_columns()
     data = get_point_wise_attendance(filters)
 
-    # Handle empty data case
-    if not data:
-        message = ["No attendance records found for the selected date."]
-        chart = {
-            "data": {
-                "labels": ["Present", "Absent", "On Leave"],
-                "datasets": [{"name": "Attendance Distribution", "values": [0, 0, 0]}]
-            },
-            "type": "pie",
-            "colors": ["#28a745", "#dc3545", "#ffc107"],
-            "height": 280
-        }
-        report_summary = [
-            {"value": 0, "label": "Total Employees", "datatype": "Int", "indicator": "gray"},
-            {"value": 0, "label": "Present", "datatype": "Int", "indicator": "gray"},
-            {"value": 0, "label": "Absent", "datatype": "Int", "indicator": "gray"},
-            {"value": 0, "label": "On Leave", "datatype": "Int", "indicator": "gray"},
-            {"value": 0, "label": "Attendance %", "datatype": "Percent", "indicator": "gray"}
-        ]
-        return columns, [], message, chart, report_summary
-
-    # Calculate totals for summary and chart - only count point-level rows
-    point_level_data = [row for row in data if row.get("point")]
-    total_employees = sum(row["total_employees"] for row in point_level_data)
-    total_present = sum(row["present"] for row in point_level_data)
-    total_absent = sum(row["absent"] for row in point_level_data)
-    total_on_leave = sum(row["on_leave"] for row in point_level_data)
+    # Calculate totals for summary and chart
+    total_employees = sum(row["total_employees"] for row in data[:-1])  # Exclude the last (Total) row
+    total_present = sum(row["present"] for row in data[:-1])
+    total_absent = sum(row["absent"] for row in data[:-1])
+    total_on_leave = sum(row["on_leave"] for row in data[:-1])
     total_marked = total_present + total_absent + total_on_leave
 
+    # Handle case when there's no attendance data
     if total_marked == 0:
         message = ["No attendance records found for the selected date."]
+        # Create empty chart
         chart = {
             "data": {
                 "labels": ["Present", "Absent", "On Leave"],
@@ -54,96 +34,56 @@ def execute(filters=None):
             "colors": ["#28a745", "#dc3545", "#ffc107"],
             "height": 280
         }
+        # Create empty summary
         report_summary = [
-            {"value": total_employees, "label": "Total Employees", "datatype": "Int", "indicator": "gray"},
-            {"value": 0, "label": "Present", "datatype": "Int", "indicator": "gray"},
-            {"value": 0, "label": "Absent", "datatype": "Int", "indicator": "gray"},
-            {"value": 0, "label": "On Leave", "datatype": "Int", "indicator": "gray"},
-            {"value": 0, "label": "Attendance %", "datatype": "Percent", "indicator": "gray"}
+            {
+                "value": total_employees,
+                "label": "Total Employees",
+                "datatype": "Int",
+                "indicator": "gray"
+            },
+            {
+                "value": 0,
+                "label": "Present",
+                "datatype": "Int",
+                "indicator": "gray"
+            },
+            {
+                "value": 0,
+                "label": "Absent",
+                "datatype": "Int",
+                "indicator": "gray"
+            },
+            {
+                "value": 0,
+                "label": "On Leave",
+                "datatype": "Int",
+                "indicator": "gray"
+            },
+            {
+                "value": 0,
+                "label": "Attendance %",
+                "datatype": "Percent",
+                "indicator": "gray"
+            }
         ]
     else:
-        # Get designation-wise attendance
-        designation_data = frappe.get_all(
-            "Employee",
-            fields=["designation", "count(*) as total"],
-            filters={
-                "company": ("in", filters.companies),
-                "status": "Active"
-            },
-            group_by="designation"
-        )
-
-        # Get attendance by designation
-        designation_attendance = {}
-        for desig in designation_data:
-            employees = frappe.get_all(
-                "Employee",
-                fields=["name"],
-                filters={
-                    "designation": desig.designation,
-                    "company": ("in", filters.companies),
-                    "status": "Active"
-                }
-            )
-            
-            if not employees:
-                continue
-
-            attendance = frappe.get_all(
-                "Attendance",
-                fields=["status", "count(*) as count"],
-                filters={
-                    "attendance_date": filters.date,
-                    "employee": ("in", [emp.name for emp in employees]),
-                    "docstatus": 1
-                },
-                group_by="status"
-            )
-            
-            present = sum(a.count for a in attendance if a.status in ["Present", "Work From Home"])
-            absent = sum(a.count for a in attendance if a.status == "Absent")
-            on_leave = sum(a.count for a in attendance if a.status == "On Leave")
-            marked = present + absent + on_leave
-            
-            designation_attendance[desig.designation] = {
-                "total": desig.total,
-                "present": present,
-                "absent": absent,
-                "on_leave": on_leave,
-                "marked": marked
-            }
-
-        # Calculate overall percentages
         overall_attendance_percentage = (total_present / total_marked * 100) if total_marked else 0
+        
+        # Calculate percentages safely
         present_percentage = f"{(total_present/total_marked*100):.1f}" if total_marked else "0.0"
         absent_percentage = f"{(total_absent/total_marked*100):.1f}" if total_marked else "0.0"
         leave_percentage = f"{(total_on_leave/total_marked*100):.1f}" if total_marked else "0.0"
 
-        # Create message with designation breakdown
         message = [
-            f"Total Employees: {total_employees} Overall Attendance: {overall_attendance_percentage:.1f}%\n",
-            f"Attendance Breakdown: • Present: {total_present} ({present_percentage}%) • Absent: {total_absent} ({absent_percentage}%) • On Leave: {total_on_leave} ({leave_percentage}%)"
+            f"Total Employees: {total_employees}",
+            f"Overall Attendance: {overall_attendance_percentage:.1f}%",
+            f"Present: {total_present} ({present_percentage}%)",
+            f"Absent: {total_absent} ({absent_percentage}%)",
+            f"On Leave: {total_on_leave} ({leave_percentage}%)"
         ]
 
-        # Add designation breakdown
-        if designation_attendance:
-            desig_messages = []
-            for desig, data in designation_attendance.items():
-                if data["marked"] > 0:
-                    present_pct = (data["present"] / data["marked"] * 100) if data["marked"] else 0
-                    absent_pct = (data["absent"] / data["marked"] * 100) if data["marked"] else 0
-                    leave_pct = (data["on_leave"] / data["marked"] * 100) if data["marked"] else 0
-                    
-                    desig_messages.append(
-                        f"\n{desig} ({data['total']}): Present: {data['present']} ({present_pct:.1f}%), "
-                        f"Absent: {data['absent']} ({absent_pct:.1f}%), "
-                        f"On Leave: {data['on_leave']} ({leave_pct:.1f}%)"
-                    )
-            
-            if desig_messages:
-                message.append("\nDesignation-wise Breakdown:" + "".join(desig_messages))
-
-        # Create chart
+        # Create pie chart
         chart = {
             "data": {
                 "labels": ["Present", "Absent", "On Leave"],
@@ -153,20 +93,45 @@ def execute(filters=None):
                 }]
             },
             "type": "pie",
-            "colors": ["#36a2eb", "#ff6384", "#ffcd56"],
+            "colors": ["#36a2eb", "#ff6384", "#ffcd56"],  # Professional blue, soft red, muted yellow
             "height": 280
         }
 
-        # Create report summary
+        # Create report summary with indicators
         report_summary = [
-            {"value": total_employees, "label": "Total Employees", "datatype": "Int", "indicator": "gray"},
-            {"value": total_present, "label": "Present", "datatype": "Int", "indicator": "green"},
-            {"value": total_absent, "label": "Absent", "datatype": "Int", "indicator": "red"},
-            {"value": total_on_leave, "label": "On Leave", "datatype": "Int", "indicator": "yellow"},
-            {"value": overall_attendance_percentage, "label": "Attendance %", "datatype": "Percent", "indicator": "blue"}
+            {
+                "value": total_employees,
+                "label": "Total Employees",
+                "datatype": "Int",
+                "indicator": "gray"
+            },
+            {
+                "value": total_present,
+                "label": "Present",
+                "datatype": "Int",
+                "indicator": "gray"
+            },
+            {
+                "value": total_absent,
+                "label": "Absent",
+                "datatype": "Int",
+                "indicator": "gray"
+            },
+            {
+                "value": total_on_leave,
+                "label": "On Leave",
+                "datatype": "Int",
+                "indicator": "gray"
+            },
+            {
+                "value": overall_attendance_percentage,
+                "label": "Attendance %",
+                "datatype": "Percent",
+                "indicator": "gray"
+            }
         ]
 
-    return columns, data, message, chart, report_summary
+    return columns, data, None, chart, report_summary
 
 def get_columns():
     return [
@@ -222,23 +187,15 @@ def get_point_wise_attendance(filters):
     
     # Add zone filter if specified
     if filters.get("zones"):
-        point_filters["zone_name"] = ("in", filters.get("zones"))
+        point_filters["custom_zone"] = ("in", filters.get("zones"))
     
-    # Get points with their zone information
     allowed_points = frappe.get_list("Point", 
-        fields=["name", "zone_name", "point_name"],
+        fields=["name", "zone"],
         filters=point_filters
     )
     
-    # Get zone names for mapping
-    zones = frappe.get_list("Zone", 
-        fields=["name", "zone_name"],
-        as_list=False
-    )
-    zone_map = {zone.name: zone.zone_name for zone in zones}
-    
     # Create point to zone mapping
-    point_zone_map = {p.name: zone_map.get(p.zone_name, "") for p in allowed_points}
+    point_zone_map = {p.name: p.zone for p in allowed_points}
     
     # Get all points and their employees
     point_filters = {
@@ -341,16 +298,8 @@ def get_point_wise_attendance(filters):
         zone_wise_data[zone]["absent"] += absent
         zone_wise_data[zone]["on_leave"] += on_leave
 
-    # Sort by zone and then point
-    data.sort(key=lambda x: (x["zone"] or "", x["point"] or ""))
-
-    # Initialize grand totals (before adding zone totals)
-    grand_total = {
-        "total_employees": sum(row["total_employees"] for row in data),
-        "present": sum(row["present"] for row in data),
-        "absent": sum(row["absent"] for row in data),
-        "on_leave": sum(row["on_leave"] for row in data)
-    }
+    # Sort by zone and then attendance percentage
+    data.sort(key=lambda x: (x["zone"] or "", x["attendance_percentage"]), reverse=True)
 
     # Add zone subtotals
     final_data = []
@@ -387,16 +336,21 @@ def get_point_wise_attendance(filters):
             "attendance_percentage": (zone_total["present"] / zone_marked * 100) if zone_marked else 0
         })
 
-    # Add grand total using the pre-calculated sums
-    total_marked = grand_total["present"] + grand_total["absent"] + grand_total["on_leave"]
+    # Add grand total
+    total_employees = sum(row["total_employees"] for row in data)
+    total_present = sum(row["present"] for row in data)
+    total_absent = sum(row["absent"] for row in data)
+    total_on_leave = sum(row["on_leave"] for row in data)
+    total_marked = total_present + total_absent + total_on_leave
+    
     final_data.append({
         "zone": "Grand Total",
         "point": "",
-        "total_employees": grand_total["total_employees"],
-        "present": grand_total["present"],
-        "absent": grand_total["absent"],
-        "on_leave": grand_total["on_leave"],
-        "attendance_percentage": (grand_total["present"] / total_marked * 100) if total_marked else 0
+        "total_employees": total_employees,
+        "present": total_present,
+        "absent": total_absent,
+        "on_leave": total_on_leave,
+        "attendance_percentage": (total_present / total_marked * 100) if total_marked else 0
     })
 
     return final_data
