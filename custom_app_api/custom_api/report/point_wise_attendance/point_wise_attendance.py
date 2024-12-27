@@ -14,11 +14,12 @@ def execute(filters=None):
     columns = get_columns()
     data = get_point_wise_attendance(filters)
 
-    # Calculate totals for summary and chart
-    total_employees = sum(row["total_employees"] for row in data[:-1])  # Exclude the last (Total) row
-    total_present = sum(row["present"] for row in data[:-1])
-    total_absent = sum(row["absent"] for row in data[:-1])
-    total_on_leave = sum(row["on_leave"] for row in data[:-1])
+    # Calculate totals for summary and chart - only count point-level rows (exclude zone totals and grand total)
+    point_level_data = [row for row in data if row["point"]]  # Only rows with point values
+    total_employees = sum(row["total_employees"] for row in point_level_data)
+    total_present = sum(row["present"] for row in point_level_data)
+    total_absent = sum(row["absent"] for row in point_level_data)
+    total_on_leave = sum(row["on_leave"] for row in point_level_data)
     total_marked = total_present + total_absent + total_on_leave
 
     # Handle case when there's no attendance data
@@ -309,6 +310,14 @@ def get_point_wise_attendance(filters):
     # Sort by zone and then point
     data.sort(key=lambda x: (x["zone"] or "", x["point"] or ""))
 
+    # Initialize grand totals (before adding zone totals)
+    grand_total = {
+        "total_employees": sum(row["total_employees"] for row in data),
+        "present": sum(row["present"] for row in data),
+        "absent": sum(row["absent"] for row in data),
+        "on_leave": sum(row["on_leave"] for row in data)
+    }
+
     # Add zone subtotals
     final_data = []
     current_zone = None
@@ -344,21 +353,16 @@ def get_point_wise_attendance(filters):
             "attendance_percentage": (zone_total["present"] / zone_marked * 100) if zone_marked else 0
         })
 
-    # Get totals from the last row (Grand Total)
-    total_employees = data[-1]["total_employees"]
-    total_present = data[-1]["present"]
-    total_absent = data[-1]["absent"]
-    total_on_leave = data[-1]["on_leave"]
-    total_marked = total_present + total_absent + total_on_leave
-    
+    # Add grand total using the pre-calculated sums
+    total_marked = grand_total["present"] + grand_total["absent"] + grand_total["on_leave"]
     final_data.append({
         "zone": "Grand Total",
         "point": "",
-        "total_employees": total_employees,
-        "present": total_present,
-        "absent": total_absent,
-        "on_leave": total_on_leave,
-        "attendance_percentage": (total_present / total_marked * 100) if total_marked else 0
+        "total_employees": grand_total["total_employees"],
+        "present": grand_total["present"],
+        "absent": grand_total["absent"],
+        "on_leave": grand_total["on_leave"],
+        "attendance_percentage": (grand_total["present"] / total_marked * 100) if total_marked else 0
     })
 
     return final_data
