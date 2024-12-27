@@ -187,11 +187,11 @@ def get_point_wise_attendance(filters):
     
     # Add zone filter if specified
     if filters.get("zones"):
-        point_filters["custom_zone"] = ("in", filters.get("zones"))
+        point_filters["zone_name"] = ("in", filters.get("zones"))
     
     # Get points with their zone information
     allowed_points = frappe.get_list("Point", 
-        fields=["name", "custom_zone", "point_name"],
+        fields=["name", "zone_name", "point_name"],
         filters=point_filters
     )
     
@@ -203,7 +203,7 @@ def get_point_wise_attendance(filters):
     zone_map = {zone.name: zone.zone_name for zone in zones}
     
     # Create point to zone mapping
-    point_zone_map = {p.name: zone_map.get(p.custom_zone, "") for p in allowed_points}
+    point_zone_map = {p.name: zone_map.get(p.zone_name, "") for p in allowed_points}
     
     # Get all points and their employees
     point_filters = {
