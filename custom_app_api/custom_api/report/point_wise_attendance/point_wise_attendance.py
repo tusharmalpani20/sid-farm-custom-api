@@ -77,11 +77,12 @@ def execute(filters=None):
         leave_percentage = f"{(total_on_leave/total_marked*100):.1f}" if total_marked else "0.0"
 
         message = [
-            f"Total Employees: {total_employees}",
-            f"Overall Attendance: {overall_attendance_percentage:.1f}%",
-            f"Present: {total_present} ({present_percentage}%)",
-            f"Absent: {total_absent} ({absent_percentage}%)",
-            f"On Leave: {total_on_leave} ({leave_percentage}%)"
+            f"Total Employees: {total_employees}\n",
+            f"Overall Attendance: {overall_attendance_percentage:.1f}%\n",
+            f"\nAttendance Breakdown:\n",
+            f"• Present: {total_present} ({present_percentage}%)\n",
+            f"• Absent: {total_absent} ({absent_percentage}%)\n",
+            f"• On Leave: {total_on_leave} ({leave_percentage}%)"
         ]
 
         # Create pie chart
