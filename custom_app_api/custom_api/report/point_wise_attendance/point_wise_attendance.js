@@ -8,6 +8,25 @@ frappe.query_reports["Point Wise Attendance"] = {
 			reqd: 1,
 		},
 		{
+			fieldname: "zones",
+			label: __("Zones"),
+			fieldtype: "MultiSelectList",
+			get_data: function(txt) {
+				return frappe.db.get_list('Zone', {
+					fields: ['name', 'zone_name'],
+					filters: {
+						is_active: 1
+					},
+					order_by: 'zone_name asc'
+				}).then(result => {
+					return result.map(r => ({
+						value: r.name,
+						description: r.zone_name
+					}));
+				});
+			}
+		},
+		{
 			fieldname: "points",
 			label: __("Points"),
 			fieldtype: "MultiSelectList",

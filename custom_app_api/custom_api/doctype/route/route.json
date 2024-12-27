@@ -91,7 +91,7 @@
    "depends_on": "eval:doc.has_additional_payout==1",
    "fieldname": "payout_amount",
    "fieldtype": "Currency",
-   "label": "Payout Amount",
+   "label": "Payout Amount(per day)",
    "mandatory_depends_on": "eval:doc.has_additional_payout==1"
   }
  ],

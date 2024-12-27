@@ -136,9 +136,17 @@ def execute(filters=None):
 def get_columns():
     return [
         {
+            "label": _("Zone"),
+            "fieldname": "zone",
+            "fieldtype": "Link",
+            "options": "Zone",
+            "width": 150
+        },
+        {
             "label": _("Point"),
             "fieldname": "point",
-            "fieldtype": "Data",
+            "fieldtype": "Link",
+            "options": "Point",
             "width": 200
         },
         {
@@ -174,11 +182,20 @@ def get_columns():
     ]
 
 def get_point_wise_attendance(filters):
-    # First get allowed points based on permissions
+    # First get allowed points based on permissions and filters
+    point_filters = {"is_active": 1}
+    
+    # Add zone filter if specified
+    if filters.get("zones"):
+        point_filters["custom_zone"] = ("in", filters.get("zones"))
+    
     allowed_points = frappe.get_list("Point", 
-        fields=["name"],
-        filters={"is_active": 1}
+        fields=["name", "custom_zone as zone"],
+        filters=point_filters
     )
+    
+    # Create point to zone mapping
+    point_zone_map = {p.name: p.zone for p in allowed_points}
     
     # Get all points and their employees
     point_filters = {
@@ -205,9 +222,14 @@ def get_point_wise_attendance(filters):
     )
 
     data = []
+    zone_wise_data = {}  # For grouping by zone
+
     for point_data in points:
         if not point_data.point:
             continue
+
+        # Get zone for this point
+        zone = point_zone_map.get(point_data.point, "")
 
         # Get employees for this point
         point_employees = frappe.get_all(
@@ -251,34 +273,84 @@ def get_point_wise_attendance(filters):
         total_marked = present + absent + on_leave
         attendance_percentage = (present / total_marked * 100) if total_marked else 0
 
-        data.append({
+        row_data = {
+            "zone": zone,
             "point": point_data.point,
             "total_employees": point_data.total_employees,
             "present": present,
             "absent": absent,
             "on_leave": on_leave,
             "attendance_percentage": attendance_percentage
+        }
+
+        data.append(row_data)
+
+        # Aggregate zone-wise data
+        if zone not in zone_wise_data:
+            zone_wise_data[zone] = {
+                "total_employees": 0,
+                "present": 0,
+                "absent": 0,
+                "on_leave": 0
+            }
+        zone_wise_data[zone]["total_employees"] += point_data.total_employees
+        zone_wise_data[zone]["present"] += present
+        zone_wise_data[zone]["absent"] += absent
+        zone_wise_data[zone]["on_leave"] += on_leave
+
+    # Sort by zone and then attendance percentage
+    data.sort(key=lambda x: (x["zone"] or "", x["attendance_percentage"]), reverse=True)
+
+    # Add zone subtotals
+    final_data = []
+    current_zone = None
+    for row in data:
+        if row["zone"] != current_zone:
+            if current_zone is not None:
+                # Add zone total
+                zone_total = zone_wise_data[current_zone]
+                zone_marked = zone_total["present"] + zone_total["absent"] + zone_total["on_leave"]
+                final_data.append({
+                    "zone": f"<b>Total for {current_zone}</b>",
+                    "point": "",
+                    "total_employees": zone_total["total_employees"],
+                    "present": zone_total["present"],
+                    "absent": zone_total["absent"],
+                    "on_leave": zone_total["on_leave"],
+                    "attendance_percentage": (zone_total["present"] / zone_marked * 100) if zone_marked else 0
+                })
+            current_zone = row["zone"]
+        final_data.append(row)
+
+    # Add last zone total
+    if current_zone:
+        zone_total = zone_wise_data[current_zone]
+        zone_marked = zone_total["present"] + zone_total["absent"] + zone_total["on_leave"]
+        final_data.append({
+            "zone": f"<b>Total for {current_zone}</b>",
+            "point": "",
+            "total_employees": zone_total["total_employees"],
+            "present": zone_total["present"],
+            "absent": zone_total["absent"],
+            "on_leave": zone_total["on_leave"],
+            "attendance_percentage": (zone_total["present"] / zone_marked * 100) if zone_marked else 0
         })
 
-    # Sort by attendance percentage in descending order
-    data.sort(key=lambda x: x["attendance_percentage"], reverse=True)
-
-    # Calculate totals
+    # Add grand total
     total_employees = sum(row["total_employees"] for row in data)
     total_present = sum(row["present"] for row in data)
     total_absent = sum(row["absent"] for row in data)
     total_on_leave = sum(row["on_leave"] for row in data)
     total_marked = total_present + total_absent + total_on_leave
-    overall_attendance_percentage = (total_present / total_marked * 100) if total_marked else 0
-
-    # Add totals row
-    data.append({
-        "point": "<b>Total</b>",
+    
+    final_data.append({
+        "zone": "<b>Grand Total</b>",
+        "point": "",
         "total_employees": total_employees,
         "present": total_present,
         "absent": total_absent,
         "on_leave": total_on_leave,
-        "attendance_percentage": overall_attendance_percentage
+        "attendance_percentage": (total_present / total_marked * 100) if total_marked else 0
     })
 
-    return data
+    return final_data
