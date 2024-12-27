@@ -14,26 +14,95 @@ def execute(filters=None):
     columns = get_columns()
     data = get_point_wise_attendance(filters)
 
-    # Calculate totals for summary and chart - use the grand total row
-    grand_total_row = data[-1] if data else {}  # Get the last row (Grand Total)
+    # Handle case when no data is found
+    if not data:
+        message = "No employees found for the selected criteria."
+        chart = {
+            "data": {
+                "labels": ["Present", "Absent", "On Leave"],
+                "datasets": [{"name": "Attendance Distribution", "values": [0, 0, 0]}]
+            },
+            "type": "pie",
+            "colors": ["#36a2eb", "#ff6384", "#ffcd56"],
+            "height": 280
+        }
+        report_summary = [
+            {"value": 0, "label": "Total Employees", "datatype": "Int", "indicator": "gray"},
+            {"value": 0, "label": "Present", "datatype": "Int", "indicator": "gray"},
+            {"value": 0, "label": "Absent", "datatype": "Int", "indicator": "gray"},
+            {"value": 0, "label": "On Leave", "datatype": "Int", "indicator": "gray"},
+            {"value": 0, "label": "Attendance %", "datatype": "Percent", "indicator": "gray"}
+        ]
+        return columns, [], message, chart, report_summary
+
+    # Calculate totals from grand total row
+    grand_total_row = data[-1] if data else {}
     total_employees = grand_total_row.get("total_employees", 0)
     total_present = grand_total_row.get("present", 0)
     total_absent = grand_total_row.get("absent", 0)
     total_on_leave = grand_total_row.get("on_leave", 0)
     total_marked = total_present + total_absent + total_on_leave
 
-    if total_marked == 0:
-        return columns, data, None, None, None
+    # Get all unique designations
+    designations = frappe.get_all(
+        "Employee",
+        fields=["designation"],
+        filters={
+            "company": ("in", filters.companies),
+            "status": "Active",
+            "custom_point": ("in", [row["point"] for row in data if row.get("point")])
+        },
+        distinct=True,
+        order_by="designation"
+    )
 
-    # Calculate overall percentages
+    # Handle case when no attendance records found
+    if total_marked == 0:
+        base_message = f"No attendance records found for {filters.date}.\n\n"
+        if total_employees > 0:
+            base_message += f"Total Employees: {total_employees}\n\nDesignation-wise Employee Count:"
+            
+            # Add designation-wise employee count
+            for designation in designations:
+                emp_count = frappe.count(
+                    "Employee",
+                    filters={
+                        "company": ("in", filters.companies),
+                        "status": "Active",
+                        "custom_point": ("in", [row["point"] for row in data if row.get("point")]),
+                        "designation": designation.designation
+                    }
+                )
+                if emp_count > 0:
+                    base_message += f"\n{designation.designation}: {emp_count} employees"
+        
+        chart = {
+            "data": {
+                "labels": ["Present", "Absent", "On Leave"],
+                "datasets": [{"name": "Attendance Distribution", "values": [0, 0, 0]}]
+            },
+            "type": "pie",
+            "colors": ["#36a2eb", "#ff6384", "#ffcd56"],
+            "height": 280
+        }
+        report_summary = [
+            {"value": total_employees, "label": "Total Employees", "datatype": "Int", "indicator": "gray"},
+            {"value": 0, "label": "Present", "datatype": "Int", "indicator": "gray"},
+            {"value": 0, "label": "Absent", "datatype": "Int", "indicator": "gray"},
+            {"value": 0, "label": "On Leave", "datatype": "Int", "indicator": "gray"},
+            {"value": 0, "label": "Attendance %", "datatype": "Percent", "indicator": "gray"}
+        ]
+        return columns, data, base_message, chart, report_summary
+
+    # Calculate percentages for normal case
     overall_attendance_percentage = (total_present / total_marked * 100) if total_marked else 0
     present_percentage = f"{(total_present/total_marked*100):.1f}" if total_marked else "0.0"
     absent_percentage = f"{(total_absent/total_marked*100):.1f}" if total_marked else "0.0"
     leave_percentage = f"{(total_on_leave/total_marked*100):.1f}" if total_marked else "0.0"
 
-    # Create message
+    # Create the main message
     message = (
-        f"Total Employees: {total_employees} Overall Attendance: {overall_attendance_percentage:.1f}% "
+        f"Total Employees: {total_employees} Overall Attendance: {overall_attendance_percentage:.1f}%\n"
         f"Attendance Breakdown: • Present: {total_present} ({present_percentage}%) • Absent: {total_absent} ({absent_percentage}%) • On Leave: {total_on_leave} ({leave_percentage}%)"
     )
 
