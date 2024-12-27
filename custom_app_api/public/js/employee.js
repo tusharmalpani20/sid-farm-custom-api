@@ -44,7 +44,7 @@ frappe.ui.form.on("Employee", {
 				}
 				else if (userDesignation === 'Last Mile Zonal Head') {
 					console.log('Applying Last Mile Zonal Head restrictions');
-					frm.set_value('reports_to', r.message.name);
+					// frm.set_value('reports_to', r.message.name);
 					frm.set_query('designation', function() {
 						return {
 							filters: [
@@ -55,7 +55,7 @@ frappe.ui.form.on("Employee", {
 				}
 				else if (userDesignation === 'Last Mile Head') {
 					console.log('Applying Last Mile Head restrictions');
-					frm.set_value('reports_to', r.message.name);
+					// frm.set_value('reports_to', r.message.name);
 					frm.set_query('designation', function() {
 						return {
 							filters: [

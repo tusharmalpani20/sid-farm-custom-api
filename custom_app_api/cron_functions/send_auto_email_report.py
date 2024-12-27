@@ -10,6 +10,7 @@ def send_custom_time_reports():
     time_zone = pytz.timezone(frappe.utils.get_system_timezone())
     current_datetime = datetime.now(time_zone)
     current_time = current_datetime.strftime("%I %p").lstrip("0")  # lstrip("0") removes leading zero
+    today = current_datetime.strftime("%Y-%m-%d")
     
     # Get all enabled reports scheduled for current time
     enabled_reports = frappe.get_all(
@@ -23,6 +24,16 @@ def send_custom_time_reports():
 
     for report in enabled_reports:
         try:
+            doc = frappe.get_doc("Auto Email Report", report.name)
+            
+            # Update date only for Point Wise Attendance report
+            if doc.report == "Point Wise Attendance":
+                filters = frappe.parse_json(doc.filters)
+                if "date" in filters:
+                    filters["date"] = today
+                    doc.filters = frappe.as_json(filters)
+                    doc.save()
+            
             send_now(report.name)
         except Exception as e:
             frappe.log_error(
