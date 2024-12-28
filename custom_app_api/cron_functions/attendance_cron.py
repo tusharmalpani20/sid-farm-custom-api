@@ -9,8 +9,8 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
     Designed to run at the end of each day via scheduler
     """
     try:
-        # today = frappe.utils.nowdate()
-        today = frappe.utils.add_days(frappe.utils.nowdate(), -1)
+        today = frappe.utils.nowdate()
+        # today = frappe.utils.add_days(frappe.utils.nowdate(), -1)
         
         # Get all active employees
         active_employees = frappe.get_all(
