@@ -1,7 +1,7 @@
 import frappe
 from frappe import _
 from typing import Dict, Any
-from custom_api.api_end_points.leave_application_api import validate_token, handle_error_response
+from .attendance_api import verify_dp_token, handle_error_response
 
 @frappe.whitelist(allow_guest=True, methods=["GET"])
 def get_field_options() -> Dict[str, Any]:
