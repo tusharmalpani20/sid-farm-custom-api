@@ -10,10 +10,10 @@ def get_field_options() -> Dict[str, Any]:
     Required header: Authorization Bearer token
     """
     try:
-        # Verify token and authenticate
-        is_valid, result = validate_token()
+        # Get the authorization header
+        is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
-            frappe.local.response['http_status_code'] = result.get("http_status_code", 401)
+            frappe.local.response['http_status_code'] = 401
             return result
 
         doctypes = {
