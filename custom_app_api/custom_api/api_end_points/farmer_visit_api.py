@@ -64,118 +64,6 @@ def get_field_options() -> Dict[str, Any]:
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error retrieving field options")
 
-@frappe.whitelist(allow_guest=True, methods=["POST"])
-def create_farmer_visit(
-    farmer_name: str = None,
-    farmer_create_detail: Dict = None,
-    visit_tracker_detail: Dict[str, Any]
-) -> Dict[str, Any]:
-    """
-    Creates a farmer visit record with optional farmer creation
-    Required header: Authorization Bearer token
-    
-    Args:
-        farmer_name: Existing farmer's ID (optional if farmer_create_detail provided)
-        farmer_create_detail: New farmer details (optional if farmer_name provided)
-        visit_tracker_detail: Visit tracking details (mandatory)
-    """
-    try:
-        # Verify authorization
-        is_valid, result = verify_dp_token(frappe.request.headers)
-        if not is_valid:
-            frappe.local.response['http_status_code'] = 401
-            return result
-        
-        employee = result["employee"]
-
-        # Validate that either farmer_name or farmer_create_detail is provided
-        if not farmer_name and not farmer_create_detail:
-            frappe.local.response['http_status_code'] = 400
-            return {
-                "success": False,
-                "status": "error",
-                "message": "Either farmer_name or farmer_create_detail must be provided",
-                "code": "INVALID_INPUT",
-                "http_status_code": 400
-            }
-
-        # Create new farmer if details provided
-        if farmer_create_detail:
-            try:
-                farmer = frappe.get_doc({
-                    "doctype": "Farmer Details",
-                    "registered_by" : employee,
-                    **farmer_create_detail
-                })
-                farmer.insert()
-                farmer_name = farmer.name
-            except Exception as e:
-                frappe.local.response['http_status_code'] = 400
-                return {
-                    "success": False,
-                    "status": "error",
-                    "message": f"Failed to create farmer: {str(e)}",
-                    "code": "FARMER_CREATION_FAILED",
-                    "http_status_code": 400
-                }
-
-        # Handle base64 image
-        if "visit_image" in visit_tracker_detail:
-            try:
-                image_result = handle_base64_image(
-                    visit_tracker_detail.pop("visit_image"),
-                    prefix="visit",
-                    is_private=0  # Make visit images public
-                )
-                visit_tracker_detail["visit_image"] = image_result["file_url"]
-            except frappe.ValidationError as e:
-                frappe.local.response['http_status_code'] = 400
-                return {
-                    "success": False,
-                    "status": "error",
-                    "message": str(e),
-                    "code": "IMAGE_PROCESSING_FAILED",
-                    "http_status_code": 400
-                }
-
-        # Create visit tracker record
-        try:
-            visit = frappe.get_doc({
-                "doctype": "Visit Tracker",
-                "farmer": farmer_name,
-                "visited_by" : employee,
-                **visit_tracker_detail
-            })
-            visit.insert()
-            visit.submit()  # Since it's a submittable document
-
-            frappe.local.response['http_status_code'] = 201
-            return {
-                "success": True,
-                "status": "success",
-                "message": "Visit record created successfully",
-                "code": "VISIT_CREATED",
-                "data": {
-                    "visit_id": visit.name,
-                    "farmer_id": farmer_name
-                },
-                "http_status_code": 201
-            }
-
-        except Exception as e:
-            frappe.local.response['http_status_code'] = 400
-            return {
-                "success": False,
-                "status": "error",
-                "message": f"Failed to create visit: {str(e)}",
-                "code": "VISIT_CREATION_FAILED",
-                "http_status_code": 400
-            }
-
-    except Exception as e:
-        frappe.local.response['http_status_code'] = 500
-        return handle_error_response(e, "Error creating farmer visit")
-
 @frappe.whitelist(allow_guest=True, methods=["GET"])
 def get_assigned_villages() -> Dict[str, Any]:
     """
@@ -286,4 +174,116 @@ def get_bmc_list() -> Dict[str, Any]:
     except Exception as e:
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error retrieving BMC list")
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def create_farmer_visit(
+    farmer_name: str = None,
+    farmer_create_detail: Dict = None,
+    visit_tracker_detail: Dict[str, Any] = None
+) -> Dict[str, Any]:
+    """
+    Creates a farmer visit record with optional farmer creation
+    Required header: Authorization Bearer token
+    
+    Args:
+        farmer_name: Existing farmer's ID (optional if farmer_create_detail provided)
+        farmer_create_detail: New farmer details (optional if farmer_name provided)
+        visit_tracker_detail: Visit tracking details (mandatory)
+    """
+    try:
+        # Verify authorization
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        if not is_valid:
+            frappe.local.response['http_status_code'] = 401
+            return result
+        
+        employee = result["employee"]
+
+        # Validate that either farmer_name or farmer_create_detail is provided
+        if not farmer_name and not farmer_create_detail:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Either farmer_name or farmer_create_detail must be provided",
+                "code": "INVALID_INPUT",
+                "http_status_code": 400
+            }
+
+        # Create new farmer if details provided
+        if farmer_create_detail:
+            try:
+                farmer = frappe.get_doc({
+                    "doctype": "Farmer Details",
+                    "registered_by" : employee,
+                    **farmer_create_detail
+                })
+                farmer.insert()
+                farmer_name = farmer.name
+            except Exception as e:
+                frappe.local.response['http_status_code'] = 400
+                return {
+                    "success": False,
+                    "status": "error",
+                    "message": f"Failed to create farmer: {str(e)}",
+                    "code": "FARMER_CREATION_FAILED",
+                    "http_status_code": 400
+                }
+
+        # Handle base64 image
+        if "visit_image" in visit_tracker_detail:
+            try:
+                image_result = handle_base64_image(
+                    visit_tracker_detail.pop("visit_image"),
+                    prefix="visit",
+                    is_private=0  # Make visit images public
+                )
+                visit_tracker_detail["visit_image"] = image_result["file_url"]
+            except frappe.ValidationError as e:
+                frappe.local.response['http_status_code'] = 400
+                return {
+                    "success": False,
+                    "status": "error",
+                    "message": str(e),
+                    "code": "IMAGE_PROCESSING_FAILED",
+                    "http_status_code": 400
+                }
+
+        # Create visit tracker record
+        try:
+            visit = frappe.get_doc({
+                "doctype": "Visit Tracker",
+                "farmer": farmer_name,
+                "visited_by" : employee,
+                **visit_tracker_detail
+            })
+            visit.insert()
+            visit.submit()  # Since it's a submittable document
+
+            frappe.local.response['http_status_code'] = 201
+            return {
+                "success": True,
+                "status": "success",
+                "message": "Visit record created successfully",
+                "code": "VISIT_CREATED",
+                "data": {
+                    "visit_id": visit.name,
+                    "farmer_id": farmer_name
+                },
+                "http_status_code": 201
+            }
+
+        except Exception as e:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": f"Failed to create visit: {str(e)}",
+                "code": "VISIT_CREATION_FAILED",
+                "http_status_code": 400
+            }
+
+    except Exception as e:
+        frappe.local.response['http_status_code'] = 500
+        return handle_error_response(e, "Error creating farmer visit")
 
