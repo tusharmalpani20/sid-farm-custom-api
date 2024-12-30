@@ -24,7 +24,8 @@
   "revisit_on",
   "visit_reason",
   "comments",
-  "last_visit"
+  "last_visit",
+  "visited_by"
  ],
  "fields": [
   {
@@ -132,6 +133,13 @@
    "fieldtype": "Link",
    "label": "Last Visit",
    "options": "Visit Tracker"
+  },
+  {
+   "fieldname": "visited_by",
+   "fieldtype": "Link",
+   "label": "Visited By",
+   "options": "Employee",
+   "reqd": 1
   }
  ],
  "image_field": "visit_image",
