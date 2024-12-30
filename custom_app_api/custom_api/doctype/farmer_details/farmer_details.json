@@ -18,6 +18,7 @@
   "contact_number",
   "address",
   "prospect_type",
+  "registered_by",
   "work_details_section",
   "bmc",
   "does_the_farmer_have_5_acres_of_land",
@@ -101,6 +102,13 @@
    "fieldtype": "Select",
    "label": "Prospect Type",
    "options": "Warm\nCold\nHot\nLost"
+  },
+  {
+   "fieldname": "registered_by",
+   "fieldtype": "Link",
+   "label": "Registered By",
+   "options": "Employee",
+   "reqd": 1
   },
   {
    "fieldname": "work_details_section",

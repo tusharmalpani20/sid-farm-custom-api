@@ -10,6 +10,7 @@
   "amended_from",
   "farmer",
   "visit_date",
+  "visit_type",
   "village",
   "column_break_ffyf",
   "latitude",
@@ -51,6 +52,12 @@
    "fieldname": "visit_date",
    "fieldtype": "Datetime",
    "label": "Visit Date"
+  },
+  {
+   "fieldname": "visit_type",
+   "fieldtype": "Select",
+   "label": "Visit Type",
+   "options": "Phone Call\nPhysical Visit"
   },
   {
    "fieldname": "village",
