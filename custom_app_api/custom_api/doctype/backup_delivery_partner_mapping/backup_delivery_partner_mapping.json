@@ -1,0 +1,141 @@
+{
+    "actions": [],
+    "allow_rename": 1,
+    "creation": "2024-12-30 10:00:00.000000",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "filters_section",
+        "area",
+        "point",
+        "zone",
+        "get_employees",
+        "section_break_1",
+        "employees_html",
+        "amended_from"
+    ],
+    "fields": [
+        {
+            "fieldname": "filters_section",
+            "fieldtype": "Section Break",
+            "label": "Filters"
+        },
+        {
+            "fieldname": "area",
+            "fieldtype": "Link",
+            "label": "Area",
+            "options": "Area"
+        },
+        {
+            "fieldname": "point",
+            "fieldtype": "Link",
+            "label": "Point",
+            "options": "Point"
+        },
+        {
+            "fieldname": "zone",
+            "fieldtype": "Link",
+            "label": "Zone",
+            "options": "Zone"
+        },
+        {
+            "fieldname": "get_employees",
+            "fieldtype": "Button",
+            "label": "Get Employees"
+        },
+        {
+            "fieldname": "section_break_1",
+            "fieldtype": "Section Break"
+        },
+        {
+            "fieldname": "employees_html",
+            "fieldtype": "HTML",
+            "label": "Employees HTML"
+        },
+        {
+            "fieldname": "amended_from",
+            "fieldtype": "Link",
+            "label": "Amended From",
+            "no_copy": 1,
+            "options": "Backup Delivery Partner Mapping",
+            "print_hide": 1,
+            "read_only": 1
+        },
+        {
+            "fieldname": "custom_route",
+            "fieldtype": "Link",
+            "label": "Route",
+            "options": "Route"
+        },
+        {
+            "fieldname": "custom_point",
+            "fieldtype": "Link",
+            "label": "Point",
+            "options": "Point"
+        },
+        {
+            "fieldname": "custom_zone",
+            "fieldtype": "Link",
+            "label": "Zone",
+            "options": "Zone",
+            "read_only": 1
+        },
+        {
+            "fieldname": "custom_area",
+            "fieldtype": "Link",
+            "label": "Area",
+            "options": "Area",
+            "read_only": 1
+        },
+        {
+            "fieldname": "route_name",
+            "fieldtype": "Link",
+            "label": "Route",
+            "options": "Route"
+        },
+        {
+            "fieldname": "point_name",
+            "fieldtype": "Link",
+            "label": "Point",
+            "options": "Point"
+        },
+        {
+            "fieldname": "zone_name",
+            "fieldtype": "Link",
+            "label": "Zone",
+            "options": "Zone",
+            "read_only": 1
+        },
+        {
+            "fieldname": "area_name",
+            "fieldtype": "Link",
+            "label": "Area",
+            "options": "Area",
+            "read_only": 1
+        }
+    ],
+    "is_submittable": 1,
+    "modified": "2024-12-30 10:00:00.000000",
+    "modified_by": "Administrator",
+    "module": "Custom API",
+    "name": "Backup Delivery Partner Mapping",
+    "owner": "Administrator",
+    "permissions": [
+        {
+            "create": 1,
+            "delete": 1,
+            "email": 1,
+            "export": 1,
+            "print": 1,
+            "read": 1,
+            "report": 1,
+            "role": "System Manager",
+            "share": 1,
+            "write": 1,
+            "cancel": 0,
+            "amend": 1
+        }
+    ],
+    "sort_field": "modified",
+    "sort_order": "DESC"
+}
