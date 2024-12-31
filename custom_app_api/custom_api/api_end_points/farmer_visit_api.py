@@ -230,23 +230,29 @@ def create_farmer_visit(
     """
     try:
         # Log incoming request data
-        frappe.logger().debug(f"Create Farmer Visit - Input Data: farmer_name={farmer_name}, "
-                            f"farmer_create_detail={farmer_create_detail}, "
-                            f"visit_tracker_detail={visit_tracker_detail}")
+        frappe.log_error(
+            title="Create Farmer Visit - Input Data",
+            message=f"farmer_name={farmer_name}\nfarmer_create_detail={farmer_create_detail}\nvisit_tracker_detail={visit_tracker_detail}"
+        )
 
         # Verify authorization
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
-            frappe.logger().error(f"Authorization failed: {result}")
+            frappe.log_error(
+                title="Create Farmer Visit - Auth Failed",
+                message=f"Authorization failed: {result}"
+            )
             frappe.local.response['http_status_code'] = 401
             return result
         
         employee = result["employee"]
-        frappe.logger().debug(f"Authorized employee: {employee}")
-
+        
         # Validate input parameters
         if not farmer_name and not farmer_create_detail:
-            frappe.logger().error("Neither farmer_name nor farmer_create_detail provided")
+            frappe.log_error(
+                title="Create Farmer Visit - Invalid Input",
+                message="Neither farmer_name nor farmer_create_detail provided"
+            )
             frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
@@ -259,7 +265,6 @@ def create_farmer_visit(
         # Create new farmer if details provided
         if farmer_create_detail:
             try:
-                frappe.logger().debug(f"Creating new farmer with details: {farmer_create_detail}")
                 farmer = frappe.get_doc({
                     "doctype": "Farmer Details",
                     "registered_by": employee,
@@ -267,9 +272,12 @@ def create_farmer_visit(
                 })
                 farmer.insert()
                 farmer_name = farmer.name
-                frappe.logger().info(f"New farmer created: {farmer_name}")
+                
             except Exception as e:
-                frappe.logger().error(f"Farmer creation failed: {str(e)}\nDetails: {farmer_create_detail}")
+                frappe.log_error(
+                    title="Create Farmer Visit - Farmer Creation Failed",
+                    message=f"Error: {str(e)}\nDetails: {farmer_create_detail}"
+                )
                 frappe.local.response['http_status_code'] = 400
                 return {
                     "success": False,
@@ -282,16 +290,18 @@ def create_farmer_visit(
         # Handle base64 image
         if visit_tracker_detail and "visit_image" in visit_tracker_detail:
             try:
-                frappe.logger().debug("Processing visit image")
                 image_result = handle_base64_image(
                     visit_tracker_detail.pop("visit_image"),
                     prefix="visit",
                     is_private=0
                 )
                 visit_tracker_detail["visit_image"] = image_result["file_url"]
-                frappe.logger().debug(f"Image processed successfully: {image_result['file_url']}")
+                
             except Exception as e:
-                frappe.logger().error(f"Image processing failed: {str(e)}")
+                frappe.log_error(
+                    title="Create Farmer Visit - Image Processing Failed",
+                    message=f"Error: {str(e)}"
+                )
                 frappe.local.response['http_status_code'] = 400
                 return {
                     "success": False,
@@ -303,7 +313,11 @@ def create_farmer_visit(
 
         # Create visit tracker record
         try:
-            frappe.logger().debug(f"Creating visit tracker with details: {visit_tracker_detail}")
+            frappe.log_error(
+                title="Create Farmer Visit - Creating Visit",
+                message=f"Creating visit with details:\nFarmer: {farmer_name}\nEmployee: {employee}\nDetails: {visit_tracker_detail}"
+            )
+            
             visit = frappe.get_doc({
                 "doctype": "Visit Tracker",
                 "farmer": farmer_name,
@@ -312,7 +326,6 @@ def create_farmer_visit(
             })
             visit.insert()
             visit.submit()  # Since it's a submittable document
-            frappe.logger().info(f"Visit record created successfully: {visit.name}")
 
             frappe.local.response['http_status_code'] = 201
             return {
@@ -328,7 +341,10 @@ def create_farmer_visit(
             }
 
         except Exception as e:
-            frappe.logger().error(f"Visit creation failed: {str(e)}\nDetails: {visit_tracker_detail}")
+            frappe.log_error(
+                title="Create Farmer Visit - Visit Creation Failed",
+                message=f"Error: {str(e)}\nDetails:\nFarmer: {farmer_name}\nEmployee: {employee}\nVisit Details: {visit_tracker_detail}"
+            )
             frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
@@ -339,7 +355,10 @@ def create_farmer_visit(
             }
 
     except Exception as e:
-        frappe.logger().error(f"Unexpected error in create_farmer_visit: {str(e)}")
+        frappe.log_error(
+            title="Create Farmer Visit - Unexpected Error",
+            message=f"Error: {str(e)}\nFarmer: {farmer_name}\nDetails: {visit_tracker_detail}"
+        )
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error creating farmer visit")
 
