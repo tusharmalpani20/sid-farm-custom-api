@@ -89,7 +89,8 @@ def execute(filters=None):
     if designation_data:
         message.extend([
             "<div style='margin-top: 20px;'>",
-            "<h3 style='color: #1F497D; margin-bottom: 15px;'>Designation-wise Breakdown</h3>"
+            "<h3 style='color: #1F497D; margin-bottom: 15px;'>Designation-wise Breakdown</h3>",
+            "<div style='display: flex; flex-wrap: wrap; gap: 20px;'>"
         ])
         
         for desig in designation_data:
@@ -130,15 +131,15 @@ def execute(filters=None):
                 present_pct = absent_pct = leave_pct = 0
 
             message.extend([
-                f"<div style='margin-bottom: 15px; padding-left: 10px;'>",
+                f"<div style='flex: 0 1 calc(33.33% - 14px); margin-bottom: 15px;'>",
                 f"<div style='font-weight: bold; color: #4472C4; margin-bottom: 8px;'>{desig.designation} ({desig.total} employees)</div>",
-                f"<div style='margin-left: 20px;'>• Present: <b>{present}</b> ({present_pct:.1f}%)</div>",
-                f"<div style='margin-left: 20px;'>• Absent: <b>{absent}</b> ({absent_pct:.1f}%)</div>", 
-                f"<div style='margin-left: 20px;'>• On Leave: <b>{on_leave}</b> ({leave_pct:.1f}%)</div>",
+                f"<div>• Present: <b>{present}</b> ({present_pct:.1f}%)</div>",
+                f"<div>• Absent: <b>{absent}</b> ({absent_pct:.1f}%)</div>", 
+                f"<div>• On Leave: <b>{on_leave}</b> ({leave_pct:.1f}%)</div>",
                 "</div>"
             ])
 
-        message.append("</div>")
+        message.extend(["</div></div>"])
     message.append("</div>")
 
     # Create chart
@@ -334,40 +335,40 @@ def get_point_wise_attendance(filters):
     # Sort by zone and then attendance percentage
     data.sort(key=lambda x: (x["zone"] or "", x["attendance_percentage"]), reverse=True)
 
-    # Add zone subtotals
+    # Add zone subtotals (commented out)
     final_data = []
     current_zone = None
     for row in data:
-        if row["zone"] != current_zone:
-            if current_zone is not None:
-                # Add zone total
-                zone_total = zone_wise_data[current_zone]
-                zone_marked = zone_total["present"] + zone_total["absent"] + zone_total["on_leave"]
-                final_data.append({
-                    "zone": current_zone + " Total",
-                    "point": "",
-                    "total_employees": zone_total["total_employees"],
-                    "present": zone_total["present"],
-                    "absent": zone_total["absent"],
-                    "on_leave": zone_total["on_leave"],
-                    "attendance_percentage": (zone_total["present"] / zone_marked * 100) if zone_marked else 0
-                })
-            current_zone = row["zone"]
+        # if row["zone"] != current_zone:
+        #     if current_zone is not None:
+        #         # Add zone total
+        #         zone_total = zone_wise_data[current_zone]
+        #         zone_marked = zone_total["present"] + zone_total["absent"] + zone_total["on_leave"]
+        #         final_data.append({
+        #             "zone": current_zone + " Total",
+        #             "point": "",
+        #             "total_employees": zone_total["total_employees"],
+        #             "present": zone_total["present"],
+        #             "absent": zone_total["absent"],
+        #             "on_leave": zone_total["on_leave"],
+        #             "attendance_percentage": (zone_total["present"] / zone_marked * 100) if zone_marked else 0
+        #         })
+        #     current_zone = row["zone"]
         final_data.append(row)
 
-    # Add last zone total if exists
-    if current_zone:
-        zone_total = zone_wise_data[current_zone]
-        zone_marked = zone_total["present"] + zone_total["absent"] + zone_total["on_leave"]
-        final_data.append({
-            "zone": current_zone + " Total",
-            "point": "",
-            "total_employees": zone_total["total_employees"],
-            "present": zone_total["present"],
-            "absent": zone_total["absent"],
-            "on_leave": zone_total["on_leave"],
-            "attendance_percentage": (zone_total["present"] / zone_marked * 100) if zone_marked else 0
-        })
+    # Add last zone total if exists (commented out)
+    # if current_zone:
+    #     zone_total = zone_wise_data[current_zone]
+    #     zone_marked = zone_total["present"] + zone_total["absent"] + zone_total["on_leave"]
+    #     final_data.append({
+    #         "zone": current_zone + " Total",
+    #         "point": "",
+    #         "total_employees": zone_total["total_employees"],
+    #         "present": zone_total["present"],
+    #         "absent": zone_total["absent"],
+    #         "on_leave": zone_total["on_leave"],
+    #         "attendance_percentage": (zone_total["present"] / zone_marked * 100) if zone_marked else 0
+    #     })
 
     # Add grand total
     total_employees = sum(row["total_employees"] for row in data)

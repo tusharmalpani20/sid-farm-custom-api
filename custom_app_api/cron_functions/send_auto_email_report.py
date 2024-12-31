@@ -30,7 +30,7 @@ def send_custom_time_reports():
             if doc.report == "Point Wise Attendance":
                 filters = frappe.parse_json(doc.filters)
                 if "date" in filters:
-                    filters["date"] = today.strftime("%d-%m-%Y")
+                    filters["date"] = current_datetime.strftime("%d-%m-%Y")
                     doc.filters = frappe.as_json(filters)
                     doc.save()
             # Update from and to dates for Delivery Partner Status Report
@@ -40,7 +40,7 @@ def send_custom_time_reports():
                     # Get yesterday's date
                     yesterday = (current_datetime - frappe.utils.datetime.timedelta(days=1)).strftime("%d-%m-%Y")
                     filters["from"] = yesterday
-                    filters["to"] = today.strftime("%d-%m-%Y")
+                    filters["to"] = current_datetime.strftime("%d-%m-%Y")
                     doc.filters = frappe.as_json(filters)
                     doc.save()
             
