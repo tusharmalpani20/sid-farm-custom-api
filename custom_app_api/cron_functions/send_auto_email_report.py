@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from frappe.utils import add_to_date
 import frappe
 from frappe.email.doctype.auto_email_report.auto_email_report import send_now
@@ -6,8 +6,8 @@ from frappe.email.doctype.auto_email_report.auto_email_report import send_now
 def send_custom_time_reports():
     """Check and send reports scheduled for the current hour"""
     
-    # Get current time
-    current_datetime = datetime.now()
+    # Get current time and add 5:30 for IST
+    current_datetime = datetime.now() + timedelta(hours=5, minutes=30)
     current_time = current_datetime.strftime("%I %p").lstrip("0")  # For hour format like "9 AM"
     today = current_datetime.strftime('%d-%m-%Y')  # Format as DD-MM-YYYY
     
