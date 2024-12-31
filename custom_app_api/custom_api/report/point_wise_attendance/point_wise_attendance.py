@@ -90,7 +90,7 @@ def execute(filters=None):
         message.extend([
             "<div style='margin-top: 20px;'>",
             "<h3 style='color: #1F497D; margin-bottom: 15px;'>Designation-wise Breakdown</h3>",
-            "<div style='display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;'>"
+            "<div style='display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px;'>"
         ])
         
         for desig in designation_data:
@@ -131,14 +131,12 @@ def execute(filters=None):
                 present_pct = absent_pct = leave_pct = 0
 
             message.extend([
-                "<div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; min-width: 250px;'>",
-                "<div>",
-                f"<div style='font-weight: bold; color: #4472C4;'>{desig.designation}</div>",
+                "<div style='padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px;'>",
+                f"<div style='font-weight: bold; color: #4472C4; margin-bottom: 5px;'>{desig.designation}</div>",
                 f"<div style='color: #666; font-size: 0.9em; margin-bottom: 10px;'>({desig.total} employees)</div>",
-                f"<div>Present: <b>{present}</b> ({present_pct:.1f}%)</div>",
-                f"<div>Absent: <b>{absent}</b> ({absent_pct:.1f}%)</div>", 
+                f"<div style='margin-bottom: 3px;'>Present: <b>{present}</b> ({present_pct:.1f}%)</div>",
+                f"<div style='margin-bottom: 3px;'>Absent: <b>{absent}</b> ({absent_pct:.1f}%)</div>", 
                 f"<div>On Leave: <b>{on_leave}</b> ({leave_pct:.1f}%)</div>",
-                "</div>",
                 "</div>"
             ])
 
