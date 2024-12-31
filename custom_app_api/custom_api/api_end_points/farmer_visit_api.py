@@ -1,7 +1,50 @@
 import frappe
 from frappe import _
 from typing import Dict, Any
+import base64
+import os
 from .attendance_api import verify_dp_token, handle_error_response
+
+def handle_base64_image(base64_string: str, prefix: str = "file", is_private: int = 1) -> Dict[str, str]:
+    """
+    Handle base64 image upload
+    Args:
+        base64_string: Base64 encoded image string
+        prefix: Prefix for the file name
+        is_private: Whether the file should be private (1) or public (0)
+    Returns:
+        Dict containing file_url and other file details
+    """
+    try:
+        # Remove the data URL prefix if present
+        if "base64," in base64_string:
+            base64_string = base64_string.split("base64,")[1]
+
+        # Decode base64 string
+        file_content = base64.b64decode(base64_string)
+
+        # Generate a unique filename
+        filename = f"{prefix}_{frappe.generate_hash()[:10]}.png"
+
+        # Create a new file doc
+        file_doc = frappe.get_doc({
+            "doctype": "File",
+            "file_name": filename,
+            "is_private": is_private,
+            "content": file_content,
+            "decode": True
+        })
+        
+        file_doc.insert()
+
+        return {
+            "name": file_doc.name,
+            "file_name": file_doc.file_name,
+            "file_url": file_doc.file_url
+        }
+
+    except Exception as e:
+        frappe.throw(f"Error processing image: {str(e)}")
 
 @frappe.whitelist(allow_guest=True, methods=["GET"])
 def get_field_options() -> Dict[str, Any]:

@@ -13,7 +13,9 @@
    "fieldname": "village",
    "fieldtype": "Link",
    "label": "Village",
-   "options": "Village"
+   "options": "Village",
+   "allow_on_submit": 1,
+   "in_list_view": 1
   }
  ],
  "index_web_pages_for_search": 1,
