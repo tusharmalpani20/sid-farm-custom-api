@@ -82,66 +82,61 @@ def execute(filters=None):
         f"<div style='margin-left: 20px; margin-top: 5px;'>• Present: <b>{total_present}</b> ({present_percentage}%)</div>",
         f"<div style='margin-left: 20px;'>• Absent: <b>{total_absent}</b> ({absent_percentage}%)</div>",
         f"<div style='margin-left: 20px;'>• On Leave: <b>{total_on_leave}</b> ({leave_percentage}%)</div>",
-        "</div>"
+        "</div>",
+        "<div style='margin-top: 20px;'>",
+        "<h3 style='color: #1F497D; margin-bottom: 15px;'>Designation-wise Breakdown</h3>",
+        "<div style='display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px;'>"
     ]
-
-    # Add designation-wise breakdown if data exists
-    if designation_data:
-        message.extend([
-            "<div style='margin-top: 20px;'>",
-            "<h3 style='color: #1F497D; margin-bottom: 15px;'>Designation-wise Breakdown</h3>",
-            "<div style='display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px;'>"
-        ])
-        
-        for desig in designation_data:
-            # Get attendance for this designation
-            attendance = frappe.get_all(
-                "Attendance",
-                fields=["status", "count(*) as count"],
-                filters={
-                    "attendance_date": filters.date,
-                    "docstatus": 1,
-                    "employee": ("in", 
-                        frappe.get_all(
-                            "Employee",
-                            filters={
-                                "designation": desig.designation,
-                                "company": ("in", filters.companies),
-                                "status": "Active",
-                                "custom_point": ("in", [row["point"] for row in data if row.get("point")])
-                            },
-                            pluck="name"
-                        )
+    
+    for desig in designation_data:
+        # Get attendance for this designation
+        attendance = frappe.get_all(
+            "Attendance",
+            fields=["status", "count(*) as count"],
+            filters={
+                "attendance_date": filters.date,
+                "docstatus": 1,
+                "employee": ("in", 
+                    frappe.get_all(
+                        "Employee",
+                        filters={
+                            "designation": desig.designation,
+                            "company": ("in", filters.companies),
+                            "status": "Active",
+                            "custom_point": ("in", [row["point"] for row in data if row.get("point")])
+                        },
+                        pluck="name"
                     )
-                },
-                group_by="status"
-            )
+                )
+            },
+            group_by="status"
+        )
 
-            # Calculate attendance counts and percentages
-            present = sum(a.count for a in attendance if a.status in ["Present", "Work From Home"])
-            absent = sum(a.count for a in attendance if a.status == "Absent")
-            on_leave = sum(a.count for a in attendance if a.status == "On Leave")
-            marked = present + absent + on_leave
-            
-            if marked > 0:
-                present_pct = (present / marked * 100)
-                absent_pct = (absent / marked * 100)
-                leave_pct = (on_leave / marked * 100)
-            else:
-                present_pct = absent_pct = leave_pct = 0
+        # Calculate attendance counts and percentages
+        present = sum(a.count for a in attendance if a.status in ["Present", "Work From Home"])
+        absent = sum(a.count for a in attendance if a.status == "Absent")
+        on_leave = sum(a.count for a in attendance if a.status == "On Leave")
+        marked = present + absent + on_leave
+        
+        if marked > 0:
+            present_pct = (present / marked * 100)
+            absent_pct = (absent / marked * 100)
+            leave_pct = (on_leave / marked * 100)
+        else:
+            present_pct = absent_pct = leave_pct = 0
 
-            message.extend([
-                "<div style='padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px;'>",
-                f"<div style='font-weight: bold; color: #4472C4; margin-bottom: 5px;'>{desig.designation}</div>",
-                f"<div style='color: #666; font-size: 0.9em; margin-bottom: 10px;'>({desig.total} employees)</div>",
-                f"<div style='margin-bottom: 3px;'>Present: <b>{present}</b> ({present_pct:.1f}%)</div>",
-                f"<div style='margin-bottom: 3px;'>Absent: <b>{absent}</b> ({absent_pct:.1f}%)</div>", 
-                f"<div>On Leave: <b>{on_leave}</b> ({leave_pct:.1f}%)</div>",
-                "</div>"
-            ])
+        message.append(
+            f"""<div style='padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px;'>
+                <div style='font-weight: bold; color: #4472C4; margin-bottom: 5px;'>{desig.designation}</div>
+                <div style='color: #666; font-size: 0.9em; margin-bottom: 10px;'>({desig.total} employees)</div>
+                <div style='margin-bottom: 3px;'>Present: <b>{present}</b> ({present_pct:.1f}%)</div>
+                <div style='margin-bottom: 3px;'>Absent: <b>{absent}</b> ({absent_pct:.1f}%)</div>
+                <div>On Leave: <b>{on_leave}</b> ({leave_pct:.1f}%)</div>
+            </div>"""
+        )
 
-        message.extend(["</div></div>"])
-    message.append("</div>")
+    message.extend(["</div>", "</div>", "</div>"])
+    message = "".join(message)
 
     # Create chart
     chart = {
