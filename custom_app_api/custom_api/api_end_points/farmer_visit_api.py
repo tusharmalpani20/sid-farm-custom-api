@@ -277,6 +277,7 @@ def create_farmer_visit(
                     if existing_farmer:
                         frappe.db.rollback()
                         farmer_info = existing_farmer[0]
+                        frappe.local.response['http_status_code'] = 400
                         return {
                             "success": False,
                             "status": "error",
@@ -354,4 +355,64 @@ def create_farmer_visit(
         frappe.db.rollback()
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error creating farmer visit")
+
+@frappe.whitelist(allow_guest=True, methods=["GET"])
+def get_farmers_by_employee() -> Dict[str, Any]:
+    """
+    Returns list of farmers registered by the logged-in employee
+    Required header: Authorization Bearer token
+    """
+    try:
+        # Verify authorization
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        if not is_valid:
+            frappe.local.response['http_status_code'] = 401
+            return result
+        
+        employee = result["employee"]
+        
+        # Get farmers registered by the employee
+        farmers = frappe.get_all(
+            "Farmer Details",
+            filters={"registered_by": employee},
+            fields=[
+                "name",
+                "first_name",
+                "last_name",
+                "contact_number",
+                "address",
+                "prospect_type",
+                "bmc",
+                "age",
+                "family_background",
+                "financial_status",
+                "educational_qualification"
+            ]
+        )
+        
+        if not farmers:
+            frappe.local.response['http_status_code'] = 404
+            return {
+                "success": False,
+                "status": "error",
+                "message": "No farmers found for this employee",
+                "code": "NO_FARMERS_FOUND",
+                "http_status_code": 404
+            }
+
+        frappe.local.response['http_status_code'] = 200
+        return {
+            "success": True,
+            "status": "success",
+            "message": "Farmers list retrieved successfully",
+            "code": "FARMERS_RETRIEVED",
+            "data": farmers,
+            "http_status_code": 200
+        }
+
+    except Exception as e:
+        frappe.local.response['http_status_code'] = 500
+        return handle_error_response(e, "Error retrieving farmers list")
+
+
 
