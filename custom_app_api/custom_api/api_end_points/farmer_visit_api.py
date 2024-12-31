@@ -4,37 +4,43 @@ from typing import Dict, Any
 import base64
 import os
 from .attendance_api import verify_dp_token, handle_error_response
+import datetime
+import pytz
 
-def handle_base64_image(base64_string: str, prefix: str = "file", is_private: int = 1) -> Dict[str, str]:
+def handle_base64_image(base64_string: str, prefix: str = "file") -> Dict[str, str]:
     """
     Handle base64 image upload
     Args:
         base64_string: Base64 encoded image string
         prefix: Prefix for the file name
-        is_private: Whether the file should be private (1) or public (0)
     Returns:
         Dict containing file_url and other file details
     """
     try:
-        # Remove the data URL prefix if present
-        if "base64," in base64_string:
-            base64_string = base64_string.split("base64,")[1]
+        # Remove data URL prefix if present
+        if base64_string.startswith('data:'):
+            base64_string = base64_string.split('base64,')[1].strip()
+        
+        try:
+            # Decode base64 string
+            file_content = base64.b64decode(base64_string)
+        except Exception as e:
+            frappe.log_error(
+                title="Image Processing - Base64 Decode Failed",
+                message=f"Error: {str(e)}"
+            )
+            raise frappe.ValidationError("Invalid base64 image data. Please check the image format.")
 
-        # Decode base64 string
-        file_content = base64.b64decode(base64_string)
-
-        # Generate a unique filename
-        filename = f"{prefix}_{frappe.generate_hash()[:10]}.png"
-
-        # Create a new file doc
+        # Generate filename with timestamp
+        filename = f"{prefix}_{frappe.utils.now_datetime().strftime('%Y%m%d%H%M%S')}.jpg"
+        
+        # Create file doc
         file_doc = frappe.get_doc({
             "doctype": "File",
             "file_name": filename,
-            "is_private": is_private,
             "content": file_content,
-            "decode": True
+            "is_private": 0  # Make it public since it's a visit image
         })
-        
         file_doc.insert()
 
         return {
@@ -44,7 +50,11 @@ def handle_base64_image(base64_string: str, prefix: str = "file", is_private: in
         }
 
     except Exception as e:
-        frappe.throw(f"Error processing image: {str(e)}")
+        frappe.log_error(
+            title="Image Processing Failed",
+            message=f"Error: {str(e)}"
+        )
+        raise
 
 @frappe.whitelist(allow_guest=True, methods=["GET"])
 def get_field_options() -> Dict[str, Any]:
@@ -228,20 +238,14 @@ def create_farmer_visit(
     Creates a farmer visit record with optional farmer creation
     Required header: Authorization Bearer token
     """
+    # Start transaction
+    frappe.db.begin()
+    
     try:
-        # Log incoming request data
-        frappe.log_error(
-            title="Create Farmer Visit - Input Data",
-            message=f"farmer_name={farmer_name}\nfarmer_create_detail={farmer_create_detail}\nvisit_tracker_detail={visit_tracker_detail}"
-        )
-
         # Verify authorization
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
-            frappe.log_error(
-                title="Create Farmer Visit - Auth Failed",
-                message=f"Authorization failed: {result}"
-            )
+            frappe.db.rollback()
             frappe.local.response['http_status_code'] = 401
             return result
         
@@ -249,10 +253,7 @@ def create_farmer_visit(
         
         # Validate input parameters
         if not farmer_name and not farmer_create_detail:
-            frappe.log_error(
-                title="Create Farmer Visit - Invalid Input",
-                message="Neither farmer_name nor farmer_create_detail provided"
-            )
+            frappe.db.rollback()
             frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
@@ -262,9 +263,29 @@ def create_farmer_visit(
                 "http_status_code": 400
             }
 
-        # Create new farmer if details provided
-        if farmer_create_detail:
-            try:
+        try:
+            # Create new farmer if details provided
+            if farmer_create_detail:
+                # Check for duplicate mobile number
+                if 'contact_number' in farmer_create_detail:
+                    existing_farmer = frappe.get_all(
+                        "Farmer Details",
+                        filters={"contact_number": farmer_create_detail['contact_number']},
+                        fields=["name", "first_name", "last_name"]
+                    )
+                    
+                    if existing_farmer:
+                        frappe.db.rollback()
+                        farmer_info = existing_farmer[0]
+                        return {
+                            "success": False,
+                            "status": "error",
+                            "message": f"Mobile number {farmer_create_detail['contact_number']} is already registered "
+                                     f"with farmer {farmer_info.first_name} {farmer_info.last_name} ({farmer_info.name})",
+                            "code": "DUPLICATE_MOBILE",
+                            "http_status_code": 400
+                        }
+
                 farmer = frappe.get_doc({
                     "doctype": "Farmer Details",
                     "registered_by": employee,
@@ -272,52 +293,27 @@ def create_farmer_visit(
                 })
                 farmer.insert()
                 farmer_name = farmer.name
-                
-            except Exception as e:
-                frappe.log_error(
-                    title="Create Farmer Visit - Farmer Creation Failed",
-                    message=f"Error: {str(e)}\nDetails: {farmer_create_detail}"
-                )
-                frappe.local.response['http_status_code'] = 400
-                return {
-                    "success": False,
-                    "status": "error",
-                    "message": f"Failed to create farmer: {str(e)}",
-                    "code": "FARMER_CREATION_FAILED",
-                    "http_status_code": 400
-                }
 
-        # Handle base64 image
-        if visit_tracker_detail and "visit_image" in visit_tracker_detail:
-            try:
-                image_result = handle_base64_image(
-                    visit_tracker_detail.pop("visit_image"),
-                    prefix="visit",
-                    is_private=0
-                )
-                visit_tracker_detail["visit_image"] = image_result["file_url"]
-                
-            except Exception as e:
-                frappe.log_error(
-                    title="Create Farmer Visit - Image Processing Failed",
-                    message=f"Error: {str(e)}"
-                )
-                frappe.local.response['http_status_code'] = 400
-                return {
-                    "success": False,
-                    "status": "error",
-                    "message": f"Failed to process image: {str(e)}",
-                    "code": "IMAGE_PROCESSING_FAILED",
-                    "http_status_code": 400
-                }
+            # Handle base64 image
+            if visit_tracker_detail and "visit_image" in visit_tracker_detail:
+                try:
+                    image_result = handle_base64_image(
+                        visit_tracker_detail["visit_image"],
+                        prefix="visit"
+                    )
+                    visit_tracker_detail["visit_image"] = image_result["file_url"]
+                except Exception as e:
+                    frappe.db.rollback()
+                    frappe.local.response['http_status_code'] = 400
+                    return {
+                        "success": False,
+                        "status": "error",
+                        "message": f"Failed to process image: {str(e)}",
+                        "code": "IMAGE_PROCESSING_FAILED",
+                        "http_status_code": 400
+                    }
 
-        # Create visit tracker record
-        try:
-            frappe.log_error(
-                title="Create Farmer Visit - Creating Visit",
-                message=f"Creating visit with details:\nFarmer: {farmer_name}\nEmployee: {employee}\nDetails: {visit_tracker_detail}"
-            )
-            
+            # Create visit tracker record
             visit = frappe.get_doc({
                 "doctype": "Visit Tracker",
                 "farmer": farmer_name,
@@ -325,7 +321,10 @@ def create_farmer_visit(
                 **visit_tracker_detail
             })
             visit.insert()
-            visit.submit()  # Since it's a submittable document
+            visit.submit()  # Submit the document
+
+            # If everything is successful, commit the transaction
+            frappe.db.commit()
 
             frappe.local.response['http_status_code'] = 201
             return {
@@ -341,24 +340,18 @@ def create_farmer_visit(
             }
 
         except Exception as e:
-            frappe.log_error(
-                title="Create Farmer Visit - Visit Creation Failed",
-                message=f"Error: {str(e)}\nDetails:\nFarmer: {farmer_name}\nEmployee: {employee}\nVisit Details: {visit_tracker_detail}"
-            )
+            frappe.db.rollback()
             frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "status": "error",
-                "message": f"Failed to create visit: {str(e)}",
-                "code": "VISIT_CREATION_FAILED",
+                "message": str(e),
+                "code": "CREATION_FAILED",
                 "http_status_code": 400
             }
 
     except Exception as e:
-        frappe.log_error(
-            title="Create Farmer Visit - Unexpected Error",
-            message=f"Error: {str(e)}\nFarmer: {farmer_name}\nDetails: {visit_tracker_detail}"
-        )
+        frappe.db.rollback()
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error creating farmer visit")
 
