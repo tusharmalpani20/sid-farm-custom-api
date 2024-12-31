@@ -1,6 +1,7 @@
+from datetime import datetime
+from frappe.utils import add_to_date
 import frappe
 from frappe.email.doctype.auto_email_report.auto_email_report import send_now
-from datetime import datetime
 
 def send_custom_time_reports():
     """Check and send reports scheduled for the current hour"""
@@ -8,6 +9,7 @@ def send_custom_time_reports():
     # Get current time
     current_datetime = datetime.now()
     current_time = current_datetime.strftime("%I %p").lstrip("0")  # For hour format like "9 AM"
+    today = current_datetime.strftime('%d-%m-%Y')  # Format as DD-MM-YYYY
     
     # Get all enabled reports scheduled for current time
     enabled_reports = frappe.get_all(
@@ -27,7 +29,7 @@ def send_custom_time_reports():
             if doc.report == "Point Wise Attendance":
                 filters = frappe.parse_json(doc.filters)
                 if "date" in filters:
-                    filters["date"] = current_datetime.strftime("%d-%m-%Y")
+                    filters["date"] = today
                     doc.filters = frappe.as_json(filters)
                     doc.save()
             
