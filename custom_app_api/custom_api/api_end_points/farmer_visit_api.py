@@ -465,14 +465,19 @@ def create_farmer_visit(
 def create_farmer_revisit(
     farmer_id: str,
     previous_visit_id: str,
+    farmer_prospect_type: str,
     visit_tracker_detail: Dict[str, Any] = None
 ) -> Dict[str, Any]:
     """
-    It requires farmer_id and previous_visit_id and visit_tracker_detail
+    It requires farmer_id, previous_visit_id, farmer_prospect_type and visit_tracker_detail
     It will validate the farmer_id and previous_visit_id and create a new visit record
     And it will also make sure there are no revisit entry made for the given previous_visit_id
     Required header: Authorization Bearer token
     """
+
+    # Start transaction
+    frappe.db.begin()
+
     try:
         # Verify authorization
         is_valid, result = verify_dp_token(frappe.request.headers)
@@ -509,16 +514,14 @@ def create_farmer_revisit(
                 "http_status_code": 404
             }
 
-        #check if there is already a revisit entry for the previous visit
-        existing_revisit = frappe.get_all("Visit Tracker", filters={"last_visit": previous_visit_id, "is_revist": 1 , "docstatus": 1})
-
-        if existing_revisit:
+        # Check if the previous visit has already been followed up
+        if previous_visit.follow_up_visit:
             frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "status": "error",
-                "message": "Revisit already exists for the previous visit",
-                "code": "REVISIT_ALREADY_EXISTS",
+                "message": "This visit already has a follow-up visit",
+                "code": "FOLLOW_UP_EXISTS",
                 "http_status_code": 400
             }
 
@@ -546,12 +549,22 @@ def create_farmer_revisit(
         # Create visit tracker record
         visit = frappe.get_doc({
             "doctype": "Visit Tracker",
-            "farmer": farmer_name,
+            "farmer": farmer_id,
             "visited_by": employee,
+            "is_revisit": 1,
+            "last_visit": previous_visit_id,
             **visit_tracker_detail
         })
         visit.insert()
         visit.submit()  # Submit the document
+
+        # Update the previous visit's follow_up_visit field using db_set
+        previous_visit.db_set('follow_up_visit', visit.name, update_modified=False)
+
+        # Update the farmer's prospect type
+        farmer.db_set('prospect_type', farmer_prospect_type, update_modified=True)
+
+        frappe.db.commit()
 
         frappe.local.response['http_status_code'] = 201
         return {
@@ -567,6 +580,7 @@ def create_farmer_revisit(
         }
 
     except Exception as e:
+        frappe.db.rollback()
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error creating farmer revisit")
 
@@ -710,4 +724,424 @@ def get_assigned_farmers_list() -> Dict[str, Any]:
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error retrieving assigned farmers list")
 
+@frappe.whitelist(allow_guest=True, methods=["PUT"])
+def update_farmer_details(farmer_id: str, update_data: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Updates specific fields of a farmer's details
+    Required header: Authorization Bearer token
+    Args:
+        farmer_id: ID of the farmer to update
+        update_data: Dictionary containing fields to update
+    Allowed fields for update:
+        - first_name
+        - last_name
+        - age
+        - contact_number
+        - prospect_type
+    """
+    try:
+        # Verify authorization
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        if not is_valid:
+            frappe.local.response['http_status_code'] = 401
+            return result
+        
+        employee = result["employee"]
+        
+        # Validate farmer exists and belongs to the employee
+        farmer = frappe.get_doc("Farmer Details", farmer_id)
+        if farmer.assigned_sales_person != employee:
+            frappe.local.response['http_status_code'] = 403
+            return {
+                "success": False,
+                "status": "error",
+                "message": "You don't have permission to update this farmer's details",
+                "code": "PERMISSION_DENIED",
+                "http_status_code": 403
+            }
+        
+        # List of allowed fields for update
+        allowed_fields = [
+            "first_name",
+            "last_name",
+            "age",
+            "contact_number",
+            "prospect_type"
+        ]
+        
+        # Validate update data
+        update_fields = {}
+        for field in allowed_fields:
+            if field in update_data:
+                # Special validation for contact number
+                if field == "contact_number":
+                    # Skip if number hasn't changed
+                    if update_data[field] == farmer.get(field):
+                        continue
+                        
+                    # Check for duplicate contact number
+                    existing = frappe.get_all(
+                        "Farmer Details",
+                        filters={
+                            "contact_number": update_data[field],
+                            "name": ("!=", farmer_id)
+                        },
+                        fields=["name", "first_name", "last_name"]
+                    )
+                    if existing:
+                        farmer_info = existing[0]
+                        frappe.local.response['http_status_code'] = 400
+                        return {
+                            "success": False,
+                            "status": "error",
+                            "message": f"Mobile number {update_data[field]} is already registered "
+                                     f"with farmer {farmer_info.first_name} {farmer_info.last_name} ({farmer_info.name})",
+                            "code": "DUPLICATE_MOBILE",
+                            "http_status_code": 400
+                        }
+                
+                # Special validation for age
+                if field == "age" and not isinstance(update_data[field], int):
+                    frappe.local.response['http_status_code'] = 400
+                    return {
+                        "success": False,
+                        "status": "error",
+                        "message": "Age must be a number",
+                        "code": "INVALID_AGE",
+                        "http_status_code": 400
+                    }
+                
+                update_fields[field] = update_data[field]
+        
+        if not update_fields:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "No valid fields to update",
+                "code": "NO_UPDATES",
+                "http_status_code": 400
+            }
+        
+        # Update farmer details
+        farmer.update(update_fields)
+        farmer.save()
+        
+        frappe.local.response['http_status_code'] = 200
+        return {
+            "success": True,
+            "status": "success",
+            "message": "Farmer details updated successfully",
+            "code": "FARMER_UPDATED",
+            "data": {
+                "farmer_id": farmer_id,
+                "updated_fields": list(update_fields.keys())
+            },
+            "http_status_code": 200
+        }
+        
+    except frappe.DoesNotExistError:
+        frappe.local.response['http_status_code'] = 404
+        return {
+            "success": False,
+            "status": "error",
+            "message": "Farmer not found",
+            "code": "FARMER_NOT_FOUND",
+            "http_status_code": 404
+        }
+    except Exception as e:
+        frappe.local.response['http_status_code'] = 500
+        return handle_error_response(e, "Error updating farmer details")
+
+@frappe.whitelist(allow_guest=True, methods=["GET"])
+def get_visits_list() -> Dict[str, Any]:
+    """
+    Returns paginated list of visits made by the logged-in employee
+    Required header: Authorization Bearer token
+    Query params:
+        page_number: int (default=1)
+        page_size: int (default=10)
+        visit_type: str (optional) - "Phone Call" or "Physical Visit"
+        village: str (optional) - Village ID
+        requested_revisit: int (optional) - 0 or 1
+        is_revisit: int (optional) - 0 or 1
+        farmer: str (optional) - Farmer ID
+    """
+    try:
+        # Verify authorization
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        if not is_valid:
+            frappe.local.response['http_status_code'] = 401
+            return result
+        
+        employee = result["employee"]
+        
+        # Get query parameters
+        page_number = int(frappe.request.args.get('page_number', 1))
+        page_size = int(frappe.request.args.get('page_size', 10))
+        
+        # Get filter parameters
+        visit_type = frappe.request.args.get('visit_type')
+        village = frappe.request.args.get('village')
+        requested_revisit = frappe.request.args.get('requested_revisit')
+        is_revisit = frappe.request.args.get('is_revisit')
+        farmer = frappe.request.args.get('farmer')
+        
+        # Calculate offset
+        offset = (page_number - 1) * page_size
+        
+        # Build filters
+        filters = {
+            "visited_by": employee,
+            "docstatus": 1  # Only get submitted documents
+        }
+        
+        # Add optional filters if provided
+        if visit_type:
+            filters["visit_type"] = visit_type
+        if village:
+            filters["village"] = village
+        if requested_revisit is not None:
+            filters["requested_revisit"] = int(requested_revisit)
+        if is_revisit is not None:
+            filters["is_revisit"] = int(is_revisit)
+        if farmer:
+            filters["farmer"] = farmer
+        
+        # Get total count for pagination
+        total_visits = frappe.db.count("Visit Tracker", filters=filters)
+        
+        # Get visits with pagination
+        visits = frappe.get_all(
+            "Visit Tracker",
+            filters=filters,
+            fields=[
+                "name",
+                "farmer",
+                "visit_date",
+                "visit_type",
+                "village",
+                "requested_revisit",
+                "is_revisit",
+                "visit_reason",
+                "comments",
+                "follow_up_visit",
+                #"visit_image"
+            ],
+            order_by="visit_date desc",
+            start=offset,
+            page_length=page_size
+        )
+        
+        # Get additional details for each visit
+        for visit in visits:
+            # Get farmer details
+            farmer_doc = frappe.get_doc("Farmer Details", visit.farmer)
+            visit["farmer_name"] = f"{farmer_doc.first_name} {farmer_doc.last_name}"
+            
+            # Get village name if village exists
+            if visit.village:
+                village_doc = frappe.get_doc("Village", visit.village)
+                visit["village_name"] = village_doc.village_name
+        
+        frappe.local.response['http_status_code'] = 200
+        return {
+            "success": True,
+            "status": "success",
+            "message": "Visits list retrieved successfully",
+            "code": "VISITS_RETRIEVED",
+            "data": {
+                "visits": visits,
+                "pagination": {
+                    "total_records": total_visits,
+                    "page_size": page_size,
+                    "current_page": page_number,
+                    "total_pages": (total_visits + page_size - 1) // page_size
+                }
+            },
+            "http_status_code": 200
+        }
+
+    except Exception as e:
+        frappe.local.response['http_status_code'] = 500
+        return handle_error_response(e, "Error retrieving visits list")
+
+@frappe.whitelist(allow_guest=True, methods=["GET"])
+def get_pending_revisits() -> Dict[str, Any]:
+    """
+    Returns list of pending revisits for the logged-in employee
+    Required header: Authorization Bearer token
+    Query params:
+        start_date: str (optional) - format: YYYY-MM-DD (default: start of current month)
+        end_date: str (optional) - format: YYYY-MM-DD (default: end of current month)
+    """
+    try:
+        # Verify authorization
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        if not is_valid:
+            frappe.local.response['http_status_code'] = 401
+            return result
+        
+        employee = result["employee"]
+        
+        # Get current date
+        today = frappe.utils.today()
+        
+        # Get start and end dates from query params or use defaults
+        try:
+            # Default: Start of current month
+            start_date = frappe.request.args.get('start_date') or frappe.utils.data.get_first_day(today)
+            # Default: End of current month
+            end_date = frappe.request.args.get('end_date') or frappe.utils.data.get_last_day(today)
+        except Exception as e:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Invalid date format. Use YYYY-MM-DD",
+                "code": "INVALID_DATE_FORMAT",
+                "http_status_code": 400
+            }
+        
+        # Get pending revisits
+        visits = frappe.get_all(
+            "Visit Tracker",
+            filters={
+                "visited_by": employee,
+                "docstatus": 1,  # Only submitted documents
+                "requested_revisit": 1,  # Only visits that requested revisit
+                "follow_up_visit": ("is", "not set"),  # No follow-up visit created yet
+                "revisit_on": ["between", [start_date, end_date]]
+            },
+            fields=[
+                "name",
+                "farmer",
+                "visit_date",
+                "visit_type",
+                "village",
+                "revisit_on",
+                "visit_reason",
+                "comments"
+            ],
+            order_by="revisit_on asc"  # Order by revisit date
+        )
+        
+        # Get additional details for each visit
+        for visit in visits:
+            # Get farmer details
+            farmer_doc = frappe.get_doc("Farmer Details", visit.farmer)
+            visit["farmer_name"] = f"{farmer_doc.first_name} {farmer_doc.last_name}"
+            visit["farmer_contact"] = farmer_doc.contact_number
+            visit["prospect_type"] = farmer_doc.prospect_type
+            
+            # Get village name if village exists
+            if visit.village:
+                village_doc = frappe.get_doc("Village", visit.village)
+                visit["village_name"] = village_doc.village_name
+        
+        frappe.local.response['http_status_code'] = 200
+        return {
+            "success": True,
+            "status": "success",
+            "message": "Pending revisits retrieved successfully",
+            "code": "REVISITS_RETRIEVED",
+            "data": {
+                "visits": visits,
+                "date_range": {
+                    "start_date": start_date,
+                    "end_date": end_date
+                }
+            },
+            "http_status_code": 200
+        }
+
+    except Exception as e:
+        frappe.local.response['http_status_code'] = 500
+        return handle_error_response(e, "Error retrieving pending revisits")
+
+@frappe.whitelist(allow_guest=True, methods=["GET"])
+def get_prospect_statistics() -> Dict[str, Any]:
+    """
+    Returns prospect statistics for farmers assigned to the logged-in employee
+    Required header: Authorization Bearer token
+    Query params:
+        start_date: str - format: YYYY-MM-DD
+        end_date: str - format: YYYY-MM-DD
+    """
+    try:
+        # Verify authorization
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        if not is_valid:
+            frappe.local.response['http_status_code'] = 401
+            return result
+        
+        employee = result["employee"]
+        
+        # Get date filters from query params
+        start_date = frappe.request.args.get('start_date')
+        end_date = frappe.request.args.get('end_date')
+        
+        if not start_date or not end_date:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Both start_date and end_date are required",
+                "code": "MISSING_DATE_FILTERS",
+                "http_status_code": 400
+            }
+        
+        try:
+            # Validate date format
+            frappe.utils.getdate(start_date)
+            frappe.utils.getdate(end_date)
+        except Exception:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Invalid date format. Use YYYY-MM-DD",
+                "code": "INVALID_DATE_FORMAT",
+                "http_status_code": 400
+            }
+        
+        # Base filters
+        base_filters = {
+            "assigned_sales_person": employee,
+            "creation": ["between", [start_date, end_date]]
+        }
+        
+        # Get total farmers count
+        total_farmers = frappe.db.count("Farmer Details", filters=base_filters)
+        
+        # Get prospect type counts
+        prospect_types = ["Hot", "Warm", "Cold", "Lost", "Converted"]
+        prospect_counts = {}
+        
+        for prospect_type in prospect_types:
+            filters = base_filters.copy()
+            filters["prospect_type"] = prospect_type
+            count = frappe.db.count("Farmer Details", filters=filters)
+            prospect_counts[f"{prospect_type.lower()}_prospect"] = count
+        
+        frappe.local.response['http_status_code'] = 200
+        return {
+            "success": True,
+            "status": "success",
+            "message": "Prospect statistics retrieved successfully",
+            "code": "STATISTICS_RETRIEVED",
+            "data": {
+                "total_farmers": total_farmers,
+                **prospect_counts,
+                "date_range": {
+                    "start_date": start_date,
+                    "end_date": end_date
+                }
+            },
+            "http_status_code": 200
+        }
+
+    except Exception as e:
+        frappe.local.response['http_status_code'] = 500
+        return handle_error_response(e, "Error retrieving prospect statistics")
 

@@ -25,6 +25,7 @@
   "visit_reason",
   "comments",
   "last_visit",
+  "follow_up_visit",
   "visited_by"
  ],
  "fields": [
@@ -128,11 +129,16 @@
    "label": "Comments"
   },
   {
-   "description": "This is the record of the revisit request made by the farmer to the BDE.",
    "fieldname": "last_visit",
    "fieldtype": "Link",
    "label": "Last Visit",
    "options": "Visit Tracker"
+  },
+  {
+    "fieldname": "follow_up_visit",
+    "fieldtype": "Link",
+    "label": "Follow Up Visit",
+    "options": "Visit Tracker"
   },
   {
    "fieldname": "visited_by",
