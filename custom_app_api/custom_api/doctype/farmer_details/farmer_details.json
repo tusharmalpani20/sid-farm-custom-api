@@ -18,6 +18,7 @@
   "contact_number",
   "address",
   "prospect_type",
+  "assigned_sales_person",
   "registered_by",
   "work_details_section",
   "bmc",
@@ -101,7 +102,14 @@
    "fieldname": "prospect_type",
    "fieldtype": "Select",
    "label": "Prospect Type",
-   "options": "Warm\nCold\nHot\nLost"
+   "options": "Warm\nCold\nHot\nLost\nConverted"
+  },
+  {
+    "fieldname": "assigned_sales_person",
+    "fieldtype": "Link",
+    "label": "Assigned Sales Person",
+    "options": "Employee",
+    "reqd": 1
   },
   {
    "fieldname": "registered_by",

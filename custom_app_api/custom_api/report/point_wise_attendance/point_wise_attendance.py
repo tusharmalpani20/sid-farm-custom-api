@@ -14,18 +14,20 @@ def execute(filters=None):
     columns = get_columns()
     data = get_point_wise_attendance(filters)
 
+    # Initialize chart at the start
+    chart = {
+        "data": {
+            "labels": ["Present", "Absent", "On Leave"],
+            "datasets": [{"name": "Attendance Distribution", "values": [0, 0, 0]}]
+        },
+        "type": "pie",
+        "colors": ["#36a2eb", "#ff6384", "#ffcd56"],
+        "height": 280
+    }
+
     # Handle case when no data is found
     if not data:
         message = "No employees found for the selected criteria."
-        chart = {
-            "data": {
-                "labels": ["Present", "Absent", "On Leave"],
-                "datasets": [{"name": "Attendance Distribution", "values": [0, 0, 0]}]
-            },
-            "type": "pie",
-            "colors": ["#36a2eb", "#ff6384", "#ffcd56"],
-            "height": 280
-        }
         report_summary = [
             {"value": 0, "label": "Total Employees", "datatype": "Int", "indicator": "gray"},
             {"value": 0, "label": "Present", "datatype": "Int", "indicator": "gray"},
