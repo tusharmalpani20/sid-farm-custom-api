@@ -574,7 +574,7 @@ def create_farmer_revisit(
             "code": "VISIT_CREATED",
             "data": {
                 "visit_id": visit.name,
-                "farmer_id": farmer_name
+                "farmer_id": farmer_id
             },
             "http_status_code": 201
         }
@@ -1065,8 +1065,8 @@ def get_prospect_statistics() -> Dict[str, Any]:
     Returns prospect statistics for farmers assigned to the logged-in employee
     Required header: Authorization Bearer token
     Query params:
-        start_date: str - format: YYYY-MM-DD
-        end_date: str - format: YYYY-MM-DD
+        period: str (optional) - 'all', 'this_month', 'this_quarter', 'this_year', 'last_year'
+                                (default: 'this_month')
     """
     try:
         # Verify authorization
@@ -1077,41 +1077,56 @@ def get_prospect_statistics() -> Dict[str, Any]:
         
         employee = result["employee"]
         
-        # Get date filters from query params
-        start_date = frappe.request.args.get('start_date')
-        end_date = frappe.request.args.get('end_date')
+        # Get period from query params
+        period = frappe.request.args.get('period', 'this_month')
         
-        if not start_date or not end_date:
+        # Get current date
+        today = frappe.utils.today()
+        
+        # Calculate date range based on period
+        if period == 'all':
+            start_date = None
+            end_date = None
+        elif period == 'this_month':
+            start_date = frappe.utils.data.get_first_day(today)
+            end_date = frappe.utils.data.get_last_day(today)
+        elif period == 'this_quarter':
+            current_quarter = ((frappe.utils.data.month_diff(today, '2000-01-01') // 3) % 4) + 1
+            start_date = frappe.utils.data.get_first_day(today, d=1, m=((current_quarter - 1) * 3) + 1)
+            end_date = frappe.utils.data.get_last_day(today, d=31, m=(current_quarter * 3))
+        elif period == 'this_year':
+            start_date = frappe.utils.data.get_first_day(today, d=1, m=1)
+            end_date = frappe.utils.data.get_last_day(today, d=31, m=12)
+        elif period == 'last_year':
+            last_year = frappe.utils.add_years(today, -1)
+            start_date = frappe.utils.data.get_first_day(last_year, d=1, m=1)
+            end_date = frappe.utils.data.get_last_day(last_year, d=31, m=12)
+        else:
             frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
                 "status": "error",
-                "message": "Both start_date and end_date are required",
-                "code": "MISSING_DATE_FILTERS",
-                "http_status_code": 400
-            }
-        
-        try:
-            # Validate date format
-            frappe.utils.getdate(start_date)
-            frappe.utils.getdate(end_date)
-        except Exception:
-            frappe.local.response['http_status_code'] = 400
-            return {
-                "success": False,
-                "status": "error",
-                "message": "Invalid date format. Use YYYY-MM-DD",
-                "code": "INVALID_DATE_FORMAT",
+                "message": "Invalid period. Use 'all', 'this_month', 'this_quarter', 'this_year', or 'last_year'",
+                "code": "INVALID_PERIOD",
                 "http_status_code": 400
             }
         
         # Base filters
         base_filters = {
             "assigned_sales_person": employee,
-            "creation": ["between", [start_date, end_date]]
-        }        
+        }
+        
+        # Add date filters if period is not 'all'
+        if start_date and end_date:
+            base_filters["modified"] = ["between", [start_date, end_date]]
+        
         # Get total farmers count
-        total_farmers = frappe.db.count("Farmer Details", filters=base_filters)
+        total_farmers = len(frappe.get_all(
+            "Farmer Details",
+            filters=base_filters,
+            fields=["name"]
+        ))
+        
         # Get prospect type counts
         prospect_types = ["Hot", "Warm", "Cold", "Lost", "Converted"]
         prospect_counts = {}
@@ -1119,7 +1134,11 @@ def get_prospect_statistics() -> Dict[str, Any]:
         for prospect_type in prospect_types:
             filters = base_filters.copy()
             filters["prospect_type"] = prospect_type
-            count = frappe.db.count("Farmer Details", filters=filters)
+            count = len(frappe.get_all(
+                "Farmer Details",
+                filters=filters,
+                fields=["name"]
+            ))
             prospect_counts[f"{prospect_type.lower()}_prospect"] = count
         
         frappe.local.response['http_status_code'] = 200
@@ -1131,9 +1150,10 @@ def get_prospect_statistics() -> Dict[str, Any]:
             "data": {
                 "total_farmers": total_farmers,
                 **prospect_counts,
+                "period": period,
                 "date_range": {
-                    "start_date": start_date,
-                    "end_date": end_date
+                    "start_date": str(start_date) if start_date else None,
+                    "end_date": str(end_date) if end_date else None
                 }
             },
             "http_status_code": 200
@@ -1142,4 +1162,102 @@ def get_prospect_statistics() -> Dict[str, Any]:
     except Exception as e:
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error retrieving prospect statistics")
+
+@frappe.whitelist(allow_guest=True, methods=["GET"])
+def get_today_visits() -> Dict[str, Any]:
+    """
+    Returns list of visits made by the logged-in employee for today
+    Required header: Authorization Bearer token
+    Query params:
+        visit_type: str (optional) - "Phone Call" or "Physical Visit"
+        village: str (optional) - Village ID
+        requested_revisit: int (optional) - 0 or 1
+        is_revisit: int (optional) - 0 or 1
+        farmer: str (optional) - Farmer ID
+    """
+    try:
+        # Verify authorization
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        if not is_valid:
+            frappe.local.response['http_status_code'] = 401
+            return result
+        
+        employee = result["employee"]
+        
+        # Get today's date
+        today = frappe.utils.today()
+        
+        # Get filter parameters
+        visit_type = frappe.request.args.get('visit_type')
+        village = frappe.request.args.get('village')
+        requested_revisit = frappe.request.args.get('requested_revisit')
+        is_revisit = frappe.request.args.get('is_revisit')
+        farmer = frappe.request.args.get('farmer')
+        
+        # Build filters
+        filters = {
+            "visited_by": employee,
+            "docstatus": 1,  # Only get submitted documents
+            "visit_date": today  # Only get today's visits
+        }
+        
+        # Add optional filters if provided
+        if visit_type:
+            filters["visit_type"] = visit_type
+        if village:
+            filters["village"] = village
+        if requested_revisit is not None:
+            filters["requested_revisit"] = int(requested_revisit)
+        if is_revisit is not None:
+            filters["is_revisit"] = int(is_revisit)
+        if farmer:
+            filters["farmer"] = farmer
+        
+        # Get visits
+        visits = frappe.get_all(
+            "Visit Tracker",
+            filters=filters,
+            fields=[
+                "name",
+                "farmer",
+                "visit_date",
+                "visit_type",
+                "village",
+                "requested_revisit",
+                "is_revisit",
+                "visit_reason",
+                "comments",
+                "follow_up_visit",
+                #"visit_image"
+            ],
+            order_by="creation desc"
+        )
+        
+        # Get additional details for each visit
+        for visit in visits:
+            # Get farmer details
+            farmer_doc = frappe.get_doc("Farmer Details", visit.farmer)
+            visit["farmer_name"] = f"{farmer_doc.first_name} {farmer_doc.last_name}"
+            
+            # Get village name if village exists
+            if visit.village:
+                village_doc = frappe.get_doc("Village", visit.village)
+                visit["village_name"] = village_doc.village_name
+        
+        frappe.local.response['http_status_code'] = 200
+        return {
+            "success": True,
+            "status": "success",
+            "message": "Today's visits list retrieved successfully",
+            "code": "TODAYS_VISITS_RETRIEVED",
+            "data": {
+                "visits": visits,
+                "date": today
+            },
+            "http_status_code": 200
+        }
+
+    except Exception as e:
+        frappe.local.response['http_status_code'] = 500
+        return handle_error_response(e, "Error retrieving today's visits list")
 
