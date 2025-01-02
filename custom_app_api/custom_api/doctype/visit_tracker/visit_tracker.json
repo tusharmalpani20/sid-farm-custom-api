@@ -20,7 +20,7 @@
   "visit_image",
   "section_break_kxvh",
   "requested_revisit",
-  "is_revist",
+  "is_revisit",
   "revisit_on",
   "visit_reason",
   "comments",
@@ -108,9 +108,9 @@
   },
   {
    "default": "0",
-   "fieldname": "is_revist",
+   "fieldname": "is_revisit",
    "fieldtype": "Check",
-   "label": "Is Revist"
+   "label": "Is Revisit"
   },
   {
    "fieldname": "revisit_on",
