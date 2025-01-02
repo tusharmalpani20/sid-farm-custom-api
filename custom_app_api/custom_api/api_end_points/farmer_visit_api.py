@@ -1088,19 +1088,19 @@ def get_prospect_statistics() -> Dict[str, Any]:
             start_date = None
             end_date = None
         elif period == 'this_month':
-            start_date = frappe.utils.data.get_first_day(today)
-            end_date = frappe.utils.data.get_last_day(today)
+            start_date = frappe.utils.get_first_day(today)
+            end_date = frappe.utils.get_last_day(today)
         elif period == 'this_quarter':
-            current_quarter = ((frappe.utils.data.month_diff(today, '2000-01-01') // 3) % 4) + 1
-            start_date = frappe.utils.data.get_first_day(today, d=1, m=((current_quarter - 1) * 3) + 1)
-            end_date = frappe.utils.data.get_last_day(today, d=31, m=(current_quarter * 3))
+            start_date = frappe.utils.get_first_day(today)
+            start_date = frappe.utils.get_first_day(start_date, d=1, m=((frappe.utils.quarter(start_date) - 1) * 3 + 1))
+            end_date = frappe.utils.get_last_day(start_date, d=1, m=((frappe.utils.quarter(start_date)) * 3))
         elif period == 'this_year':
-            start_date = frappe.utils.data.get_first_day(today, d=1, m=1)
-            end_date = frappe.utils.data.get_last_day(today, d=31, m=12)
+            start_date = frappe.utils.get_year_start(today)
+            end_date = frappe.utils.get_year_ending(today)
         elif period == 'last_year':
             last_year = frappe.utils.add_years(today, -1)
-            start_date = frappe.utils.data.get_first_day(last_year, d=1, m=1)
-            end_date = frappe.utils.data.get_last_day(last_year, d=31, m=12)
+            start_date = frappe.utils.get_year_start(last_year)
+            end_date = frappe.utils.get_year_ending(last_year)
         else:
             frappe.local.response['http_status_code'] = 400
             return {
