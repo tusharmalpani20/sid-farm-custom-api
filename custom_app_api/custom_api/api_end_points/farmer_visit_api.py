@@ -1113,6 +1113,8 @@ def get_prospect_statistics() -> Dict[str, Any]:
         
         # Get total farmers count
         total_farmers = frappe.db.count("Farmer Details", filters=base_filters)
+
+        print(total_farmers)
         
         # Get prospect type counts
         prospect_types = ["Hot", "Warm", "Cold", "Lost", "Converted"]
