@@ -356,7 +356,7 @@ def get_bmc_list() -> Dict[str, Any]:
 #         frappe.local.response['http_status_code'] = 500
 #         return handle_error_response(e, "Error creating farmer visit")
 
-@frappe.whitelist(allow_guest=True, methods=["GET"])
+@frappe.whitelist(allow_guest=True, methods=["POST"])
 def create_farmer_visit(
     farmer_create_detail: Dict,
     visit_tracker_detail: Dict[str, Any] = None
@@ -461,7 +461,7 @@ def create_farmer_visit(
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error creating farmer and visit record")
 
-@frappe.whitelist(allow_guest=True, methods=["GET"])
+@frappe.whitelist(allow_guest=True, methods=["POST"])
 def create_farmer_revisit(
     farmer_id: str,
     previous_visit_id: str,
