@@ -1109,12 +1109,9 @@ def get_prospect_statistics() -> Dict[str, Any]:
         base_filters = {
             "assigned_sales_person": employee,
             "creation": ["between", [start_date, end_date]]
-        }
-        print(base_filters)
-        
+        }        
         # Get total farmers count
         total_farmers = frappe.db.count("Farmer Details", filters=base_filters)
-        print(total_farmers)
         # Get prospect type counts
         prospect_types = ["Hot", "Warm", "Cold", "Lost", "Converted"]
         prospect_counts = {}
