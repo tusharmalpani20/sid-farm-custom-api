@@ -1091,16 +1091,15 @@ def get_prospect_statistics() -> Dict[str, Any]:
             start_date = frappe.utils.get_first_day(today)
             end_date = frappe.utils.get_last_day(today)
         elif period == 'this_quarter':
-            start_date = frappe.utils.get_first_day(today)
-            start_date = frappe.utils.get_first_day(start_date, d=1, m=((frappe.utils.quarter(start_date) - 1) * 3 + 1))
-            end_date = frappe.utils.get_last_day(start_date, d=1, m=((frappe.utils.quarter(start_date)) * 3))
+            start_date = frappe.utils.data.get_quarter_start(today)
+            end_date = frappe.utils.data.get_quarter_ending(today)
         elif period == 'this_year':
-            start_date = frappe.utils.get_year_start(today)
-            end_date = frappe.utils.get_year_ending(today)
+            start_date = frappe.utils.data.get_year_start(today)
+            end_date = frappe.utils.data.get_year_ending(today)
         elif period == 'last_year':
             last_year = frappe.utils.add_years(today, -1)
-            start_date = frappe.utils.get_year_start(last_year)
-            end_date = frappe.utils.get_year_ending(last_year)
+            start_date = frappe.utils.data.get_year_start(last_year)
+            end_date = frappe.utils.data.get_year_ending(last_year)
         else:
             frappe.local.response['http_status_code'] = 400
             return {
