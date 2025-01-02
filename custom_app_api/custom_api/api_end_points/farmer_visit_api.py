@@ -571,7 +571,7 @@ def create_farmer_revisit(
         return handle_error_response(e, "Error creating farmer revisit")
 
 @frappe.whitelist(allow_guest=True, methods=["GET"])
-def get_farmers_by_employee() -> Dict[str, Any]:
+def get_assigned_farmers() -> Dict[str, Any]:
     """
     Returns list of farmers registered by the logged-in employee
     Required header: Authorization Bearer token
@@ -588,7 +588,7 @@ def get_farmers_by_employee() -> Dict[str, Any]:
         # Get farmers registered by the employee
         farmers = frappe.get_all(
             "Farmer Details",
-            filters={"registered_by": employee},
+            filters={"assigned_sales_person": employee},
             fields=[
                 "name",
                 "first_name",
@@ -629,7 +629,7 @@ def get_farmers_by_employee() -> Dict[str, Any]:
         return handle_error_response(e, "Error retrieving farmers list")
 
 @frappe.whitelist(allow_guest=True, methods=["GET"])
-def get_assigned_farmers() -> Dict[str, Any]:
+def get_assigned_farmers_list() -> Dict[str, Any]:
     """
     Returns paginated list of farmers assigned to the logged-in employee as sales person
     Required header: Authorization Bearer token
