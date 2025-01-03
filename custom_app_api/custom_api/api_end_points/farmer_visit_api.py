@@ -1366,3 +1366,104 @@ def get_farmer_details() -> Dict[str, Any]:
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error retrieving farmer details")
 
+@frappe.whitelist(allow_guest=True, methods=["GET"])
+def get_farmer_pending_revisits() -> Dict[str, Any]:
+    """
+    Returns list of all pending revisits for a specific farmer
+    Required header: Authorization Bearer token
+    Query params:
+        farmer_id: str - The ID of the farmer to retrieve pending revisits for
+    """
+    try:
+        # Verify authorization
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        if not is_valid:
+            frappe.local.response['http_status_code'] = 401
+            return result
+        
+        employee = result["employee"]
+        
+        # Get farmer_id from query params
+        farmer_id = frappe.request.args.get('farmer_id')
+        
+        if not farmer_id:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "farmer_id is required",
+                "code": "MISSING_FARMER_ID",
+                "http_status_code": 400
+            }
+        
+        # Check if farmer exists and belongs to the logged-in employee
+        farmer = frappe.get_all(
+            "Farmer Details",
+            filters={
+                "name": farmer_id
+            },
+            fields=["name", "first_name", "last_name", "contact_number", "prospect_type"]
+        )
+        
+        if not farmer:
+            frappe.local.response['http_status_code'] = 404
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Farmer not found or not assigned to you",
+                "code": "FARMER_NOT_FOUND",
+                "http_status_code": 404
+            }
+        
+        farmer = farmer[0]
+        
+        # Get pending revisits
+        visits = frappe.get_all(
+            "Visit Tracker",
+            filters={
+                "visited_by": employee,
+                "farmer": farmer_id,
+                "docstatus": 1,  # Only submitted documents
+                "requested_revisit": 1,  # Only visits that requested revisit
+                "follow_up_visit": ("is", "not set")  # No follow-up visit created yet
+            },
+            fields=[
+                "name",
+                "visit_date",
+                "visit_type",
+                "village",
+                "revisit_on",
+                "visit_reason",
+                "comments"
+            ],
+            order_by="revisit_on asc"  # Order by revisit date
+        )
+        
+        # Get village names for visits
+        for visit in visits:
+            if visit.village:
+                village_doc = frappe.get_doc("Village", visit.village)
+                visit["village_name"] = village_doc.village_name
+        
+        frappe.local.response['http_status_code'] = 200
+        return {
+            "success": True,
+            "status": "success",
+            "message": "Farmer's pending revisits retrieved successfully",
+            "code": "FARMER_REVISITS_RETRIEVED",
+            "data": {
+                "farmer": {
+                    "id": farmer.name,
+                    "name": f"{farmer.first_name} {farmer.last_name}",
+                    "contact_number": farmer.contact_number,
+                    "prospect_type": farmer.prospect_type
+                },
+                "visits": visits
+            },
+            "http_status_code": 200
+        }
+
+    except Exception as e:
+        frappe.local.response['http_status_code'] = 500
+        return handle_error_response(e, "Error retrieving farmer's pending revisits")
+
