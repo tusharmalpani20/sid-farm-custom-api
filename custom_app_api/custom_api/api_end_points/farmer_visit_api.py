@@ -1260,3 +1260,109 @@ def get_today_visits() -> Dict[str, Any]:
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error retrieving today's visits list")
 
+@frappe.whitelist(allow_guest=True, methods=["GET"])
+def get_farmer_details() -> Dict[str, Any]:
+    """
+    Returns detailed information about a specific farmer
+    Required header: Authorization Bearer token
+    Query params:
+        farmer_id: str - The ID of the farmer to retrieve details for
+    """
+    try:
+        # Verify authorization
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        if not is_valid:
+            frappe.local.response['http_status_code'] = 401
+            return result
+        
+        employee = result["employee"]
+        
+        # Get farmer_id from query params
+        farmer_id = frappe.request.args.get('farmer_id')
+        
+        if not farmer_id:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "farmer_id is required",
+                "code": "MISSING_FARMER_ID",
+                "http_status_code": 400
+            }
+        
+        # Check if farmer exists and belongs to the logged-in employee
+        farmer = frappe.get_all(
+            "Farmer Details",
+            filters={
+                "name": farmer_id,
+                "assigned_sales_person": employee
+            },
+            fields=["*"]
+        )
+        
+        if not farmer:
+            frappe.local.response['http_status_code'] = 404
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Farmer not found or not assigned to you",
+                "code": "FARMER_NOT_FOUND",
+                "http_status_code": 404
+            }
+        
+        farmer = farmer[0]
+        
+        # Get village name if village exists
+        if farmer.village:
+            village_doc = frappe.get_doc("Village", farmer.village)
+            farmer["village_name"] = village_doc.village_name
+        
+        # Get BMC name if BMC exists
+        if farmer.bmc:
+            bmc_doc = frappe.get_doc("BMC", farmer.bmc)
+            farmer["bmc_name"] = bmc_doc.bmc_name
+        
+        # Get all visits for this farmer
+        visits = frappe.get_all(
+            "Visit Tracker",
+            filters={
+                "farmer": farmer_id,
+                "docstatus": 1  # Only get submitted documents
+            },
+            fields=[
+                "name",
+                "visit_date",
+                "visit_type",
+                "village",
+                "requested_revisit",
+                "is_revisit",
+                "visit_reason",
+                "comments",
+                "follow_up_visit"
+            ],
+            order_by="visit_date desc"
+        )
+        
+        # Get village names for visits
+        for visit in visits:
+            if visit.village:
+                village_doc = frappe.get_doc("Village", visit.village)
+                visit["village_name"] = village_doc.village_name
+        
+        frappe.local.response['http_status_code'] = 200
+        return {
+            "success": True,
+            "status": "success",
+            "message": "Farmer details retrieved successfully",
+            "code": "FARMER_DETAILS_RETRIEVED",
+            "data": {
+                "farmer": farmer,
+                "visits": visits
+            },
+            "http_status_code": 200
+        }
+
+    except Exception as e:
+        frappe.local.response['http_status_code'] = 500
+        return handle_error_response(e, "Error retrieving farmer details")
+
