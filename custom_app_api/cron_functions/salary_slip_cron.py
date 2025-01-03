@@ -137,13 +137,15 @@ def generate_salary_slips_for_active_employees():
             title="Salary Slip Generation Error"
         )
     
-def generate_salary_slips_for_specific_month(target_date):
+def generate_salary_slips_for_specific_month():
     """
     Generate salary slips for active employees for a specific month
     Args:
         target_date (str): Date in format 'YYYY-MM-DD'
     """
     try:
+
+        target_date = "2024-12-06"
         # Convert string date to datetime
         target_datetime = datetime.strptime(target_date, '%Y-%m-%d')
         
