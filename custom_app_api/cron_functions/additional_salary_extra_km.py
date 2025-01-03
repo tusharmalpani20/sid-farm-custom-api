@@ -70,13 +70,18 @@ def calculate_extra_km_salary():
                 # Insert without triggering workflow
                 additional_salary.insert()
                 
-                # Force update workflow state in database directly
+                # Force update workflow state and docstatus in database directly
                 if additional_salary.salary_component != "Advance Salary":  # Safety check
-                    frappe.db.set_value('Additional Salary', additional_salary.name, 'workflow_state', 'Submitted')
+                    frappe.db.set_value('Additional Salary', additional_salary.name, {
+                        'workflow_state': 'Submitted',
+                        'docstatus': 1
+                    })
+                    
+                    # Reload the document to reflect the changes
+                    additional_salary.reload()
                 
-                # Now submit the document
-                additional_salary.submit()
-                frappe.db.commit()
+                # Remove submit() since we're handling it directly
+                # additional_salary.submit()
 
                 frappe.logger().info(
                     f"Additional Salary created for {employee.employee_name} "

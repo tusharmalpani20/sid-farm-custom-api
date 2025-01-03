@@ -181,12 +181,18 @@ Employee Distribution:
                             # Insert without triggering workflow
                             additional_salary.insert()
                             
-                            # Force update workflow state in database directly
+                            # Force update workflow state and docstatus in database directly
                             if additional_salary.salary_component != "Advance Salary":  # Safety check
-                                frappe.db.set_value('Additional Salary', additional_salary.name, 'workflow_state', 'Submitted')
+                                frappe.db.set_value('Additional Salary', additional_salary.name, {
+                                    'workflow_state': 'Submitted',
+                                    'docstatus': 1
+                                })
+                                
+                                # Reload the document to reflect the changes
+                                additional_salary.reload()
                             
-                            # Now submit the document
-                            additional_salary.submit()
+                            # Remove submit() since we're handling it directly
+                            # additional_salary.submit()
                             bonus_entries_created += 1
 
                             frappe.logger().info(
@@ -228,3 +234,43 @@ Packet Bonus Calculation completed for {first_day} to {last_day}:
         frappe.logger().error(error_msg)
         frappe.log_error(title="Packet Bonus Calculation Failed", message=error_msg)
         raise
+
+
+def update_packet_bonus_docstatus():
+    try:
+        # Get all Additional Salary entries for Packet Bonus with docstatus 0
+        bonus_entries = frappe.get_all(
+            "Additional Salary",
+            filters={
+                "salary_component": "Packet Bonus",
+                "docstatus": 0
+            },
+            fields=["name"]
+        )
+        
+        count = 0
+        for entry in bonus_entries:
+            try:
+                # Update docstatus and workflow state
+                frappe.db.set_value('Additional Salary', entry.name, {
+                    'workflow_state': 'Submitted',
+                    'docstatus': 1
+                })
+                count += 1
+                
+                # Log each successful update
+                print(f"Updated entry: {entry.name}")
+                
+            except Exception as e:
+                print(f"Error updating entry {entry.name}: {str(e)}")
+                continue
+        
+        # Commit the changes
+        frappe.db.commit()
+        
+        print(f"\nUpdate completed successfully!")
+        print(f"Total entries updated: {count}")
+        
+    except Exception as e:
+        print(f"Script failed: {str(e)}")
+        frappe.db.rollback()

@@ -98,11 +98,17 @@ Employee: {employee.employee_name} (Grade: L5)"""
                     # Insert without triggering workflow
                     additional_salary.insert()
                     
-                    # Force update workflow state
-                    frappe.db.set_value('Additional Salary', additional_salary.name, 'workflow_state', 'Submitted')
+                    # Force update workflow state and docstatus directly in the database
+                    frappe.db.set_value('Additional Salary', additional_salary.name, {
+                        'workflow_state': 'Submitted',
+                        'docstatus': 1
+                    })
                     
-                    # Submit the document
-                    additional_salary.submit()
+                    # Reload the document to reflect the changes
+                    additional_salary.reload()
+                    
+                    # Skip the submit() call since we've already set docstatus
+                    # additional_salary.submit()
                     payout_entries_created += 1
 
                     frappe.logger().info(
