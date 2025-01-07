@@ -618,6 +618,7 @@ def get_employee_details() -> Dict[str, Any]:
             'custom_pollution_certificate_expiry'
         ]
 
+        # Get reporting manager details
         reporting_manager = {}
         if emp_doc.reports_to:
             reporting_manager = frappe.db.get_value(
@@ -627,13 +628,15 @@ def get_employee_details() -> Dict[str, Any]:
                 as_dict=True
             )
         
+        # Basic details with additional fields
         employee_data = {
             "basic_details": {
-                "employee_name": emp_doc.employee_name ,
-                "cell_number": emp_doc.cell_number,
-                "image": emp_doc.image,
-                "reporting_manager_name" : reporting_manager.employee_name if reporting_manager else "N/A",
-                "reporting_manager_cell_number" : reporting_manager.cell_number if reporting_manager else "N/A"
+                "employee_name": emp_doc.employee_name,
+                "employee_id": emp_doc.name,
+                "cell_number": emp_doc.cell_number or "N/A",
+                "image": emp_doc.image or "N/A",
+                "reporting_manager_name": reporting_manager.get('employee_name') if reporting_manager else "N/A",
+                "reporting_manager_cell_number": reporting_manager.get('cell_number') if reporting_manager else "N/A"
             }
         }
 
@@ -701,12 +704,6 @@ def get_employee_details() -> Dict[str, Any]:
         
         # Profile image
         employee_data['profile_image'] = emp_doc.image
-        
-        # Basic details
-        employee_data['basic_details'] = {
-            'employee_name': emp_doc.employee_name,
-            'employee_id': emp_doc.name
-        }
         
         frappe.local.response['http_status_code'] = 200
         return {
