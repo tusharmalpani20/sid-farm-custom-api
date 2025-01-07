@@ -39,7 +39,7 @@ def handle_base64_image(base64_string: str, prefix: str = "file") -> Dict[str, s
             "doctype": "File",
             "file_name": filename,
             "content": file_content,
-            "is_private": 0  # Make it public since it's a visit image
+            "is_private": 1  # MAKE IT PRIVATE
         })
         file_doc.insert()
 
@@ -88,7 +88,8 @@ def get_field_options() -> Dict[str, Any]:
             'custom_raincoat_size',
             'custom_trouser_size',
             'custom_shoe_size',
-            'custom_helmet_size'
+            'custom_helmet_size',
+            'blood_group'
         ]
         
         options = {}
@@ -634,6 +635,7 @@ def get_employee_details() -> Dict[str, Any]:
                 "employee_name": emp_doc.employee_name,
                 "employee_id": emp_doc.name,
                 "cell_number": emp_doc.cell_number or "N/A",
+                "blood_group" : emp_doc.blood_group or "N/A",
                 "image": emp_doc.image or "N/A",
                 "reporting_manager_name": reporting_manager.get('employee_name') if reporting_manager else "N/A",
                 "reporting_manager_cell_number": reporting_manager.get('cell_number') if reporting_manager else "N/A"
@@ -718,4 +720,84 @@ def get_employee_details() -> Dict[str, Any]:
     except Exception as e:
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error retrieving employee details")
+
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def update_employee_blood_group(blood_group: str = None) -> Dict[str, Any]:
+    """
+    Update employee blood group
+    Required header: Authorization Bearer token
+    Args:
+        blood_group: Blood group value
+    """
+    frappe.db.begin()
+    
+    try:
+        # Verify authorization
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        if not is_valid:
+            frappe.db.rollback()
+            frappe.local.response['http_status_code'] = 401
+            return result
+        
+        if not blood_group:
+            frappe.db.rollback()
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Blood group is required",
+                "code": "BLOOD_GROUP_REQUIRED",
+                "http_status_code": 400
+            }
+        
+        # Get valid blood group options
+        meta = frappe.get_meta("Employee")
+        blood_group_field = meta.get_field("blood_group")
+        if not blood_group_field:
+            frappe.db.rollback()
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Blood group field not found in Employee DocType",
+                "code": "FIELD_NOT_FOUND",
+                "http_status_code": 400
+            }
+        
+        # Validate blood group value
+        valid_options = [opt for opt in blood_group_field.options.split('\n') if opt]
+        if blood_group not in valid_options:
+            frappe.db.rollback()
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": f"Invalid blood group. Must be one of: {', '.join(valid_options)}",
+                "code": "INVALID_BLOOD_GROUP",
+                "http_status_code": 400
+            }
+        
+        employee = result["employee"]
+        emp_doc = frappe.get_doc("Employee", employee)
+        
+        # Update blood group
+        emp_doc.db_set('blood_group', blood_group, update_modified=True)
+        
+        frappe.db.commit()
+        
+        frappe.local.response['http_status_code'] = 200
+        return {
+            "success": True,
+            "status": "success",
+            "message": "Blood group updated successfully",
+            "code": "BLOOD_GROUP_UPDATED",
+            "data": {"blood_group": blood_group},
+            "http_status_code": 200
+        }
+            
+    except Exception as e:
+        frappe.db.rollback()
+        frappe.local.response['http_status_code'] = 500
+        return handle_error_response(e, "Error updating blood group")
 

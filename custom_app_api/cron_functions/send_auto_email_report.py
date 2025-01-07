@@ -37,6 +37,8 @@ def send_custom_time_reports():
                     filters["date"] = today
                     doc.filters = frappe.as_json(filters)
                     doc.save()
+                print(f"Filters updated for {doc.report}: {filters}")
+                print(f"Today's date: {today}")
             elif doc.report == "Delivery Partner Status Report":
                 filters = frappe.parse_json(doc.filters)
                 if "from" in filters and "to" in filters:
