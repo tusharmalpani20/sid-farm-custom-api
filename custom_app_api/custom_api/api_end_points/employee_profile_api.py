@@ -59,7 +59,7 @@ def handle_base64_image(base64_string: str, prefix: str = "file") -> Dict[str, s
 @frappe.whitelist(allow_guest=True, methods=["GET"])
 def get_field_options() -> Dict[str, Any]:
     """
-    Dynamically returns all select field options for Farmer Details and Visit Tracker
+    Returns select field options for employee uniform and vehicle fields
     Required header: Authorization Bearer token
     """
     try:
@@ -69,39 +69,39 @@ def get_field_options() -> Dict[str, Any]:
             frappe.local.response['http_status_code'] = 401
             return result
 
-        doctypes = {
-            "farmer_details": "Farmer Details",
-            "visit_tracker": "Visit Tracker"
-        }
+        try:
+            meta = frappe.get_meta("Employee")
+        except Exception as e:
+            frappe.local.response['http_status_code'] = 404
+            return {
+                "success": False,
+                "status": "error",
+                "message": "DocType Employee not found",
+                "code": "DOCTYPE_NOT_FOUND",
+                "http_status_code": 404
+            }
+
+        # List of fields we want to get options for
+        required_fields = [
+            'custom_vehicle_type',
+            'custom_tshirt_size',
+            'custom_raincoat_size',
+            'custom_trouser_size',
+            'custom_shoe_size',
+            'custom_helmet_size'
+        ]
         
         options = {}
         
-        for key, doctype in doctypes.items():
-            try:
-                meta = frappe.get_meta(doctype)
-            except Exception as e:
-                frappe.local.response['http_status_code'] = 404
-                return {
-                    "success": False,
-                    "status": "error",
-                    "message": f"DocType {doctype} not found",
-                    "code": "DOCTYPE_NOT_FOUND",
-                    "http_status_code": 404
-                }
-
-            doctype_options = {}
-            
-            # Get all fields of type "Select"
-            select_fields = [field for field in meta.fields if field.fieldtype == "Select"]
-            
-            # Extract options for each select field
-            for field in select_fields:
-                if field.options:
-                    # Split options string into list and remove empty strings
-                    field_options = [opt for opt in field.options.split('\n') if opt]
-                    doctype_options[field.fieldname] = field_options
-            
-            options[key] = doctype_options
+        # Get all fields of type "Select"
+        select_fields = [field for field in meta.fields if field.fieldtype == "Select" and field.fieldname in required_fields]
+        
+        # Extract options for each select field
+        for field in select_fields:
+            if field.options:
+                # Split options string into list and remove empty strings
+                field_options = [opt for opt in field.options.split('\n') if opt]
+                options[field.fieldname] = field_options
 
         frappe.local.response['http_status_code'] = 200
         return {
