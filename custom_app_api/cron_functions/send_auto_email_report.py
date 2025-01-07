@@ -9,7 +9,8 @@ def send_custom_time_reports():
     # Get current time and add 5:30 for IST
     current_datetime = datetime.now() + timedelta(hours=5, minutes=30)
     current_time = current_datetime.strftime("%I %p").lstrip("0")  # For hour format like "9 AM"
-    today = current_datetime.strftime('%d-%m-%Y')  # Format as DD-MM-YYYY
+    # today = current_datetime.strftime('%d-%m-%Y')  # Format as DD-MM-YYYY
+    today = current_datetime.strftime('%Y-%m-%d')  # Format as YYYY-MM-DD
     
     print(f"Current Time: {current_time}")  # Debug print
     
