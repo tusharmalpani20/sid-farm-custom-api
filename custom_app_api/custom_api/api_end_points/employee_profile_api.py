@@ -619,10 +619,10 @@ def get_employee_details() -> Dict[str, Any]:
         ]
 
         reporting_manager = {}
-        if employee_details.reports_to:
+        if emp_doc.reports_to:
             reporting_manager = frappe.db.get_value(
                 "Employee",
-                employee_details.reports_to,
+                emp_doc.reports_to,
                 ["employee_name", "cell_number"],
                 as_dict=True
             )
