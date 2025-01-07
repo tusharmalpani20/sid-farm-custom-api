@@ -632,8 +632,8 @@ def get_employee_details() -> Dict[str, Any]:
                 "employee_name": emp_doc.employee_name ,
                 "cell_number": emp_doc.cell_number,
                 "image": emp_doc.image,
-                "reporting_manager_name" : reporting_manager.employee_name if reporting_manager else "N/A",
-                "reporting_manager_cell_number" : reporting_manager.cell_number if reporting_manager else "N/A"
+                "reporting_manager_name" : reporting_manager.employee_name if reporting_manager.employee_name else "N/A",
+                "reporting_manager_cell_number" : reporting_manager.cell_number if reporting_manager.cell_number else "N/A"
             }
         }
 
