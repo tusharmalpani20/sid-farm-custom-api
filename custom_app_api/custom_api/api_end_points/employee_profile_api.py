@@ -908,7 +908,7 @@ def get_employee_avatar():
         # Verify authorization
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
-            frappe.local.response['http_status_code'] = 401
+            frappe.response.http_status_code = 401
             return result
         
         employee = result["employee"]
@@ -944,7 +944,7 @@ def get_employee_avatar():
             # Set response headers for image
             frappe.response.filename = os.path.basename(emp_doc.image)
             frappe.response.filecontent = open(file_doc.get_full_path(), "rb").read()
-            frappe.response.type = "image"
+            frappe.response.type = "download"
             return
 
         except Exception as e:
