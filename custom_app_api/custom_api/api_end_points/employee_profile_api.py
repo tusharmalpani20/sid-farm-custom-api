@@ -835,8 +835,23 @@ def get_employee_profile_image() -> Dict[str, Any]:
             }
         
         try:
-            # Get the full file path
-            file_path = frappe.get_site_path('public', 'files', emp_doc.image.lstrip('/'))
+            # Get the file doc
+            file_doc = frappe.get_doc("File", {
+                "file_url": emp_doc.image
+            })
+            
+            if not file_doc:
+                frappe.local.response['http_status_code'] = 404
+                return {
+                    "success": False,
+                    "status": "error",
+                    "message": "Image file not found",
+                    "code": "FILE_NOT_FOUND",
+                    "http_status_code": 404
+                }
+            
+            # Get the full file path for private files
+            file_path = file_doc.get_full_path()
             
             # Check if file exists
             if not os.path.exists(file_path):
