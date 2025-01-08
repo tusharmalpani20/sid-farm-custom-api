@@ -799,3 +799,84 @@ def update_employee_blood_group(blood_group: str = None) -> Dict[str, Any]:
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error updating blood group")
 
+
+@frappe.whitelist(allow_guest=True, methods=["GET"])
+def get_employee_profile_image() -> Dict[str, Any]:
+    """
+    Get employee profile image
+    Required header: Authorization Bearer token
+    Returns:
+        - If image exists: base64 encoded image string
+        - If no image: null
+    """
+    try:
+        # Verify authorization
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        if not is_valid:
+            frappe.local.response['http_status_code'] = 401
+            return result
+        
+        employee = result["employee"]
+        emp_doc = frappe.get_doc("Employee", employee)
+        
+        # Check if image exists
+        if not emp_doc.image:
+            frappe.local.response['http_status_code'] = 200
+            return {
+                "success": True,
+                "status": "success",
+                "message": "No profile image found",
+                "code": "NO_IMAGE",
+                "data": {
+                    "image": None,
+                    "image_url": None
+                },
+                "http_status_code": 200
+            }
+        
+        try:
+            # Get the full file path
+            file_path = frappe.get_site_path('public', 'files', emp_doc.image.lstrip('/'))
+            
+            # Check if file exists
+            if not os.path.exists(file_path):
+                frappe.local.response['http_status_code'] = 404
+                return {
+                    "success": False,
+                    "status": "error",
+                    "message": "Image file not found",
+                    "code": "FILE_NOT_FOUND",
+                    "http_status_code": 404
+                }
+            
+            # Read and encode the image
+            with open(file_path, "rb") as image_file:
+                encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
+            
+            frappe.local.response['http_status_code'] = 200
+            return {
+                "success": True,
+                "status": "success",
+                "message": "Profile image retrieved successfully",
+                "code": "IMAGE_RETRIEVED",
+                "data": {
+                    "image": encoded_image,
+                    "image_url": emp_doc.image
+                },
+                "http_status_code": 200
+            }
+            
+        except Exception as e:
+            frappe.local.response['http_status_code'] = 500
+            return {
+                "success": False,
+                "status": "error",
+                "message": f"Error processing image: {str(e)}",
+                "code": "IMAGE_PROCESSING_ERROR",
+                "http_status_code": 500
+            }
+            
+    except Exception as e:
+        frappe.local.response['http_status_code'] = 500
+        return handle_error_response(e, "Error retrieving profile image")
+
