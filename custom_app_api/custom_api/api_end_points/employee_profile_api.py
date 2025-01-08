@@ -895,3 +895,68 @@ def get_employee_profile_image() -> Dict[str, Any]:
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error retrieving profile image")
 
+@frappe.whitelist(allow_guest=True, methods=["GET"])
+def get_employee_avatar():
+    """
+    Get employee profile image
+    Required header: Authorization Bearer token
+    Returns:
+        - If image exists: Image file
+        - If no image: 404 Not Found
+    """
+    try:
+        # Verify authorization
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        if not is_valid:
+            frappe.local.response['http_status_code'] = 401
+            return result
+        
+        employee = result["employee"]
+        emp_doc = frappe.get_doc("Employee", employee)
+        
+        # If no image exists, return 404
+        if not emp_doc.image:
+            frappe.response.http_status_code = 404
+            return {
+                "success": False,
+                "status": "error",
+                "message": "No profile image found",
+                "code": "NO_IMAGE",
+                "http_status_code": 404
+            }
+        
+        try:
+            # Get the file doc
+            file_doc = frappe.get_doc("File", {
+                "file_url": emp_doc.image
+            })
+            
+            if not file_doc or not os.path.exists(file_doc.get_full_path()):
+                frappe.response.http_status_code = 404
+                return {
+                    "success": False,
+                    "status": "error",
+                    "message": "Image file not found",
+                    "code": "FILE_NOT_FOUND",
+                    "http_status_code": 404
+                }
+            
+            # Set response headers for image
+            frappe.response.filename = os.path.basename(emp_doc.image)
+            frappe.response.filecontent = open(file_doc.get_full_path(), "rb").read()
+            frappe.response.type = "image"
+            return
+
+        except Exception as e:
+            frappe.response.http_status_code = 404
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Error retrieving image file",
+                "code": "FILE_ERROR",
+                "http_status_code": 404
+            }
+
+    except Exception as e:
+        frappe.response.http_status_code = 500
+        return handle_error_response(e, "Error retrieving profile image")
