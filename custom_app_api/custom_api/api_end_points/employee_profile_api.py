@@ -448,7 +448,6 @@ def update_employee_bank_details(
     custom_ifsc_no: str = None,
     custom_beneficiary_name: str = None,
     bank_ac_no: str = None,
-    custom_helmet_size: str = None,
     is_reentry_allowed: bool = False
 ) -> Dict[str, Any]:
     """
@@ -477,7 +476,6 @@ def update_employee_bank_details(
             'custom_ifsc_no': {'type': 'data', 'reentry': False},
             'custom_beneficiary_name': {'type': 'data', 'reentry': False},
             'bank_ac_no': {'type': 'data', 'reentry': False},
-            'custom_helmet_size': {'type': 'data', 'reentry': False}
         }
 
         # Process each field
