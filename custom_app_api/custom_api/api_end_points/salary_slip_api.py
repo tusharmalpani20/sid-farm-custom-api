@@ -355,6 +355,8 @@ def get_salary_slip_tax_info():
             ) or 0
             
             records.append({
+                "month": month,
+                "year": year,
                 "employee_id": slip.employee,
                 "employee_name": slip.employee_name,
                 "pan_number": employee_dict.get(slip.employee),
