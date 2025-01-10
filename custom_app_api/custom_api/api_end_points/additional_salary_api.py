@@ -234,9 +234,17 @@ def get_additional_salary_records():
         to_date = to_date.strftime('%Y-%m-%d 23:59:59') if isinstance(to_date, date) else to_date
 
         # Build filters dictionary
-        additional_salary_filters = {
-            "payroll_date": ["between", [from_date, to_date]]
-        }
+        additional_salary_filters = {}
+
+        # Handle date filters with OR condition
+        date_filters = [
+            ["payroll_date", "between", [from_date, to_date]],
+            [
+                ["from_date", "<=", to_date],
+                ["to_date", ">=", from_date]
+            ]
+        ]
+        additional_salary_filters["$or"] = date_filters
 
         # Add docstatus filter if provided
         if filters.get('doc_status'):
@@ -258,7 +266,8 @@ def get_additional_salary_records():
             filters=additional_salary_filters,
             fields=[
                 "name", "salary_component", "custom_reason", "custom_total_amount",
-                "payroll_date", "workflow_state", "workflow_action_taken_on", "employee"
+                "payroll_date", "workflow_state", "workflow_action_taken_on", "employee",
+                "amount", "custom_pay_in_installment"
             ]
         )
 
@@ -271,13 +280,16 @@ def get_additional_salary_records():
                 "custom_ifsc_no"
             ], as_dict=1)
 
+            # Use custom_total_amount if it's an installment, otherwise use amount
+            display_amount = salary.custom_total_amount if salary.custom_pay_in_installment else salary.amount
+
             formatted_records.append({
                 "id": salary.name,
                 "salary_component": salary.salary_component,
                 "route_name": employee.custom_route,
                 "delivery_executive_name": employee.employee_name,
                 "reason": salary.custom_reason,
-                "total_amount": salary.custom_total_amount,
+                "total_amount": display_amount,
                 "delivery_phone_number": employee.cell_number,
                 "bank_name": employee.bank_name,
                 "beneficiary_name": employee.custom_beneficiary_name,
