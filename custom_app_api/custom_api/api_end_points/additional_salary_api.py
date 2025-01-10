@@ -242,11 +242,11 @@ def get_additional_salary_records():
 
         # Add base date condition
         date_condition = """
-            (payroll_date BETWEEN %(from_date)s AND %(to_date)s)
+            ((payroll_date BETWEEN %(from_date)s AND %(to_date)s)
             OR (
                 (from_date <= %(to_date)s)
                 AND (to_date >= %(from_date)s)
-            )
+            ))
         """
         conditions.append(date_condition)
 
