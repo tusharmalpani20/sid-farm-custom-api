@@ -227,49 +227,61 @@ def get_additional_salary_records():
         
         # Set default dates if not provided
         today = datetime.today()
-        from_date = filters.get('from_date') or today.replace(day=1).strftime('%Y-%m-%d 00:00:00')
+        from_date = filters.get('from_date') or today.replace(day=1).strftime('%Y-%m-%d')
         to_date = filters.get('to_date') or today.replace(day=1, month=today.month+1 if today.month < 12 else 1, 
                                                          year=today.year if today.month < 12 else today.year+1) \
                                                .replace(day=1) - relativedelta(days=1)
-        to_date = to_date.strftime('%Y-%m-%d 23:59:59') if isinstance(to_date, date) else to_date
+        to_date = to_date.strftime('%Y-%m-%d') if isinstance(to_date, date) else to_date
 
-        # Build filters dictionary
-        additional_salary_filters = {}
+        # Build base filters
+        additional_salary_filters = []
 
-        # Handle date filters with OR condition
-        date_filters = [
-            ["payroll_date", "between", [from_date, to_date]],
-            [
-                ["from_date", "<=", to_date],
-                ["to_date", ">=", from_date]
-            ]
-        ]
-        additional_salary_filters["$or"] = date_filters
+        # Add date conditions
+        date_condition = """
+            (payroll_date BETWEEN %(from_date)s AND %(to_date)s)
+            OR (
+                (from_date <= %(to_date)s)
+                AND (to_date >= %(from_date)s)
+            )
+        """
 
-        # Add docstatus filter if provided
+        # Add other filters
         if filters.get('doc_status'):
-            additional_salary_filters["docstatus"] = int(filters.get('doc_status'))
-
-        # Add salary component filter if provided
+            additional_salary_filters.append(["docstatus", "=", int(filters.get('doc_status'))])
+            
         if filters.get('salary_component'):
             salary_components = [s.strip() for s in filters.get('salary_component').split(',')]
-            additional_salary_filters["salary_component"] = ["in", salary_components]
-
-        # Add workflow state filter if provided
+            additional_salary_filters.append(["salary_component", "in", salary_components])
+            
         if filters.get('workflow_state'):
             workflow_states = [s.strip() for s in filters.get('workflow_state').split(',')]
-            additional_salary_filters["workflow_state"] = ["in", workflow_states]
+            additional_salary_filters.append(["workflow_state", "in", workflow_states])
 
         # Get Additional Salary records
-        additional_salaries = frappe.get_all(
-            "Additional Salary",
-            filters=additional_salary_filters,
-            fields=[
-                "name", "salary_component", "custom_reason", "custom_total_amount",
-                "payroll_date", "workflow_state", "workflow_action_taken_on", "employee",
-                "amount", "custom_pay_in_installment"
-            ]
-        )
+        additional_salaries = frappe.db.sql("""
+            SELECT 
+                name, salary_component, custom_reason, custom_total_amount,
+                payroll_date, workflow_state, workflow_action_taken_on, 
+                employee, amount, custom_pay_in_installment
+            FROM `tabAdditional Salary`
+            WHERE {date_condition}
+            AND {conditions}
+        """.format(
+            date_condition=date_condition,
+            conditions=" AND ".join([
+                f"`{f[0]}` {f[1]} ({','.join(['%s'] * len(f[2]))})" if isinstance(f[2], (list, tuple))
+                else f"`{f[0]}` {f[1]} %s"
+                for f in additional_salary_filters
+            ]) or "1=1"
+        ), {
+            "from_date": from_date,
+            "to_date": to_date,
+            **{
+                f"{f[0]}_{i}": v
+                for f in additional_salary_filters
+                for i, v in enumerate(f[2] if isinstance(f[2], (list, tuple)) else [f[2]])
+            }
+        }, as_dict=1)
 
         # Get employee details and format response
         formatted_records = []
