@@ -80,7 +80,7 @@ def send_otp(phone_number):
         otp_doc.insert()
 
         # Send SMS via TextLocal
-        #send_sms_via_textlocal(phone_number, otp_code)
+        send_sms_via_textlocal(phone_number, otp_code)
 
         return {
             "success": True,
