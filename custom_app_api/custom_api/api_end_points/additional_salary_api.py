@@ -278,9 +278,6 @@ def get_additional_salary_records():
         """.format(conditions=' AND '.join(conditions))
 
 
-        print(query)
-        print(params)
-
         # Execute query
         additional_salaries = frappe.db.sql(query, params, as_dict=1)
 
@@ -320,6 +317,15 @@ def get_additional_salary_records():
             "data": {
                 "records": formatted_records,
                 "total_count": len(formatted_records)
+            },
+            "query": {
+                "from_date": from_date,
+                "to_date": to_date,
+                "salary_component": filters.get('salary_component'),
+                "workflow_state": filters.get('workflow_state'),
+                "doc_status": filters.get('doc_status'),
+                # "sql_query": query,  # The actual SQL query
+                # "parameters": params  # The parameters used in the query
             },
             "http_status_code": 200
         }
