@@ -277,6 +277,10 @@ def get_additional_salary_records():
             WHERE {conditions}
         """.format(conditions=' AND '.join(conditions))
 
+
+        print(query)
+        print(params)
+
         # Execute query
         additional_salaries = frappe.db.sql(query, params, as_dict=1)
 
