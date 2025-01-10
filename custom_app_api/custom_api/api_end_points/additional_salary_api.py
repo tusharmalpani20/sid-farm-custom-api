@@ -240,14 +240,21 @@ def get_additional_salary_records():
             "to_date": to_date
         }
 
-        # Add base date condition
+        # # Add base date condition
+        # date_condition = """
+        #     ((payroll_date BETWEEN %(from_date)s AND %(to_date)s)
+        #     OR (
+        #         (from_date <= %(to_date)s)
+        #         AND (to_date >= %(from_date)s)
+        #     ))
+        # """
+
+        # Replace date condition to use workflow_action_taken_on
         date_condition = """
-            ((payroll_date BETWEEN %(from_date)s AND %(to_date)s)
-            OR (
-                (from_date <= %(to_date)s)
-                AND (to_date >= %(from_date)s)
-            ))
+            (workflow_action_taken_on IS NOT NULL 
+            AND workflow_action_taken_on BETWEEN %(from_date)s AND %(to_date)s)
         """
+
         conditions.append(date_condition)
 
         # Add other filters
