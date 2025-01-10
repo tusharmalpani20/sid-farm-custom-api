@@ -209,3 +209,97 @@ def get_pending_advance_salary() -> Dict[str, Any]:
     except Exception as e:
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error fetching pending advance salary requests")
+
+@frappe.whitelist(methods=["GET"])
+def get_additional_salary_records():
+    """
+    Get Additional Salary records with filters and employee details
+    Query Parameters:
+    - from_date: YYYY-MM-DD (optional)
+    - to_date: YYYY-MM-DD (optional)
+    - salary_component: comma-separated string (e.g., "Advance Salary,Referral Bonus")
+    - doc_status: 0 or 1
+    - workflow_state: comma-separated string (e.g., "Submitted,Approved,Rejected")
+    """
+    try:
+        # Get query parameters
+        filters = frappe.request.args
+        
+        # Set default dates if not provided
+        today = datetime.today()
+        from_date = filters.get('from_date') or today.replace(day=1).strftime('%Y-%m-%d 00:00:00')
+        to_date = filters.get('to_date') or today.replace(day=1, month=today.month+1 if today.month < 12 else 1, 
+                                                         year=today.year if today.month < 12 else today.year+1) \
+                                               .replace(day=1) - relativedelta(days=1)
+        to_date = to_date.strftime('%Y-%m-%d 23:59:59') if isinstance(to_date, date) else to_date
+
+        # Build filters dictionary
+        additional_salary_filters = {
+            "payroll_date": ["between", [from_date, to_date]]
+        }
+
+        # Add docstatus filter if provided
+        if filters.get('doc_status'):
+            additional_salary_filters["docstatus"] = int(filters.get('doc_status'))
+
+        # Add salary component filter if provided
+        if filters.get('salary_component'):
+            salary_components = [s.strip() for s in filters.get('salary_component').split(',')]
+            additional_salary_filters["salary_component"] = ["in", salary_components]
+
+        # Add workflow state filter if provided
+        if filters.get('workflow_state'):
+            workflow_states = [s.strip() for s in filters.get('workflow_state').split(',')]
+            additional_salary_filters["workflow_state"] = ["in", workflow_states]
+
+        # Get Additional Salary records
+        additional_salaries = frappe.get_all(
+            "Additional Salary",
+            filters=additional_salary_filters,
+            fields=[
+                "name", "salary_component", "custom_reason", "custom_total_amount",
+                "payroll_date", "workflow_state", "workflow_action_taken_on", "employee"
+            ]
+        )
+
+        # Get employee details and format response
+        formatted_records = []
+        for salary in additional_salaries:
+            employee = frappe.get_value("Employee", salary.employee, [
+                "custom_route", "employee_name", "cell_number",
+                "bank_name", "custom_beneficiary_name", "bank_ac_no",
+                "custom_ifsc_no"
+            ], as_dict=1)
+
+            formatted_records.append({
+                "id": salary.name,
+                "salary_component": salary.salary_component,
+                "route_name": employee.custom_route,
+                "delivery_executive_name": employee.employee_name,
+                "reason": salary.custom_reason,
+                "total_amount": salary.custom_total_amount,
+                "delivery_phone_number": employee.cell_number,
+                "bank_name": employee.bank_name,
+                "beneficiary_name": employee.custom_beneficiary_name,
+                "bank_ac_no": employee.bank_ac_no,
+                "ifsc_no": employee.custom_ifsc_no,
+                "payroll_date": salary.payroll_date,
+                "action_taken_on": salary.workflow_action_taken_on,
+                "status": salary.workflow_state
+            })
+
+        return {
+            "success": True,
+            "status": "success",
+            "message": "Additional salary records retrieved successfully",
+            "data": {
+                "records": formatted_records,
+                "total_count": len(formatted_records)
+            },
+            "http_status_code": 200
+        }
+
+    except Exception as e:
+        frappe.local.response['http_status_code'] = 500
+        return handle_error_response(e, "Error fetching additional salary records")
+
