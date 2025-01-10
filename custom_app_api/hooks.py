@@ -166,7 +166,10 @@ doc_events = {
     },
 	"Route": {
 		"after_insert": "custom_app_api.doc_events.route.after_insert"
-	}
+	},
+	"Additional Salary": {
+        "before_save": "custom_app_api.doc_events.additional_salary.before_save"
+    }
 }
 
 # Scheduled Tasks
