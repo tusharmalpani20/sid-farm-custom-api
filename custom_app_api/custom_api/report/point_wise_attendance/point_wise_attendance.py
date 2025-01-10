@@ -73,21 +73,59 @@ def execute(filters=None):
     absent_percentage = f"{(total_absent/total_marked*100):.1f}" if total_marked else "0.0"
     leave_percentage = f"{(total_on_leave/total_marked*100):.1f}" if total_marked else "0.0"
 
-    # Create the main message with HTML formatting
+    # Create the main message with modern HTML formatting
     message = [
-        "<div style='font-family: Arial; padding: 10px;'>",
-        "<h3 style='color: #1F497D; margin-bottom: 15px;'>Overall Attendance Summary</h3>",
-        f"<div style='margin-bottom: 15px;'><b>Total Employees:</b> {total_employees}</div>",
-        f"<div style='margin-bottom: 15px;'><b>Overall Attendance:</b> {overall_attendance_percentage:.1f}%</div>",
-        "<div style='margin-bottom: 15px;'>",
-        "<b>Attendance Breakdown:</b>",
-        f"<div style='margin-left: 20px; margin-top: 5px;'>• Present: <b>{total_present}</b> ({present_percentage}%)</div>",
-        f"<div style='margin-left: 20px;'>• Absent: <b>{total_absent}</b> ({absent_percentage}%)</div>",
-        f"<div style='margin-left: 20px;'>• On Leave: <b>{total_on_leave}</b> ({leave_percentage}%)</div>",
+        "<div style='font-family: system-ui, -apple-system, sans-serif; padding: 20px; max-width: 1200px; margin: 0 auto;'>",
+        "<div style='background: white; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);'>",
+        "<h2 style='color: #2c3e50; margin-bottom: 24px; font-weight: 600;'>Overall Attendance Summary</h2>",
+        
+        # Stats cards container
+        "<div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;'>",
+        
+        # Total Employees Card
+        f"<div style='background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;'>"
+        f"<div style='color: #64748b; font-size: 0.875rem; margin-bottom: 4px;'>Total Employees</div>"
+        f"<div style='color: #1e293b; font-size: 1.5rem; font-weight: 600;'>{total_employees}</div>"
         "</div>",
-        "<div style='margin-top: 20px;'>",
-        "<h3 style='color: #1F497D; margin-bottom: 15px;'>Designation-wise Breakdown</h3>",
-        "<div style='display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 20px;'>"
+        
+        # Overall Attendance Card
+        f"<div style='background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px solid #e2e8f0;'>"
+        f"<div style='color: #64748b; font-size: 0.875rem; margin-bottom: 4px;'>Overall Attendance</div>"
+        f"<div style='color: #1e293b; font-size: 1.5rem; font-weight: 600;'>{overall_attendance_percentage:.1f}%</div>"
+        "</div>",
+        "</div>",
+        
+        # Attendance Breakdown Section
+        "<div style='background: #f8fafc; border-radius: 8px; padding: 20px; margin-bottom: 32px; border: 1px solid #e2e8f0;'>",
+        "<h3 style='color: #2c3e50; margin-bottom: 16px; font-size: 1.1rem; font-weight: 600;'>Attendance Breakdown</h3>",
+        "<div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px;'>",
+        
+        # Present Stats
+        f"<div style='padding: 12px; background: #dcfce7; border-radius: 6px;'>"
+        f"<div style='color: #166534; font-size: 0.875rem;'>Present</div>"
+        f"<div style='font-weight: 600; color: #166534; font-size: 1.25rem;'>{total_present}</div>"
+        f"<div style='color: #166534; font-size: 0.875rem;'>({present_percentage}%)</div>"
+        "</div>",
+        
+        # Absent Stats
+        f"<div style='padding: 12px; background: #fee2e2; border-radius: 6px;'>"
+        f"<div style='color: #991b1b; font-size: 0.875rem;'>Absent</div>"
+        f"<div style='font-weight: 600; color: #991b1b; font-size: 1.25rem;'>{total_absent}</div>"
+        f"<div style='color: #991b1b; font-size: 0.875rem;'>({absent_percentage}%)</div>"
+        "</div>",
+        
+        # On Leave Stats
+        f"<div style='padding: 12px; background: #fef3c7; border-radius: 6px;'>"
+        f"<div style='color: #92400e; font-size: 0.875rem;'>On Leave</div>"
+        f"<div style='font-weight: 600; color: #92400e; font-size: 1.25rem;'>{total_on_leave}</div>"
+        f"<div style='color: #92400e; font-size: 0.875rem;'>({leave_percentage}%)</div>"
+        "</div>",
+        "</div>", # End of breakdown grid
+        "</div>", # End of breakdown section
+        
+        # Designation-wise Section
+        "<h2 style='color: #2c3e50; margin-bottom: 24px; font-weight: 600;'>Designation-wise Breakdown</h2>",
+        "<div style='display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;'>"
     ]
     
     for desig in designation_data:
@@ -128,12 +166,25 @@ def execute(filters=None):
             present_pct = absent_pct = leave_pct = 0
 
         message.append(
-            f"""<div style='padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px;'>
-                <div style='font-weight: bold; color: #4472C4; margin-bottom: 5px;'>{desig.designation}</div>
-                <div style='color: #666; font-size: 0.9em; margin-bottom: 10px;'>({desig.total} employees)</div>
-                <div style='margin-bottom: 3px;'>Present: <b>{present}</b> ({present_pct:.1f}%)</div>
-                <div style='margin-bottom: 3px;'>Absent: <b>{absent}</b> ({absent_pct:.1f}%)</div>
-                <div>On Leave: <b>{on_leave}</b> ({leave_pct:.1f}%)</div>
+            f"""<div style='background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);'>
+                <div style='display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;'>
+                    <div style='font-weight: 600; color: #2c3e50; font-size: 1.1rem;'>{desig.designation}</div>
+                    <div style='color: #64748b; font-size: 0.875rem; padding: 4px 12px; background: #f1f5f9; border-radius: 12px;'>{desig.total} employees</div>
+                </div>
+                <div style='display: grid; gap: 12px;'>
+                    <div style='display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0;'>
+                        <span style='color: #16a34a;'>Present</span>
+                        <span style='font-weight: 500;'>{present} ({present_pct:.1f}%)</span>
+                    </div>
+                    <div style='display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #e2e8f0;'>
+                        <span style='color: #dc2626;'>Absent</span>
+                        <span style='font-weight: 500;'>{absent} ({absent_pct:.1f}%)</span>
+                    </div>
+                    <div style='display: flex; justify-content: space-between; padding: 8px 0;'>
+                        <span style='color: #d97706;'>On Leave</span>
+                        <span style='font-weight: 500;'>{on_leave} ({leave_pct:.1f}%)</span>
+                    </div>
+                </div>
             </div>"""
         )
 
