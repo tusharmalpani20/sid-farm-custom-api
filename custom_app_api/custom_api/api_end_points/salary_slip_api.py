@@ -301,7 +301,7 @@ def get_salary_slip_tax_info():
         salary_slips = frappe.get_all(
             "Salary Slip",
             filters=slip_filters,
-            fields=["name", "employee", "employee_name", "gross_pay"]
+            fields=["name", "employee", "employee_name", "gross_pay" , "rounded_total" ]
         )
         
         if not salary_slips:
@@ -361,7 +361,8 @@ def get_salary_slip_tax_info():
                 "employee_name": slip.employee_name,
                 "pan_number": employee_dict.get(slip.employee),
                 "taxable_amount": slip.gross_pay,
-                "tds": tds_amount
+                "tds": tds_amount,
+                "net_pay": slip.rounded_total
             })
         
         return {
