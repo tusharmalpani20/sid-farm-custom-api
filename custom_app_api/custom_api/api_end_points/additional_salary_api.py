@@ -312,6 +312,7 @@ def get_additional_salary_records():
         }
 
     except Exception as e:
+        frappe.log_error(frappe.get_traceback(), _('Error fetching additional salary records'))
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error fetching additional salary records")
 
