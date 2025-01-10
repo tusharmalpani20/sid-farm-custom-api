@@ -168,7 +168,7 @@ doc_events = {
 		"after_insert": "custom_app_api.doc_events.route.after_insert"
 	},
 	"Additional Salary": {
-        "before_save": "custom_app_api.doc_events.additional_salary.before_save"
+		"on_update": "custom_app_api.doc_events.additional_salary.on_update"
     }
 }
 
