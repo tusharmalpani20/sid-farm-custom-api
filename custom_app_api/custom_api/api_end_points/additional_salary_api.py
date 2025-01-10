@@ -233,10 +233,14 @@ def get_additional_salary_records():
                                                .replace(day=1) - relativedelta(days=1)
         to_date = to_date.strftime('%Y-%m-%d') if isinstance(to_date, date) else to_date
 
-        # Build base filters
-        additional_salary_filters = []
+        # Build query conditions and parameters
+        conditions = []
+        params = {
+            "from_date": from_date,
+            "to_date": to_date
+        }
 
-        # Add date conditions
+        # Add base date condition
         date_condition = """
             (payroll_date BETWEEN %(from_date)s AND %(to_date)s)
             OR (
@@ -244,44 +248,37 @@ def get_additional_salary_records():
                 AND (to_date >= %(from_date)s)
             )
         """
+        conditions.append(date_condition)
 
         # Add other filters
         if filters.get('doc_status'):
-            additional_salary_filters.append(["docstatus", "=", int(filters.get('doc_status'))])
-            
+            conditions.append("`docstatus` = %(docstatus)s")
+            params["docstatus"] = int(filters.get('doc_status'))
+
         if filters.get('salary_component'):
             salary_components = [s.strip() for s in filters.get('salary_component').split(',')]
-            additional_salary_filters.append(["salary_component", "in", salary_components])
-            
+            placeholders = ', '.join([f'%({i})s' for i in range(len(salary_components))])
+            conditions.append(f"`salary_component` IN ({placeholders})")
+            params.update({str(i): comp for i, comp in enumerate(salary_components)})
+
         if filters.get('workflow_state'):
             workflow_states = [s.strip() for s in filters.get('workflow_state').split(',')]
-            additional_salary_filters.append(["workflow_state", "in", workflow_states])
+            placeholders = ', '.join([f'%(w{i})s' for i in range(len(workflow_states))])
+            conditions.append(f"`workflow_state` IN ({placeholders})")
+            params.update({f"w{i}": state for i, state in enumerate(workflow_states)})
 
-        # Get Additional Salary records
-        additional_salaries = frappe.db.sql("""
+        # Construct final query
+        query = """
             SELECT 
                 name, salary_component, custom_reason, custom_total_amount,
                 payroll_date, workflow_state, workflow_action_taken_on, 
                 employee, amount, custom_pay_in_installment
             FROM `tabAdditional Salary`
-            WHERE {date_condition}
-            AND {conditions}
-        """.format(
-            date_condition=date_condition,
-            conditions=" AND ".join([
-                f"`{f[0]}` {f[1]} ({','.join(['%s'] * len(f[2]))})" if isinstance(f[2], (list, tuple))
-                else f"`{f[0]}` {f[1]} %s"
-                for f in additional_salary_filters
-            ]) or "1=1"
-        ), {
-            "from_date": from_date,
-            "to_date": to_date,
-            **{
-                f"{f[0]}_{i}": v
-                for f in additional_salary_filters
-                for i, v in enumerate(f[2] if isinstance(f[2], (list, tuple)) else [f[2]])
-            }
-        }, as_dict=1)
+            WHERE {conditions}
+        """.format(conditions=' AND '.join(conditions))
+
+        # Execute query
+        additional_salaries = frappe.db.sql(query, params, as_dict=1)
 
         # Get employee details and format response
         formatted_records = []
