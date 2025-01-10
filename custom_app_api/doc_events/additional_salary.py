@@ -12,6 +12,6 @@ def on_update(doc, method):
         # Debug message to show current state
         frappe.msgprint(f"📝 Current workflow state: {doc.workflow_state}")
         
-        # Update timestamp to track when this workflow action was taken
-        doc.custom_workflow_action_taken_on = now_datetime()
+        # Update timestamp using db_set to avoid recursive updates
+        doc.db_set('custom_workflow_action_taken_on', now_datetime(), update_modified=False)
         frappe.msgprint(f"⏰ Timestamp updated to: {doc.custom_workflow_action_taken_on}")
