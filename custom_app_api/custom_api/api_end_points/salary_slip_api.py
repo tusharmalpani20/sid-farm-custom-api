@@ -255,3 +255,133 @@ def get_salary_slip_pdf() -> Dict[str, Any]:
     except Exception as e:
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error fetching salary slip PDF")
+
+@frappe.whitelist(methods=["GET"])
+def get_salary_slip_tax_info():
+    """
+    Get salary slip tax information with filters
+    Query Parameters:
+    - month: Month name (jan, feb, etc.) - optional, defaults to current month
+    - year: YYYY format - optional, defaults to current year
+    - grade: Employee grade - optional
+    - designation: Employee designation - optional
+    """
+    try:
+        # Get query parameters
+        filters = frappe.request.args
+        
+        # Set default month and year if not provided
+        current_date = frappe.utils.today()
+        current_month = frappe.utils.getdate(current_date).strftime("%b").lower()
+        current_year = frappe.utils.getdate(current_date).year
+        
+        month = (filters.get('month') or current_month).lower()
+        year = filters.get('year') or current_year
+        
+        # Validate month
+        valid_months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec']
+        if month not in valid_months:
+            frappe.throw(_("Invalid month. Please provide a valid month (jan, feb, etc.)"))
+        
+        # Convert month name to month number
+        month_num = valid_months.index(month) + 1
+        
+        # Get start and end dates for the month
+        start_date = f"{year}-{month_num:02d}-01"
+        end_date = frappe.utils.get_last_day(start_date)
+        
+        # Build salary slip filters
+        slip_filters = {
+            "start_date": start_date,
+            "end_date": end_date,
+            # "docstatus": 1  # Only submitted salary slips
+        }
+        
+        # Get salary slips
+        salary_slips = frappe.get_all(
+            "Salary Slip",
+            filters=slip_filters,
+            fields=["name", "employee", "employee_name", "gross_pay"]
+        )
+        
+        if not salary_slips:
+            return {
+                "success": True,
+                "message": "No salary slips found for the given criteria",
+                "data": {
+                    "month": month,
+                    "year": year,
+                    "records": []
+                }
+            }
+        
+        # Get employee filters
+        employee_filters = {
+            "name": ["in", [slip.employee for slip in salary_slips]]
+        }
+        
+        if filters.get('grade'):
+            employee_filters["grade"] = filters.get('grade')
+        if filters.get('designation'):
+            employee_filters["designation"] = filters.get('designation')
+        
+        # Get employee details
+        employees = frappe.get_all(
+            "Employee",
+            filters=employee_filters,
+            fields=["name", "custom_pan"],
+            as_list=False
+        )
+        
+        # Create employee lookup dict
+        employee_dict = {emp.name: emp.custom_pan for emp in employees}
+        
+        # Get TDS component details for each salary slip
+        records = []
+        for slip in salary_slips:
+            # Only include employees that match the grade/designation filters
+            if slip.employee not in employee_dict:
+                continue
+                
+            # Get TDS amount
+            tds_amount = frappe.db.get_value(
+                "Salary Detail",
+                {
+                    "parent": slip.name,
+                    "parentfield": "deductions",
+                    "salary_component_type": "Tax Deducted At Source"
+                },
+                "amount"
+            ) or 0
+            
+            records.append({
+                "employee_name": slip.employee_name,
+                "pan_number": employee_dict.get(slip.employee),
+                "taxable_amount": slip.gross_pay,
+                "tds": tds_amount
+            })
+        
+        return {
+            "success": True,
+            "message": "Salary slip tax information retrieved successfully",
+            "data": {
+                "month": month,
+                "year": year,
+                "records": records,
+                "total_count": len(records)
+            },
+            "query": {
+                "month": month,
+                "year": year,
+                "grade": filters.get('grade'),
+                "designation": filters.get('designation'),
+                # "sql_query": query,  # The actual SQL query
+                # "parameters": params  # The parameters used in the query
+            },
+            "http_status_code": 200
+        }
+        
+    except Exception as e:
+        frappe.local.response['http_status_code'] = 500
+        return handle_error_response(e, "Error fetching salary slip tax information")
+
