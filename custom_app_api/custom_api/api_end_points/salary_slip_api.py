@@ -349,7 +349,7 @@ def get_salary_slip_tax_info():
                 {
                     "parent": slip.name,
                     "parentfield": "deductions",
-                    "salary_component_type": "Tax Deducted At Source"
+                    "salary_component": "TDS"
                 },
                 "amount"
             ) or 0
