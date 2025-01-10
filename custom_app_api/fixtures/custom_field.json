@@ -41,9 +41,9 @@
     },
     {
         "doctype": "Custom Field",
-        "name": "custom_workflow_action_taken_on",
+        "name": "workflow_action_taken_on",
         "dt": "Additional Salary",
-        "fieldname": "custom_workflow_action_taken_on",
+        "fieldname": "workflow_action_taken_on",
         "fieldtype": "Datetime",
         "label": "Workflow Action Taken On",
         "insert_after": "workflow_state",
