@@ -2,6 +2,7 @@
  "actions": [],
  "allow_rename": 1,
  "creation": "2025-01-13 11:36:39.705834",
+ "autoname": "format:{cluster_name}",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -47,5 +48,5 @@
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": [],
- "name_field": "cluster_name"
+ "naming_rule": "Expression"
 }
