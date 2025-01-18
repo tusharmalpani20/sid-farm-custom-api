@@ -19,6 +19,10 @@ def record_location() -> Dict[str, Any]:
         # Verify token and authenticate
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
+            frappe.log_error(
+                title="Token Verification Failed",
+                message=f"Invalid token: {result}"
+            )
             frappe.local.response['http_status_code'] = result.get("http_status_code", 401)
             return result
         
@@ -26,6 +30,10 @@ def record_location() -> Dict[str, Any]:
         
         # Get request data
         if not frappe.request.json:
+            frappe.log_error(
+                title="Missing Request Body",
+                message="Request body is missing in location recording"
+            )
             frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
@@ -41,6 +49,10 @@ def record_location() -> Dict[str, Any]:
         # Validate required fields
         for field in required_fields:
             if field not in data:
+                frappe.log_error(
+                    title="Missing Required Field",
+                    message=f"Missing field '{field}' in location recording request for employee {employee}"
+                )
                 frappe.local.response['http_status_code'] = 400
                 return {
                     "success": False,
@@ -61,6 +73,10 @@ def record_location() -> Dict[str, Any]:
                 }, "name")
             
             if not attendance:
+                frappe.log_error(
+                    title="No Attendance Found",
+                    message=f"No approved attendance found for employee {employee} on {frappe.utils.today()}"
+                )
                 frappe.local.response['http_status_code'] = 400
                 return {
                     "success": False,
@@ -94,6 +110,10 @@ def record_location() -> Dict[str, Any]:
             }
             
         except frappe.ValidationError as e:
+            frappe.log_error(
+                title="Validation Error in Location Recording",
+                message=f"Error for employee {employee}: {str(e)}"
+            )
             frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
@@ -104,5 +124,9 @@ def record_location() -> Dict[str, Any]:
             }
             
     except Exception as e:
+        frappe.log_error(
+            title="Location Recording Error",
+            message=f"Unexpected error: {str(e)}\nTraceback: {frappe.get_traceback()}"
+        )
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error recording location")

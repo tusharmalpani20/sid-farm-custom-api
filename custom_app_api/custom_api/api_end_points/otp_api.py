@@ -12,10 +12,14 @@ import pytz
 @frappe.whitelist(allow_guest=True)
 def send_otp(phone_number):
     try:
+        # Log the incoming request
+        frappe.logger("otp").info(f"OTP request received for phone: {phone_number}")
+        
         # Standardize and validate phone number
         try:
             phone_number = standardize_phone_number(phone_number)
-        except ValueError:
+        except ValueError as e:
+            frappe.logger("otp").error(f"Phone validation failed: {str(e)}")
             frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
@@ -57,11 +61,18 @@ def send_otp(phone_number):
             fields=["name"]
         )
         
+        # Log OTP expiry process
+        if existing_otps:
+            frappe.logger("otp").info(f"Expiring {len(existing_otps)} existing OTPs for {phone_number}")
+        
         for otp in existing_otps:
-            frappe.db.set_value("OTP", otp.name, {
-                "expires_at": current_ist_time,
-                "is_expired": 1
-            })
+            try:
+                frappe.db.set_value("OTP", otp.name, {
+                    "expires_at": current_ist_time,
+                    "is_expired": 1
+                })
+            except Exception as e:
+                frappe.logger("otp").error(f"Failed to expire OTP {otp.name}: {str(e)}")
 
         # Generate 4-digit OTP
         otp_code = ''.join(random.choices('0123456789', k=4))
@@ -79,9 +90,23 @@ def send_otp(phone_number):
         })
         otp_doc.insert()
 
-        # Send SMS via TextLocal
-        send_sms_via_textlocal(phone_number, otp_code)
+        # Log OTP creation
+        frappe.logger("otp").info(f"New OTP generated for {phone_number}")
 
+        # Send SMS and log the result
+        sms_result = send_sms_via_textlocal(phone_number, otp_code)
+        if not sms_result:
+            frappe.logger("otp").error(f"SMS sending failed for {phone_number}")
+            frappe.local.response['http_status_code'] = 500
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Failed to send SMS",
+                "code": "SMS_FAILED",
+                "http_status_code": 500
+            }
+
+        frappe.logger("otp").info(f"OTP successfully sent to {phone_number}")
         return {
             "success": True,
             "status": "success",
@@ -91,7 +116,9 @@ def send_otp(phone_number):
         }
 
     except Exception as e:
-        frappe.log_error(str(e), "OTP Send Error")
+        error_msg = f"OTP Send Error for {phone_number}: {str(e)}"
+        frappe.logger("otp").error(error_msg, exc_info=True)  # Include stack trace
+        frappe.log_error(error_msg, "OTP Send Error")
         frappe.local.response['http_status_code'] = 500
         return {
             "success": False,
