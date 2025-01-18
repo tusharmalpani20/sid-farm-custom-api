@@ -90,6 +90,7 @@ def record_location() -> Dict[str, Any]:
             route_tracking = frappe.get_doc({
                 "doctype": "Route Tracking",
                 "attendance": attendance,
+                "employee": employee,
                 "latitude": float(data["latitude"]),
                 "longitude": float(data["longitude"]),
                 "accuracy": float(data["accuracy"]),
