@@ -118,74 +118,6 @@ def get_field_options() -> Dict[str, Any]:
         return handle_error_response(e, "Error retrieving field options")
 
 @frappe.whitelist(allow_guest=True, methods=["GET"])
-def get_assigned_villages() -> Dict[str, Any]:
-    """
-    Returns list of villages assigned to the logged-in employee
-    Required header: Authorization Bearer token
-    """
-    try:
-        # Verify authorization
-        is_valid, result = verify_dp_token(frappe.request.headers)
-        if not is_valid:
-            frappe.local.response['http_status_code'] = 401
-            return result
-        
-        employee = result["employee"]
-        
-        # Get village mapping for the employee
-        village_mapping = frappe.get_all(
-            "Village BDE Mapping",
-            filters={"employee": employee},
-            fields=["name"]
-        )
-        
-        if not village_mapping:
-            frappe.local.response['http_status_code'] = 404
-            return {
-                "success": False,
-                "status": "error",
-                "message": "No villages assigned to this employee",
-                "code": "NO_VILLAGES_ASSIGNED",
-                "http_status_code": 404
-            }
-            
-        # Get village details from the mapping
-        villages = frappe.get_all(
-            "Village Map",
-            filters={"parent": village_mapping[0].name},
-            fields=["village"],
-            as_list=False
-        )
-        
-        # Get complete village information
-        village_details = []
-        for village in villages:
-            village_doc = frappe.get_doc("Village", village.village)
-            village_details.append({
-                "name": village_doc.name,
-                "village_name": village_doc.village_name,
-                "state": village_doc.state,
-                "pincode": village_doc.pincode,
-                "latitude": village_doc.latitude,
-                "longitude": village_doc.longitude,
-                "nearest_towncity": village_doc.nearest_towncity
-            })
-
-        frappe.local.response['http_status_code'] = 200
-        return {
-            "success": True,
-            "status": "success",
-            "message": "Villages retrieved successfully",
-            "code": "VILLAGES_RETRIEVED",
-            "data": village_details,
-            "http_status_code": 200
-        }
-
-    except Exception as e:
-        frappe.local.response['http_status_code'] = 500
-        return handle_error_response(e, "Error retrieving assigned villages")
-
-@frappe.whitelist(allow_guest=True, methods=["GET"])
 def get_bmc_list() -> Dict[str, Any]:
     """
     Returns list of BMCs associated with the villages in clusters mapped to the logged-in employee
@@ -204,7 +136,7 @@ def get_bmc_list() -> Dict[str, Any]:
         cluster_mappings = frappe.get_all(
             "Cluster BDE Mapping",
             filters={"employee": employee},
-            fields=["parent"]
+            fields=["cluster"]
         )
         
         if not cluster_mappings:
@@ -221,8 +153,8 @@ def get_bmc_list() -> Dict[str, Any]:
         villages = []
         for mapping in cluster_mappings:
             cluster_villages = frappe.get_all(
-                "Cluster Village Mapping",
-                filters={"parent": mapping.parent},
+                "Village Map",
+                filters={"parent": mapping.cluster},
                 fields=["village"]
             )
             villages.extend([v.village for v in cluster_villages])
@@ -289,7 +221,7 @@ def get_assigned_villages() -> Dict[str, Any]:
         cluster_mappings = frappe.get_all(
             "Cluster BDE Mapping",
             filters={"employee": employee},
-            fields=["parent"]
+            fields=["cluster"]
         )
         
         if not cluster_mappings:
@@ -306,8 +238,8 @@ def get_assigned_villages() -> Dict[str, Any]:
         villages = []
         for mapping in cluster_mappings:
             cluster_villages = frappe.get_all(
-                "Cluster Village Mapping",
-                filters={"parent": mapping.parent},
+                "Village Map",
+                filters={"parent": mapping.cluster},
                 fields=["village"]
             )
             villages.extend([v.village for v in cluster_villages])
