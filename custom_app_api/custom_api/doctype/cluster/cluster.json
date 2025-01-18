@@ -21,7 +21,7 @@
    "fieldname": "village",
    "fieldtype": "Table MultiSelect",
    "label": "Village",
-   "options": "Cluster Village Mapping"
+   "options": "Village Map"
   }
  ],
  "index_web_pages_for_search": 1,
