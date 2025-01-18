@@ -1,34 +1,21 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "format:{village_name}-{state}",
+ "autoname": "format:{mandal_name}-{state}",
  "creation": "2024-12-17 16:17:21.183867",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "village_name",
-  "mandal",
+  "mandal_name",
   "state",
-  "pincode",
-  "column_break_slgr",
-  "latitude",
-  "longitude",
-  "nearest_towncity"
+  "pincode"
  ],
  "fields": [
   {
-   "fieldname": "village_name",
+   "fieldname": "mandal_name",
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Village Name",
-   "reqd": 1
-  },
-  {
-   "fieldname": "mandal",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "Mandal",
-   "options": "Mandal",
    "reqd": 1
   },
   {
@@ -37,8 +24,7 @@
    "in_list_view": 1,
    "label": "State",
    "options": "State",
-   "reqd": 1,
-   "fetch_from": "mandal.state"
+   "reqd": 1
   },
   {
    "fieldname": "pincode",
@@ -46,27 +32,7 @@
    "in_list_view": 1,
    "label": "Pincode",
    "length": 6,
-   "reqd": 1,
-   "fetch_from": "mandal.pincode"
-  },
-  {
-   "fieldname": "column_break_slgr",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "latitude",
-   "fieldtype": "Float",
-   "label": "Latitude"
-  },
-  {
-   "fieldname": "longitude",
-   "fieldtype": "Float",
-   "label": "Longitude"
-  },
-  {
-   "fieldname": "nearest_towncity",
-   "fieldtype": "Data",
-   "label": "Nearest Town/City"
+   "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
@@ -74,7 +40,7 @@
  "modified": "2024-12-18 14:52:35.537175",
  "modified_by": "Administrator",
  "module": "Custom API",
- "name": "Village",
+ "name": "Mandal",
  "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [

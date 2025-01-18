@@ -188,7 +188,7 @@ def get_assigned_villages() -> Dict[str, Any]:
 @frappe.whitelist(allow_guest=True, methods=["GET"])
 def get_bmc_list() -> Dict[str, Any]:
     """
-    Returns list of all BMCs
+    Returns list of BMCs associated with the villages in clusters mapped to the logged-in employee
     Required header: Authorization Bearer token
     """
     try:
@@ -198,10 +198,52 @@ def get_bmc_list() -> Dict[str, Any]:
             frappe.local.response['http_status_code'] = 401
             return result
         
-        # Get all BMCs
+        employee = result["employee"]
+        
+        # Get clusters mapped to the employee
+        cluster_mappings = frappe.get_all(
+            "Cluster BDE Mapping",
+            filters={"employee": employee},
+            fields=["parent"]
+        )
+        
+        if not cluster_mappings:
+            frappe.local.response['http_status_code'] = 404
+            return {
+                "success": False,
+                "status": "error",
+                "message": "No clusters mapped to this employee",
+                "code": "NO_CLUSTERS_MAPPED",
+                "http_status_code": 404
+            }
+        
+        # Get all villages from the mapped clusters
+        villages = []
+        for mapping in cluster_mappings:
+            cluster_villages = frappe.get_all(
+                "Cluster Village Mapping",
+                filters={"parent": mapping.parent},
+                fields=["village"]
+            )
+            villages.extend([v.village for v in cluster_villages])
+        
+        if not villages:
+            frappe.local.response['http_status_code'] = 404
+            return {
+                "success": False,
+                "status": "error",
+                "message": "No villages found in mapped clusters",
+                "code": "NO_VILLAGES_FOUND",
+                "http_status_code": 404
+            }
+        
+        # Get BMCs in those villages
         bmc_list = frappe.get_all(
             "BMC",
-            fields=["name", "bmc_name", "state", "location"]
+            filters={"mandal": ["in", [
+                frappe.get_value("Village", v, "mandal") for v in villages
+            ]]},
+            fields=["name", "bmc_name", "state", "location", "mandal"]
         )
         
         if not bmc_list:
@@ -209,7 +251,7 @@ def get_bmc_list() -> Dict[str, Any]:
             return {
                 "success": False,
                 "status": "error",
-                "message": "No BMCs found",
+                "message": "No BMCs found in the mapped villages",
                 "code": "NO_BMCS_FOUND",
                 "http_status_code": 404
             }
@@ -227,6 +269,86 @@ def get_bmc_list() -> Dict[str, Any]:
     except Exception as e:
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error retrieving BMC list")
+
+@frappe.whitelist(allow_guest=True, methods=["GET"])
+def get_assigned_villages() -> Dict[str, Any]:
+    """
+    Returns list of villages assigned to the logged-in employee
+    Required header: Authorization Bearer token
+    """
+    try:
+        # Verify authorization
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        if not is_valid:
+            frappe.local.response['http_status_code'] = 401
+            return result
+        
+        employee = result["employee"]
+        
+        # Get clusters mapped to the employee
+        cluster_mappings = frappe.get_all(
+            "Cluster BDE Mapping",
+            filters={"employee": employee},
+            fields=["parent"]
+        )
+        
+        if not cluster_mappings:
+            frappe.local.response['http_status_code'] = 404
+            return {
+                "success": False,
+                "status": "error",
+                "message": "No clusters mapped to this employee",
+                "code": "NO_CLUSTERS_MAPPED",
+                "http_status_code": 404
+            }
+        
+        # Get all villages from the mapped clusters
+        villages = []
+        for mapping in cluster_mappings:
+            cluster_villages = frappe.get_all(
+                "Cluster Village Mapping",
+                filters={"parent": mapping.parent},
+                fields=["village"]
+            )
+            villages.extend([v.village for v in cluster_villages])
+        
+        if not villages:
+            frappe.local.response['http_status_code'] = 404
+            return {
+                "success": False,
+                "status": "error",
+                "message": "No villages found in mapped clusters",
+                "code": "NO_VILLAGES_FOUND",
+                "http_status_code": 404
+            }
+        
+        # Get complete village information
+        village_details = []
+        for village in villages:
+            village_doc = frappe.get_doc("Village", village)
+            village_details.append({
+                "name": village_doc.name,
+                "village_name": village_doc.village_name,
+                "state": village_doc.state,
+                "pincode": village_doc.pincode,
+                "latitude": village_doc.latitude,
+                "longitude": village_doc.longitude,
+                "nearest_towncity": village_doc.nearest_towncity
+            })
+
+        frappe.local.response['http_status_code'] = 200
+        return {
+            "success": True,
+            "status": "success",
+            "message": "Villages retrieved successfully",
+            "code": "VILLAGES_RETRIEVED",
+            "data": village_details,
+            "http_status_code": 200
+        }
+
+    except Exception as e:
+        frappe.local.response['http_status_code'] = 500
+        return handle_error_response(e, "Error retrieving assigned villages")
 
 # @frappe.whitelist(allow_guest=True, methods=["POST"])
 # def create_farmer_visit(
@@ -406,6 +528,17 @@ def create_farmer_visit(
             "assigned_sales_person": employee,
             **farmer_create_detail
         })
+
+
+        #if annual_income is <1 Lakh then financial_status is Weak, 
+        #if annual_income is 1-3 Lakh then financial_status is Average,
+        #if annual_income is >3 Lakh then financial_status is Good
+        if farmer_create_detail['annual_income'] == "<1 Lakh":
+            farmer_create_detail['financial_status'] = "Weak"
+        elif farmer_create_detail['annual_income'] == "1 - 3Lakh":
+            farmer_create_detail['financial_status'] = "Average"
+        elif farmer_create_detail['annual_income'] == ">3Lakh":
+            farmer_create_detail['financial_status'] = "Good"
         farmer.insert()
 
         farmer_name = farmer.name

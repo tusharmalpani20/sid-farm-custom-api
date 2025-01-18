@@ -7,6 +7,7 @@
  "engine": "InnoDB",
  "field_order": [
   "bmc_name",
+  "mandal",
   "state",
   "location"
  ],
@@ -17,12 +18,21 @@
    "label": "BMC Name"
   },
   {
+   "fieldname": "mandal",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Mandal",
+   "options": "Mandal",
+   "reqd": 1
+  },
+  {
    "fieldname": "state",
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "State",
    "options": "State",
-   "reqd": 1
+   "reqd": 1,
+   "fetch_from": "mandal.state"
   },
   {
    "fieldname": "location",

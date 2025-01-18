@@ -11,17 +11,25 @@
   "first_name",
   "last_name",
   "age",
-  "family_background",
+  "caste",
+  "source_of_income",
+  "annual_income",
   "financial_status",
   "educational_qualification",
   "column_break_wccq",
   "contact_number",
-  "address",
+  "village",
+  "mandal",
+  "district",
+  "state",
+  "pincode",
   "prospect_type",
   "assigned_sales_person",
   "registered_by",
   "work_details_section",
   "bmc",
+  "farm_type",
+  "farm_land_size",
   "does_the_farmer_have_5_acres_of_land",
   "is_there_year_round_water_facility",
   "is_there_an_electricity_supply",
@@ -29,6 +37,9 @@
   "does_the_farmer_agree_to_construct_a_shed_as_per_our_standards",
   "is_the_farmer_considered_innovative",
   "is_the_family_willing_to_work",
+  "is_the_famer_interested_to_develop_farm",
+  "is_the_famer_ready_to_invest_in_farm",
+  "amount_of_investment",
   "has_the_farmer_applied_for_pmegp",
   "is_the_farmer_interested_in_working_with_us",
   "can_the_farmer_maintain_the_capacity_of_animals_as_promised"
@@ -66,10 +77,22 @@
    "label": "Age"
   },
   {
-   "fieldname": "family_background",
-   "fieldtype": "Select",
-   "label": "Family Background",
-   "options": "Agricultural Background\nBusiness Background\nService Background"
+    "fieldname": "caste",
+    "fieldtype": "Select",
+    "label": "Caste",
+    "options": "GEN (General)\nSC (Scheduled Caste)\nST (Scheduled Tribe)\nOBC (Other Backward Classes)"
+  },
+  {
+    "fieldname": "source_of_income",
+    "fieldtype": "Select",
+    "label": "Source of Income",
+    "options": "Income from Salary\nIncome from Agriculture\nIncome from House Property\nIncome from Profits and Gains from Business\nIncome from Capital Gains\nIncome from Other Sources"
+  },
+  {
+    "fieldname": "annual_income",
+    "fieldtype": "Select",
+    "label": "Annual Income",
+    "options" :"<1 Lakh\n1 - 3Lakh\n>3Lakh"
   },
   {
    "fieldname": "financial_status",
@@ -81,7 +104,7 @@
    "fieldname": "educational_qualification",
    "fieldtype": "Select",
    "label": "Educational Qualification",
-   "options": "\nUneducated\nHigh School\nDiploma\nBachelor's Degree\nMaster's Degree"
+   "options": "\nUneducated\nHigh School\nIntermediate(10+2)\nDiploma\nBachelor's Degree\nMaster's Degree"
   },
   {
    "fieldname": "column_break_wccq",
@@ -94,9 +117,34 @@
    "label": "Contact Number"
   },
   {
-   "fieldname": "address",
-   "fieldtype": "Small Text",
-   "label": "Address"
+    "field_name" : "village",
+    "field_type" : "Link",
+    "label" : "Village",
+    "options" : "Village"
+  },
+  {
+    "field_name" : "mandal",
+    "field_type" : "Link",
+    "label" : "Mandal",
+    "fetch_from" : "village.mandal"
+  },
+  {
+    "field_name" : "district",
+    "field_type" : "Data",
+    "label" : "District",
+    "fetch_from" : "village.district"
+  },
+  {
+    "field_name" : "state",
+    "field_type" : "Data",
+    "label" : "State",
+    "fetch_from" : "village.state"
+  },
+  {
+    "field_name" : "pincode",
+    "field_type" : "Data",
+    "label" : "Pincode",
+    "fetch_from" : "village.pincode"
   },
   {
    "fieldname": "prospect_type",
@@ -128,6 +176,17 @@
    "fieldtype": "Link",
    "label": "BMC",
    "options": "BMC"
+  },
+  {
+    "field_name" : "farm_type",
+    "field_type" : "Select",
+    "label" : "Farm Type",
+    "options" : "Buffalo\nCow\nMix"
+  },
+  {
+    "field_name" : "farm_land_size",
+    "field_type" : "Float",
+    "label" : "How much land does the farmer have?"
   },
   {
    "fieldname": "does_the_farmer_have_5_acres_of_land",
@@ -170,6 +229,24 @@
    "fieldtype": "Select",
    "label": "Is the family willing to work?",
    "options": "\nYes\nNo"
+  },
+  {
+    "field_name" : "is_the_famer_interested_to_develop_farm",
+    "field_type" : "Select",
+    "label" : "Is the farmer interested to develop farm?",
+    "options" : "Yes\nNo"
+  },
+  {
+    "field_name" : "is_the_famer_ready_to_invest_in_farm",
+    "field_type" : "Select",
+    "label" : "Is the farmer ready to invest in farm?",
+    "options" : "Yes\nNo"
+  },
+  {
+    "field_name" : "amount_of_investment",
+    "field_type" : "Float",
+    "label" : "Amount of investment(in rupees)",
+    "depends_on" : "eval:doc.is_the_famer_ready_to_invest_in_farm == 'Yes'"
   },
   {
    "fieldname": "has_the_farmer_applied_for_pmegp",
