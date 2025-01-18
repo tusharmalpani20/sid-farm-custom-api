@@ -13,7 +13,7 @@
    "fieldname": "village",
    "fieldtype": "Link",
    "label": "Village",
-   "options": "Village"
+   "options": "Village Map"
   }
  ],
  "index_web_pages_for_search": 1,
