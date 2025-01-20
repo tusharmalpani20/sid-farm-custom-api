@@ -1319,13 +1319,19 @@ def get_today_visits() -> Dict[str, Any]:
         requested_revisit = frappe.request.args.get('requested_revisit')
         is_revisit = frappe.request.args.get('is_revisit')
         farmer = frappe.request.args.get('farmer')
+
+        # Get today's date range
+        today_start = frappe.utils.now_datetime().replace(hour=0, minute=0, second=0, microsecond=0)
+        today_end = frappe.utils.now_datetime().replace(hour=23, minute=59, second=59, microsecond=999999)
         
         # Build filters
         filters = {
             "visited_by": employee,
             "docstatus": 1,  # Only get submitted documents
-            "visit_date": today  # Only get today's visits
+            "visit_date": ["between", [today_start, today_end]]  # Only get today's visits
         }
+
+        
         
         # Add optional filters if provided
         if visit_type:
