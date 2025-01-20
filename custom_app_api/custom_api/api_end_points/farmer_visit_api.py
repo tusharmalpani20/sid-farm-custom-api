@@ -277,6 +277,7 @@ def get_assigned_villages() -> Dict[str, Any]:
             village_doc = frappe.get_doc("Village", village)
             village_details.append({
                 "name": village_doc.name,
+                "mandal": village_doc.mandal,
                 "village_name": village_doc.village_name,
                 "state": village_doc.state,
                 "pincode": village_doc.pincode,
