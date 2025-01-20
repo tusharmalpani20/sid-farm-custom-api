@@ -50,6 +50,11 @@
    "reqd": 1
   },
   {
+    "fieldname": "map",
+    "fieldtype": "Geolocation",
+    "label": "Map"
+   },
+  {
    "fieldname": "recorded_at",
    "fieldtype": "Datetime",
    "label": "Recorded At",
