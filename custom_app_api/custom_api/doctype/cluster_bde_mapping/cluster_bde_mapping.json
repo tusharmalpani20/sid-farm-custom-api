@@ -17,7 +17,7 @@
    "options": "Employee"
   },
   {
-   "fieldname": "village_list",
+   "fieldname": "cluster_list",
    "fieldtype": "Table MultiSelect",
    "label": "Cluster List",
    "options": "Cluster Mapping"
