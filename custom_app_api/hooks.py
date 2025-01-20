@@ -49,7 +49,8 @@ doctype_js = {
 	"Additional Salary" : "public/js/additional_salary.js",
 	"Route Tracking" : "public/js/route_tracking.js",
 	"Delivery Records" : "public/js/delivery_records.js",
-	"Visit Tracker" : "public/js/visit_tracker.js"
+	"Visit Tracker" : "public/js/visit_tracker.js",
+	"Attendance" : "public/js/attendance.js"
 }
 doctype_list_js = {
 	# "doctype" : "public/js/doctype_list.js"
