@@ -70,7 +70,7 @@ def record_location() -> Dict[str, Any]:
                     "attendance_date": frappe.utils.today(),
                     "docstatus": ["in", [0, 1]],
                     "status": "Present"
-                }, "name")
+                }, ["name", "custom_mobile_punch_out_at"])
             
             if not attendance:
                 frappe.log_error(
@@ -85,11 +85,26 @@ def record_location() -> Dict[str, Any]:
                     "code": "NO_APPROVED_ATTENDANCE_FOUND_FOR_TODAY",
                     "http_status_code": 400
                 }
+
+            # Check if employee has punched out
+            if attendance.custom_mobile_punch_out_at:
+                frappe.log_error(
+                    title="Employee Already Punched Out",
+                    message=f"Employee {employee} has already punched out on {frappe.utils.today()}"
+                )
+                frappe.local.response['http_status_code'] = 400
+                return {
+                    "success": False,
+                    "status": "error",
+                    "message": "Location recording stopped - You have already punched out for today",
+                    "code": "STOP_LOCATION_RECORDING_EMPLOYEE_ALREADY_PUNCHED_OUT",
+                    "http_status_code": 400
+                }
             
             # Create route tracking entry
             route_tracking = frappe.get_doc({
                 "doctype": "Route Tracking",
-                "attendance": attendance,
+                "attendance": attendance.name,
                 "employee": employee,
                 "latitude": float(data["latitude"]),
                 "longitude": float(data["longitude"]),
