@@ -15,7 +15,7 @@
    "fieldname": "mandal_name",
    "fieldtype": "Data",
    "in_list_view": 1,
-   "label": "Village Name",
+   "label": "Mandal Name",
    "reqd": 1
   },
   {
