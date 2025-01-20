@@ -32,6 +32,15 @@
    "reqd": 1
   },
   {
+    "fieldname": "district",
+    "fieldtype": "Link",
+    "in_list_view": 1,
+    "label": "District",
+    "options": "District",
+    "reqd": 1,
+    "fetch_from": "mandal.district"
+  },
+  {
    "fieldname": "state",
    "fieldtype": "Link",
    "in_list_view": 1,
