@@ -132,14 +132,14 @@ def get_bmc_list() -> Dict[str, Any]:
         
         employee = result["employee"]
         
-        # Get clusters mapped to the employee
-        cluster_mappings = frappe.get_all(
+        # Get the Cluster BDE Mapping document for this employee
+        cluster_mapping_doc = frappe.get_all(
             "Cluster BDE Mapping",
             filters={"employee": employee},
-            fields=["cluster"]
+            fields=["name"]
         )
         
-        if not cluster_mappings:
+        if not cluster_mapping_doc:
             frappe.local.response['http_status_code'] = 404
             return {
                 "success": False,
@@ -149,12 +149,29 @@ def get_bmc_list() -> Dict[str, Any]:
                 "http_status_code": 404
             }
         
+        # Get all clusters from the Cluster Mapping child table
+        clusters = frappe.get_all(
+            "Cluster Mapping",
+            filters={"parent": cluster_mapping_doc[0].name},
+            fields=["cluster"]
+        )
+        
+        if not clusters:
+            frappe.local.response['http_status_code'] = 404
+            return {
+                "success": False,
+                "status": "error",
+                "message": "No clusters found in mapping",
+                "code": "NO_CLUSTERS_FOUND",
+                "http_status_code": 404
+            }
+        
         # Get all villages from the mapped clusters
         villages = []
-        for mapping in cluster_mappings:
+        for cluster in clusters:
             cluster_villages = frappe.get_all(
                 "Village Map",
-                filters={"parent": mapping.cluster},
+                filters={"parent": cluster.cluster},
                 fields=["village"]
             )
             villages.extend([v.village for v in cluster_villages])
@@ -169,12 +186,27 @@ def get_bmc_list() -> Dict[str, Any]:
                 "http_status_code": 404
             }
         
-        # Get BMCs in those villages
+        # Get mandals for all villages
+        mandals = list(set([
+            frappe.get_value("Village", v, "mandal") 
+            for v in villages 
+            if frappe.get_value("Village", v, "mandal")
+        ]))
+        
+        if not mandals:
+            frappe.local.response['http_status_code'] = 404
+            return {
+                "success": False,
+                "status": "error",
+                "message": "No mandals found for the mapped villages",
+                "code": "NO_MANDALS_FOUND",
+                "http_status_code": 404
+            }
+        
+        # Get BMCs in those mandals
         bmc_list = frappe.get_all(
             "BMC",
-            filters={"mandal": ["in", [
-                frappe.get_value("Village", v, "mandal") for v in villages
-            ]]},
+            filters={"mandal": ["in", mandals]},
             fields=["name", "bmc_name", "state", "location", "mandal"]
         )
         
@@ -183,7 +215,7 @@ def get_bmc_list() -> Dict[str, Any]:
             return {
                 "success": False,
                 "status": "error",
-                "message": "No BMCs found in the mapped villages",
+                "message": "No BMCs found in the mapped mandals",
                 "code": "NO_BMCS_FOUND",
                 "http_status_code": 404
             }
