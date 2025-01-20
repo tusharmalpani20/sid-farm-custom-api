@@ -517,12 +517,13 @@ def create_farmer_visit(
         #if annual_income is <1 Lakh then financial_status is Weak, 
         #if annual_income is 1-3 Lakh then financial_status is Average,
         #if annual_income is >3 Lakh then financial_status is Good
-        if farmer_create_detail['annual_income'] == "<1 Lakh":
-            farmer_create_detail['financial_status'] = "Weak"
-        elif farmer_create_detail['annual_income'] == "1 - 3Lakh":
-            farmer_create_detail['financial_status'] = "Average"
-        elif farmer_create_detail['annual_income'] == ">3Lakh":
-            farmer_create_detail['financial_status'] = "Good"
+        if 'annual_income' in farmer_create_detail:
+            if farmer_create_detail['annual_income'] == "<1 Lakh":
+                farmer_create_detail['financial_status'] = "Weak"
+            elif farmer_create_detail['annual_income'] == "1 - 3Lakh":
+                farmer_create_detail['financial_status'] = "Average"
+            elif farmer_create_detail['annual_income'] == ">3Lakh":
+                farmer_create_detail['financial_status'] = "Good"
 
         #create farmer record
         farmer = frappe.get_doc({
