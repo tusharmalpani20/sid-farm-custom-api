@@ -51,6 +51,11 @@
    "reqd": 1
   },
   {
+    "fieldname": "map",
+    "fieldtype": "Geolocation",
+    "label": "Map"
+   },
+  {
    "fieldname": "image",
    "fieldtype": "Attach Image",
    "label": "Image",

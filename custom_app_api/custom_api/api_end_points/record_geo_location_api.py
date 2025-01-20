@@ -99,7 +99,7 @@ def record_location() -> Dict[str, Any]:
                     "success": False,
                     "status": "error",
                     "message": "Location recording stopped - You have already punched out for today",
-                    "code": "STOP_LOCATION_RECORDING_EMPLOYEE_ALREADY_PUNCHED_OUT",
+                    "code": "STOP_LOCATION_RECORDING",
                     "http_status_code": 400
                 }
             
