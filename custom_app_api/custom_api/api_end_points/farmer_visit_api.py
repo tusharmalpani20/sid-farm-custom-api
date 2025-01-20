@@ -591,17 +591,19 @@ def create_farmer_visit(
 @frappe.whitelist(allow_guest=True, methods=["POST"])
 def create_farmer_revisit(
     farmer_id: str,
-    previous_visit_id: str,
     farmer_prospect_type: str,
+    previous_visit_id: str = None,
     visit_tracker_detail: Dict[str, Any] = None
 ) -> Dict[str, Any]:
     """
-    It requires farmer_id, previous_visit_id, farmer_prospect_type and visit_tracker_detail
-    It will validate the farmer_id and previous_visit_id and create a new visit record
-    And it will also make sure there are no revisit entry made for the given previous_visit_id
+    Creates a revisit record for a farmer
     Required header: Authorization Bearer token
+    Args:
+        farmer_id: ID of the farmer
+        farmer_prospect_type: Updated prospect type for the farmer
+        previous_visit_id: Optional ID of the previous visit
+        visit_tracker_detail: Details of the visit
     """
-
     # Start transaction
     frappe.db.begin()
 
@@ -615,7 +617,7 @@ def create_farmer_revisit(
         
         employee = result["employee"]
 
-        #farmer details
+        # Farmer details
         farmer = frappe.get_doc("Farmer Details", farmer_id)
 
         if not farmer:
@@ -628,31 +630,30 @@ def create_farmer_revisit(
                 "http_status_code": 404
             }
 
-        #previous visit details
-        previous_visit = frappe.get_doc("Visit Tracker", previous_visit_id)
+        # Check previous visit only if provided
+        if previous_visit_id:
+            previous_visit = frappe.get_doc("Visit Tracker", previous_visit_id)
 
-        if not previous_visit:
-            frappe.local.response['http_status_code'] = 404
-            return {
-                "success": False,
-                "status": "error",
-                "message": "Previous visit not found",
-                "code": "PREVIOUS_VISIT_NOT_FOUND",
-                "http_status_code": 404
-            }
+            if not previous_visit:
+                frappe.local.response['http_status_code'] = 404
+                return {
+                    "success": False,
+                    "status": "error",
+                    "message": "Previous visit not found",
+                    "code": "PREVIOUS_VISIT_NOT_FOUND",
+                    "http_status_code": 404
+                }
 
-        # Check if the previous visit has already been followed up
-        if previous_visit.follow_up_visit:
-            frappe.local.response['http_status_code'] = 400
-            return {
-                "success": False,
-                "status": "error",
-                "message": "This visit already has a follow-up visit",
-                "code": "FOLLOW_UP_EXISTS",
-                "http_status_code": 400
-            }
-
-        #create new revisit record
+            # Check if the previous visit has already been followed up
+            if previous_visit.follow_up_visit:
+                frappe.local.response['http_status_code'] = 400
+                return {
+                    "success": False,
+                    "status": "error",
+                    "message": "This visit already has a follow-up visit",
+                    "code": "FOLLOW_UP_EXISTS",
+                    "http_status_code": 400
+                }
 
         # Handle base64 image
         if visit_tracker_detail and "visit_image" in visit_tracker_detail:
@@ -674,19 +675,27 @@ def create_farmer_revisit(
                 }
 
         # Create visit tracker record
-        visit = frappe.get_doc({
+        visit_data = {
             "doctype": "Visit Tracker",
             "farmer": farmer_id,
             "visited_by": employee,
-            "is_revisit": 1,
-            "last_visit": previous_visit_id,
-            **visit_tracker_detail
-        })
+            "is_revisit": 1
+        }
+
+        # Add last_visit only if previous_visit_id is provided
+        if previous_visit_id:
+            visit_data["last_visit"] = previous_visit_id
+
+        if visit_tracker_detail:
+            visit_data.update(visit_tracker_detail)
+
+        visit = frappe.get_doc(visit_data)
         visit.insert()
         visit.submit()  # Submit the document
 
-        # Update the previous visit's follow_up_visit field using db_set
-        previous_visit.db_set('follow_up_visit', visit.name, update_modified=False)
+        # Update the previous visit's follow_up_visit field if previous_visit_id exists
+        if previous_visit_id:
+            previous_visit.db_set('follow_up_visit', visit.name, update_modified=False)
 
         # Update the farmer's prospect type
         farmer.db_set('prospect_type', farmer_prospect_type, update_modified=True)
@@ -1252,7 +1261,7 @@ def get_prospect_statistics() -> Dict[str, Any]:
             filters=base_filters,
             fields=["name"]
         ))
-        
+
         # Get prospect type counts
         prospect_types = ["Hot", "Warm", "Cold", "Lost", "Converted"]
         prospect_counts = {}

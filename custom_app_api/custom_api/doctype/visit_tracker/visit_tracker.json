@@ -121,7 +121,7 @@
    "fieldname": "visit_reason",
    "fieldtype": "Select",
    "label": "Visit Reason",
-   "options": "\nFollow-Up\nClarification\nSupport"
+   "options": "New\nFollow-Up\nClarification\nSupport"
   },
   {
    "fieldname": "comments",
