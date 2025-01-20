@@ -30,19 +30,14 @@
   "bmc",
   "farm_type",
   "farm_land_size",
-  "does_the_farmer_have_5_acres_of_land",
   "is_there_year_round_water_facility",
   "is_there_an_electricity_supply",
   "is_there_a_proper_access_to_road",
   "does_the_farmer_agree_to_construct_a_shed_as_per_our_standards",
   "is_the_farmer_considered_innovative",
   "is_the_family_willing_to_work",
-  "is_the_famer_interested_to_develop_farm",
   "is_the_famer_ready_to_invest_in_farm",
-  "amount_of_investment",
-  "has_the_farmer_applied_for_pmegp",
-  "is_the_farmer_interested_in_working_with_us",
-  "can_the_farmer_maintain_the_capacity_of_animals_as_promised"
+  "amount_of_investment"
  ],
  "fields": [
   {
@@ -86,7 +81,7 @@
     "fieldname": "source_of_income",
     "fieldtype": "Select",
     "label": "Source of Income",
-    "options": "Income from Salary\nIncome from Agriculture\nIncome from House Property\nIncome from Profits and Gains from Business\nIncome from Capital Gains\nIncome from Other Sources"
+    "options": "Salary\nAgriculture\nHouse Property\nProfits and Gains from Business\nCapital Gains\nOther Sources"
   },
   {
     "fieldname": "annual_income",
@@ -104,7 +99,7 @@
    "fieldname": "educational_qualification",
    "fieldtype": "Select",
    "label": "Educational Qualification",
-   "options": "\nUneducated\nHigh School\nIntermediate(10+2)\nDiploma\nBachelor's Degree\nMaster's Degree"
+   "options": "Uneducated\nHigh School\nIntermediate(10+2)\nDiploma\nBachelor's Degree\nMaster's Degree"
   },
   {
    "fieldname": "column_break_wccq",
@@ -189,12 +184,6 @@
     "label" : "How much land does the farmer have?"
   },
   {
-   "fieldname": "does_the_farmer_have_5_acres_of_land",
-   "fieldtype": "Select",
-   "label": "Does the farmer have 5 acres of land?",
-   "options": "\nYes\nNo"
-  },
-  {
    "fieldname": "is_there_year_round_water_facility",
    "fieldtype": "Select",
    "label": "Is there year round water facility?",
@@ -231,40 +220,16 @@
    "options": "\nYes\nNo"
   },
   {
-    "fieldname" : "is_the_famer_interested_to_develop_farm",
-    "field_type" : "Select",
-    "label" : "Is the farmer interested to develop farm?",
-    "options" : "Yes\nNo"
-  },
-  {
     "fieldname" : "is_the_famer_ready_to_invest_in_farm",
     "field_type" : "Select",
     "label" : "Is the farmer ready to invest in farm?",
-    "options" : "Yes\nNo"
+    "options" : "\nYes\nNo"
   },
   {
     "fieldname" : "amount_of_investment",
     "field_type" : "Float",
     "label" : "Amount of investment(in rupees)",
     "depends_on" : "eval:doc.is_the_famer_ready_to_invest_in_farm == 'Yes'"
-  },
-  {
-   "fieldname": "has_the_farmer_applied_for_pmegp",
-   "fieldtype": "Select",
-   "label": "Has the farmer applied for PMEGP?",
-   "options": "\nYes\nNo"
-  },
-  {
-   "fieldname": "is_the_farmer_interested_in_working_with_us",
-   "fieldtype": "Select",
-   "label": "Is the farmer interested in working with us?",
-   "options": "\nYes\nNo"
-  },
-  {
-   "fieldname": "can_the_farmer_maintain_the_capacity_of_animals_as_promised",
-   "fieldtype": "Select",
-   "label": "Can the farmer maintain the capacity of animals as promised?",
-   "options": "\nYes\nNo"
   }
  ],
  "index_web_pages_for_search": 1,

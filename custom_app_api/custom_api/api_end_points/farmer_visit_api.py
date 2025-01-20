@@ -311,6 +311,7 @@ def get_assigned_villages() -> Dict[str, Any]:
                 "name": village_doc.name,
                 "mandal": village_doc.mandal,
                 "village_name": village_doc.village_name,
+                "district": village_doc.district,
                 "state": village_doc.state,
                 "pincode": village_doc.pincode,
                 "latitude": village_doc.latitude,
