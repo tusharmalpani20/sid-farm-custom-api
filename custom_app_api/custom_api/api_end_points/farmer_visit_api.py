@@ -217,14 +217,14 @@ def get_assigned_villages() -> Dict[str, Any]:
         
         employee = result["employee"]
         
-        # Get clusters mapped to the employee
-        cluster_mappings = frappe.get_all(
+        # Get the Cluster BDE Mapping document for this employee
+        cluster_mapping_doc = frappe.get_all(
             "Cluster BDE Mapping",
             filters={"employee": employee},
-            fields=["cluster"]
+            fields=["name"]
         )
         
-        if not cluster_mappings:
+        if not cluster_mapping_doc:
             frappe.local.response['http_status_code'] = 404
             return {
                 "success": False,
@@ -234,12 +234,29 @@ def get_assigned_villages() -> Dict[str, Any]:
                 "http_status_code": 404
             }
         
+        # Get all clusters from the Cluster Mapping child table
+        clusters = frappe.get_all(
+            "Cluster Mapping",
+            filters={"parent": cluster_mapping_doc[0].name},
+            fields=["cluster"]
+        )
+        
+        if not clusters:
+            frappe.local.response['http_status_code'] = 404
+            return {
+                "success": False,
+                "status": "error",
+                "message": "No clusters found in mapping",
+                "code": "NO_CLUSTERS_FOUND",
+                "http_status_code": 404
+            }
+        
         # Get all villages from the mapped clusters
         villages = []
-        for mapping in cluster_mappings:
+        for cluster in clusters:
             cluster_villages = frappe.get_all(
                 "Village Map",
-                filters={"parent": mapping.cluster},
+                filters={"parent": cluster.cluster},
                 fields=["village"]
             )
             villages.extend([v.village for v in cluster_villages])
