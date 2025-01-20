@@ -86,8 +86,10 @@ def record_location() -> Dict[str, Any]:
                     "http_status_code": 400
                 }
 
+            attendance_name, punch_out_time = attendance  # Unpack the tuple
+
             # Check if employee has punched out
-            if attendance.custom_mobile_punch_out_at:
+            if punch_out_time:
                 frappe.log_error(
                     title="Employee Already Punched Out",
                     message=f"Employee {employee} has already punched out on {frappe.utils.today()}"
@@ -104,7 +106,7 @@ def record_location() -> Dict[str, Any]:
             # Create route tracking entry
             route_tracking = frappe.get_doc({
                 "doctype": "Route Tracking",
-                "attendance": attendance.name,
+                "attendance": attendance_name,
                 "employee": employee,
                 "latitude": float(data["latitude"]),
                 "longitude": float(data["longitude"]),
