@@ -1,7 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "format:{mandal_name}-{state}",
+ "autoname": "format:{mandal_name}-{pincode}-{state}",
  "creation": "2024-12-17 16:17:21.183867",
  "doctype": "DocType",
  "engine": "InnoDB",
