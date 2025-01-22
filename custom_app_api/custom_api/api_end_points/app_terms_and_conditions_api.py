@@ -17,13 +17,7 @@ def get_app_terms_and_conditions():
         terms_mapping = {
             'SF Partner': {
                 'type': 'text',
-                'tac': '''
-                1. Delivery Partner: You are engaged as a delivery partner, not an employee of Sids Farm Private Limited.
-                2. Responsibilities: You agree to deliver orders professionally, promptly, and in compliance with local regulations.
-                3. Permissions: You consent to grant the ERP application access to your device's location, contacts, and gallery, as required for tracking deliveries, communicating with customers, and uploading relevant images or documents.
-                4. Payment: Payments will be made per completed delivery or as specified in the payment schedule. Penalties may apply for non-compliance or delays.
-                5. Data Privacy: You agree to handle all customer and company data confidentially and as per our privacy policy.
-                6. Termination: The Company reserves the right to terminate this agreement immediately for breach of terms or poor performance.
+                'tac': '''\n1. Delivery Partner: You are engaged as a delivery partner, not an employee of Sids Farm Private Limited.\n2. Responsibilities: You agree to deliver orders professionally, promptly, and in compliance with local regulations.\n3. Permissions: You consent to grant the ERP application access to your device's location, contacts, and gallery, as required for tracking deliveries, communicating with customers, and uploading relevant images or documents.\n4. Payment: Payments will be made per completed delivery or as specified in the payment schedule. Penalties may apply for non-compliance or delays.\n5. Data Privacy: You agree to handle all customer and company data confidentially and as per our privacy policy.\n6. Termination: The Company reserves the right to terminate this agreement immediately for breach of terms or poor performance.
                 '''
             },
             'SF Field Force': {
