@@ -171,7 +171,9 @@ def record_location() -> Dict[str, Any]:
 @frappe.whitelist()
 def get_unique_route_tracking(attendance):
     return frappe.db.sql("""
-        SELECT DISTINCT latitude, longitude
+        SELECT DISTINCT 
+            ROUND(latitude, 4) as latitude,
+            ROUND(longitude, 4) as longitude
         FROM `tabRoute Tracking`
         WHERE attendance = %s
         ORDER BY recorded_at asc
