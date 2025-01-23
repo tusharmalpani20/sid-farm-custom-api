@@ -174,5 +174,5 @@ def get_unique_route_tracking(attendance):
         SELECT DISTINCT latitude, longitude
         FROM `tabRoute Tracking`
         WHERE attendance = %s
-        ORDER BY latitude, longitude
+        ORDER BY recorded_at asc
     """, attendance, as_dict=1)
