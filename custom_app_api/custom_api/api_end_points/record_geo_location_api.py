@@ -107,7 +107,7 @@ def record_location() -> Dict[str, Any]:
             last_recording = frappe.get_value("Route Tracking",
                 {
                     "employee": employee,
-                    "recorded_at": [">=", frappe.utils.add_to_date(frappe.utils.now_datetime(), seconds=-10)]
+                    "recorded_at": [">=", frappe.utils.add_to_date(frappe.utils.now_datetime(), seconds=-9)]
                 }, "name")
             
             if last_recording:
