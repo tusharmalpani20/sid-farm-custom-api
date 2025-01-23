@@ -103,6 +103,24 @@ def record_location() -> Dict[str, Any]:
                     "http_status_code": 400
                 }
             
+            # Check for recent recordings in the last 10 seconds
+            last_recording = frappe.get_value("Route Tracking",
+                {
+                    "employee": employee,
+                    "recorded_at": [">=", frappe.utils.add_seconds(frappe.utils.now_datetime(), -10)]
+                }, "name")
+            
+            if last_recording:
+                frappe.local.response['http_status_code'] = 200
+                return {
+                    "success": True,
+                    "status": "success",
+                    "message": "Location already recorded within last 10 seconds",
+                    "data": {
+                        "name": last_recording
+                    }
+                }
+            
             # Create route tracking entry
             route_tracking = frappe.get_doc({
                 "doctype": "Route Tracking",
