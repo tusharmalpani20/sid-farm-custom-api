@@ -6,14 +6,9 @@ frappe.ui.form.on("Attendance", {
 		if (frm.doc.name) {
 			// Fetch route tracking data for this attendance
 			frappe.call({
-				method: 'frappe.client.get_list',
+				method: 'custom_app_api.custom_api.api_end_points.record_geo_location_api.get_unique_route_tracking',
 				args: {
-					doctype: 'Route Tracking',
-					filters: {
-						'attendance': frm.doc.name
-					},
-					fields: ['latitude', 'longitude', 'recorded_at'],
-					order_by: 'recorded_at asc'
+					attendance: frm.doc.name
 				},
 				callback: function(response) {
 					if (response.message && response.message.length > 0) {

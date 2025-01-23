@@ -166,3 +166,13 @@ def record_location() -> Dict[str, Any]:
         )
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error recording location")
+
+
+@frappe.whitelist()
+def get_unique_route_tracking(attendance):
+    return frappe.db.sql("""
+        SELECT DISTINCT latitude, longitude
+        FROM `tabRoute Tracking`
+        WHERE attendance = %s
+        ORDER BY latitude, longitude
+    """, attendance, as_dict=1)
