@@ -40,6 +40,20 @@ def send_custom_time_reports():
                     doc.save()
                 print(f"Filters updated for {doc.report}: {filters}")
                 print(f"Today's date: {today}")
+                
+                # Check if there are any present records for today
+                present_records = frappe.get_all(
+                    "Attendance",
+                    filters={
+                        "attendance_date": today,
+                        "status": "Present"
+                    }
+                )
+                
+                if not present_records:
+                    print(f"No present records found for {today}. Skipping Point Wise Attendance report.")
+                    continue
+                    
             elif doc.report == "Delivery Partner Status Report":
                 filters = frappe.parse_json(doc.filters)
                 if "from" in filters and "to" in filters:
