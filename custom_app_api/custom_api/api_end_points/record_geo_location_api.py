@@ -186,7 +186,7 @@ def get_unique_route_tracking(attendance):
     # recorded_at
 
     return frappe.db.sql("""
-        SELECT DISTINCT 
+        SELECT 
             latitude,
             longitude
         FROM `tabRoute Tracking`
