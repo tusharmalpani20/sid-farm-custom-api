@@ -16,16 +16,22 @@ def create_leave_application() -> Dict[str, Any]:
     }
     """
     try:
+        # Add initial debug log
+        frappe.logger().debug("Starting create_leave_application")
+        
         # Verify token and authenticate
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
+            frappe.logger().error(f"Token verification failed: {result}")
             frappe.local.response['http_status_code'] = result.get("http_status_code", 401)
             return result
         
         employee = result["employee"]
+        frappe.logger().debug(f"Processing leave application for employee: {employee}")
         
         # Get request data
         if not frappe.request.json:
+            frappe.logger().error("No JSON data in request body")
             frappe.local.response['http_status_code'] = 400
             return {
                 "success": False,
@@ -36,6 +42,7 @@ def create_leave_application() -> Dict[str, Any]:
             }
         
         data = frappe.request.json
+        frappe.logger().debug(f"Request data: {data}")
         required_fields = ["from_date", "to_date", "leave_type", "description"]
         
         # Validate required fields
@@ -52,6 +59,7 @@ def create_leave_application() -> Dict[str, Any]:
         
         try:
             # Create Leave Application
+            frappe.logger().debug(f"Creating leave application with data: {data}")
             leave_application = frappe.get_doc({
                 "doctype": "Leave Application",
                 "employee": employee,
@@ -64,6 +72,7 @@ def create_leave_application() -> Dict[str, Any]:
             })
             
             leave_application.insert()
+            frappe.logger().debug(f"Leave application created successfully: {leave_application.name}")
             frappe.local.response['http_status_code'] = 201
             return {
                 "success": True,
@@ -81,7 +90,7 @@ def create_leave_application() -> Dict[str, Any]:
             }
             
         except frappe.ValidationError as e:
-            # Set the status code before returning the response
+            frappe.logger().error(f"Validation error while creating leave application: {str(e)}")
             frappe.local.response.http_status_code = 400
             return {
                 "success": False,
@@ -92,6 +101,7 @@ def create_leave_application() -> Dict[str, Any]:
             }
             
     except Exception as e:
+        frappe.logger().error(f"Unexpected error in create_leave_application: {str(e)}", exc_info=True)
         frappe.local.response.http_status_code = 500
         return handle_error_response(e, "Error creating leave application")
 

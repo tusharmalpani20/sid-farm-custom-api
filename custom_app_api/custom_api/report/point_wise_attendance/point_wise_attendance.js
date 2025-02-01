@@ -28,11 +28,19 @@ frappe.query_reports["Point Wise Attendance"] = {
 			label: __("Points"),
 			fieldtype: "MultiSelectList",
 			get_data: function(txt) {
+				let filters = {
+					is_active: 1
+				};
+				
+				// Get currently selected zones
+				const selectedZones = frappe.query_report.get_filter_value('zones');
+				if (selectedZones && selectedZones.length) {
+					filters['zone'] = ['in', selectedZones];
+				}
+
 				return frappe.db.get_list('Point', {
 					fields: ['name', 'point_name'],
-					filters: {
-						is_active: 1
-					},
+					filters: filters,
 					order_by: 'point_name asc'
 				}).then(result => {
 					return result.map(r => ({
