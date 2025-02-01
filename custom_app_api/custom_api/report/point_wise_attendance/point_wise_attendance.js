@@ -35,7 +35,7 @@ frappe.query_reports["Point Wise Attendance"] = {
 				// Get currently selected zones
 				const selectedZones = frappe.query_report.get_filter_value('zones');
 				if (selectedZones && selectedZones.length) {
-					filters['zone'] = ['in', selectedZones];
+					filters['zone_name'] = ['in', selectedZones];
 				}
 
 				return frappe.db.get_list('Point', {
