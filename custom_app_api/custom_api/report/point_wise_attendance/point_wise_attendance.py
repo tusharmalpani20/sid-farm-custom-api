@@ -35,7 +35,9 @@ def execute(filters=None):
             {"value": 0, "label": "On Leave", "datatype": "Int", "indicator": "gray"},
             {"value": 0, "label": "Attendance %", "datatype": "Percent", "indicator": "gray"}
         ]
-        return columns, [], message, chart, report_summary
+        #return columns, [], message, chart, report_summary
+        return columns, [], message, None, None
+
 
     # Calculate totals from grand total row
     grand_total_row = data[-1] if data else {}
@@ -65,7 +67,8 @@ def execute(filters=None):
             base_message += f"Total Employees: {total_employees}\n\nDesignation-wise Employee Count:"
             for d in designation_data:
                 base_message += f"\n{d.designation}: {d.total} employees"
-        return columns, data, base_message, chart, report_summary
+        # return columns, data, base_message, chart, report_summary
+        return columns, data, base_message, None, None
 
     # Calculate percentages for normal case
     overall_attendance_percentage = (total_present / total_marked * 100) if total_marked else 0
@@ -214,7 +217,8 @@ def execute(filters=None):
         {"value": overall_attendance_percentage, "label": "Attendance %", "datatype": "Percent", "indicator": "blue"}
     ]
 
-    return columns, data, message, chart, report_summary
+    # return columns, data, message, chart, report_summary
+    return columns, data, message, None, None
 
 def get_columns():
     return [
