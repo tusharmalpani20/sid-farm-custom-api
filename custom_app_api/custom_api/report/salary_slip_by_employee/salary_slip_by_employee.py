@@ -78,9 +78,8 @@ def get_columns(filters):
         },
         {
             "label": _("Bank Name"),
-            "fieldname": "brank_name",
+            "fieldname": "bank_name",
             "fieldtype": "Data",
-            "width": 120
         },
         {
             "label": _("IFSC No."),
@@ -232,7 +231,7 @@ def get_salary_slip_data(filters):
             e.custom_area,
             e.custom_zone,
             e.branch,
-            e.brank_name,
+            e.bank_name,
             e.custom_ifsc_no,
             e.bank_ac_no,
             e.designation,
