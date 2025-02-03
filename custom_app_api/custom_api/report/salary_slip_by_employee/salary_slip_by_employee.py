@@ -75,6 +75,43 @@ def get_columns(filters):
             "fieldname": "branch",
             "fieldtype": "Data",
             "width": 120
+        },
+        {
+            "label": _("Bank Name"),
+            "fieldname": "brank_name",
+            "fieldtype": "Data",
+            "width": 120
+        },
+        {
+            "label": _("IFSC No."),
+            "fieldname": "custom_ifsc_no",
+            "fieldtype": "Data",
+            "width": 120
+        },
+        {
+            "label": _("Bank A/C No."),
+            "fieldname": "bank_ac_no",
+            "fieldtype": "Data",
+            "width": 120
+        },
+        {
+            "label": _("Designation"),
+            "fieldname": "designation",
+            "fieldtype": "Data",
+            "width": 120
+        },
+        {
+            "label": _("Reports To"),
+            "fieldname": "reports_to",
+            "fieldtype": "Link",
+            "options": "Employee",
+            "width": 120
+        },
+        {
+            "label": _("Manager Name"),
+            "fieldname": "custom_manager_name",
+            "fieldtype": "Data",
+            "width": 120
         }
     ])
 
@@ -194,7 +231,13 @@ def get_salary_slip_data(filters):
             e.custom_point,
             e.custom_area,
             e.custom_zone,
-            e.branch
+            e.branch,
+            e.brank_name,
+            e.custom_ifsc_no,
+            e.bank_ac_no,
+            e.designation,
+            e.reports_to,
+            e.custom_manager_name
         FROM `tabSalary Slip` ss
         JOIN `tabEmployee` e ON ss.employee = e.name
         WHERE {docstatus_condition}

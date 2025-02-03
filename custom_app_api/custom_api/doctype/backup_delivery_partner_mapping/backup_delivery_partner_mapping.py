@@ -77,7 +77,8 @@ def get_backup_delivery_partners():
                 'designation': 'Backup Delivery Partner',
                 'status': 'Active'
             },
-            fields=['name', 'employee_name', 'custom_route', 'custom_point', 'custom_area', 'custom_zone']
+            fields=['name', 'employee_name', 'custom_route', 'custom_point', 'custom_area', 'custom_zone'],
+            ignore_permissions=False  # Explicitly enforce permissions
         )
         return employees
     except Exception as e:
