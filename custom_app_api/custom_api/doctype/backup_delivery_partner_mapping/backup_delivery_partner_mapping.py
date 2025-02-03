@@ -2,6 +2,7 @@ import frappe
 from frappe.model.document import Document
 from frappe import _
 import time
+import re
 
 class BackupDeliveryPartnerMapping(Document):
     @frappe.whitelist()
@@ -22,10 +23,14 @@ class BackupDeliveryPartnerMapping(Document):
             if self.zone:
                 filters["custom_zone"] = self.zone
 
-            # Add permission conditions if any
+            # If there are permission conditions, extract the employee names and add to filters
             if permission_conditions:
-                filters[permission_conditions] = ["", None]
-                
+                import re
+                matches = re.search(r"in \('([^']*)'(?:,'([^']*)')*\)", permission_conditions)
+                if matches:
+                    employee_list = [x.strip("'") for x in permission_conditions.split("'") if x.strip("', ")]
+                    filters['name'] = ['in', employee_list]
+            
             employees = frappe.get_all(
                 "Employee",
                 filters=filters,
@@ -91,13 +96,20 @@ def get_backup_delivery_partners():
             'status': 'Active'
         }
 
-        # Build the final conditions
+        # If there are permission conditions, extract the employee names and add to filters
         if permission_conditions:
-            filters[permission_conditions] = ["", None]  # This will add the permission conditions to the filters
+            # Extract employee names from the condition string
+            # The condition looks like: "name in ('EMP001','EMP002')"
+            import re
+            matches = re.search(r"in \('([^']*)'(?:,'([^']*)')*\)", permission_conditions)
+            if matches:
+                employee_list = [x.strip("'") for x in permission_conditions.split("'") if x.strip("', ")]
+                filters['name'] = ['in', employee_list]
 
         employees = frappe.get_all('Employee',
             filters=filters,
-            fields=['name', 'employee_name', 'custom_route', 'custom_point', 'custom_area', 'custom_zone']
+            fields=['name', 'employee_name', 'custom_route', 'custom_point', 
+                   'custom_area', 'custom_zone']
         )
         return employees
     except Exception as e:
