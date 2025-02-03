@@ -6,26 +6,37 @@ import time
 class BackupDeliveryPartnerMapping(Document):
     @frappe.whitelist()
     def get_backup_delivery_partners(self):
-        filters = {
-            "designation": "Backup Delivery Partner",
-            "status": "Active"
-        }
-        
-        if self.area:
-            filters["custom_area"] = self.area
-        if self.point:
-            filters["custom_point"] = self.point
-        if self.zone:
-            filters["custom_zone"] = self.zone
+        try:
+            # Get the permission conditions from employee doctype
+            permission_conditions = frappe.get_attr("custom_app_api.permission_query_conditions.employee.get_permission_query_conditions")(frappe.session.user)
             
-        employees = frappe.get_all(
-            "Employee",
-            filters=filters,
-            fields=["name", "employee_name", "custom_route", "custom_point", 
-                   "custom_area", "custom_zone"]
-        )
-        
-        return employees
+            filters = {
+                "designation": "Backup Delivery Partner",
+                "status": "Active"
+            }
+            
+            if self.area:
+                filters["custom_area"] = self.area
+            if self.point:
+                filters["custom_point"] = self.point
+            if self.zone:
+                filters["custom_zone"] = self.zone
+
+            # Add permission conditions if any
+            if permission_conditions:
+                filters[permission_conditions] = ["", None]
+                
+            employees = frappe.get_all(
+                "Employee",
+                filters=filters,
+                fields=["name", "employee_name", "custom_route", "custom_point", 
+                       "custom_area", "custom_zone"]
+            )
+            
+            return employees
+        except Exception as e:
+            frappe.log_error(frappe.get_traceback(), "Backup Delivery Partner Error")
+            frappe.throw(_("Error fetching delivery partners"))
 
     def on_submit(self):
         if not self.employees_data:
@@ -72,13 +83,21 @@ def update_employee_mapping(employee, route, point, area, zone):
 @frappe.whitelist()
 def get_backup_delivery_partners():
     try:
+        # Get the permission conditions from employee doctype
+        permission_conditions = frappe.get_attr("custom_app_api.permission_query_conditions.employee.get_permission_query_conditions")(frappe.session.user)
+        
+        filters = {
+            'designation': 'Backup Delivery Partner',
+            'status': 'Active'
+        }
+
+        # Build the final conditions
+        if permission_conditions:
+            filters[permission_conditions] = ["", None]  # This will add the permission conditions to the filters
+
         employees = frappe.get_all('Employee',
-            filters={
-                'designation': 'Backup Delivery Partner',
-                'status': 'Active'
-            },
-            fields=['name', 'employee_name', 'custom_route', 'custom_point', 'custom_area', 'custom_zone'],
-            ignore_permissions=False  # Explicitly enforce permissions
+            filters=filters,
+            fields=['name', 'employee_name', 'custom_route', 'custom_point', 'custom_area', 'custom_zone']
         )
         return employees
     except Exception as e:
