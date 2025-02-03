@@ -308,7 +308,13 @@ def get_salary_slip_data(filters):
             "point": slip.custom_point,
             "area": slip.custom_area,
             "zone": slip.custom_zone,
-            "branch": slip.branch
+            "branch": slip.branch,
+            "bank_name": slip.bank_name,
+            "custom_ifsc_no": slip.custom_ifsc_no,
+            "bank_ac_no": slip.bank_ac_no,
+            "designation": slip.designation,
+            "reports_to": slip.reports_to,
+            "custom_manager_name": slip.custom_manager_name
         }
 
         # Add status if include_draft is checked
