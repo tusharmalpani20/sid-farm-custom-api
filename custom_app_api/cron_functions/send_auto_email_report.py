@@ -46,7 +46,8 @@ def send_custom_time_reports():
                     "Attendance",
                     filters={
                         "attendance_date": today,
-                        "status": "Present"
+                        "status": "Present",
+                        "docstatus": 1
                     }
                 )
                 
