@@ -24,10 +24,10 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
             },
             fields=["name", "employee_name", "company", "department", "custom_route"]
         )
-        frappe.logger().info(f"Time taken to fetch active employees: {time.time() - employee_start_time:.2f} seconds")
+        print(f"Time taken to fetch active employees: {time.time() - employee_start_time:.2f} seconds")
 
         if not active_employees:
-            frappe.logger().info("No active employees found for marking absent")
+            print("No active employees found for marking absent")
             return
 
         # Get today's attendance records with full documents
@@ -40,7 +40,7 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
             },
             fields=["*"]
         )
-        frappe.logger().info(f"Time taken to fetch existing attendance: {time.time() - attendance_fetch_start:.2f} seconds")
+        print(f"Time taken to fetch existing attendance: {time.time() - attendance_fetch_start:.2f} seconds")
 
         # Create set of employees who already have attendance
         employees_with_attendance = {att.employee for att in existing_attendance}
@@ -87,7 +87,7 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
                     absent_count += 1
                     
                     if absent_count % 10 == 0:  # Log every 10 records
-                        frappe.logger().info(f"Processed {absent_count} absent records. Last record took: {time.time() - employee_start:.2f} seconds")
+                        print(f"Processed {absent_count} absent records. Last record took: {time.time() - employee_start:.2f} seconds")
                     
                 except Exception as e:
                     error_count += 1
@@ -96,7 +96,7 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
                         title="Auto Mark Absent Error"
                     )
 
-        frappe.logger().info(f"Time taken for absent marking: {time.time() - absent_marking_start:.2f} seconds")
+        print(f"Time taken for absent marking: {time.time() - absent_marking_start:.2f} seconds")
 
         # Submit all draft attendance records
         draft_submission_start = time.time()
@@ -116,7 +116,7 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
                         fields=["latitude", "longitude", "recorded_at"],
                         order_by="recorded_at ASC"
                     )
-                    frappe.logger().info(f"Time taken to fetch route records for attendance {attendance_record.name}: {time.time() - route_fetch_start:.2f} seconds")
+                    print(f"Time taken to fetch route records for attendance {attendance_record.name}: {time.time() - route_fetch_start:.2f} seconds")
                     
                     # Calculate total distance if route records exist
                     if route_records:
@@ -127,7 +127,7 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
                         
                         # Update the attendance record with total distance
                         attendance_doc.custom_kilometers_travelled = total_distance
-                        frappe.logger().info(f"Time taken to calculate distance for attendance {attendance_record.name}: {time.time() - distance_calc_start:.2f} seconds")
+                        print(f"Time taken to calculate distance for attendance {attendance_record.name}: {time.time() - distance_calc_start:.2f} seconds")
                     
                     # Only set punch out time if it hasn't been set yet
                     if not attendance_doc.custom_mobile_punch_out_at:
@@ -138,7 +138,7 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
                     submitted_count += 1
                     
                     if submitted_count % 10 == 0:  # Log every 10 records
-                        frappe.logger().info(f"Processed {submitted_count} draft submissions. Last record took: {time.time() - record_start:.2f} seconds")
+                        print(f"Processed {submitted_count} draft submissions. Last record took: {time.time() - record_start:.2f} seconds")
                     
                 except Exception as e:
                     error_count += 1
@@ -147,10 +147,10 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
                         title="Auto Submit Attendance Error"
                     )
 
-        frappe.logger().info(f"Time taken for draft submission: {time.time() - draft_submission_start:.2f} seconds")
+        print(f"Time taken for draft submission: {time.time() - draft_submission_start:.2f} seconds")
 
         # Log summary
-        frappe.logger().info(
+        print(
             f"Auto Mark Absent Summary - Date: {today}\n"
             f"Total Active Employees: {len(active_employees)}\n"
             f"Existing Attendance: {len(existing_attendance)}\n"
