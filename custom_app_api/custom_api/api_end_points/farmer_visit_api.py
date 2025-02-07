@@ -59,7 +59,7 @@ def handle_base64_image(base64_string: str, prefix: str = "file") -> Dict[str, s
 @frappe.whitelist(allow_guest=True, methods=["GET"])
 def get_field_options() -> Dict[str, Any]:
     """
-    Dynamically returns all select field options for Farmer Details and Visit Tracker
+    Dynamically returns all select field options for Farmer Detail and Visit Tracker
     Required header: Authorization Bearer token
     """
     try:
@@ -70,7 +70,7 @@ def get_field_options() -> Dict[str, Any]:
             return result
 
         doctypes = {
-            "farmer_details": "Farmer Details",
+            "farmer_details": "Farmer Detail",
             "visit_tracker": "Visit Tracker"
         }
         
@@ -383,7 +383,7 @@ def get_assigned_villages() -> Dict[str, Any]:
 #                 # Check for duplicate mobile number
 #                 if 'contact_number' in farmer_create_detail:
 #                     existing_farmer = frappe.get_all(
-#                         "Farmer Details",
+#                         "Farmer Detail",
 #                         filters={"contact_number": farmer_create_detail['contact_number']},
 #                         fields=["name", "first_name", "last_name"]
 #                     )
@@ -402,7 +402,7 @@ def get_assigned_villages() -> Dict[str, Any]:
 #                         }
 
 #                 farmer = frappe.get_doc({
-#                     "doctype": "Farmer Details",
+#                     "doctype": "Farmer Detail",
 #                     "registered_by": employee,
 #                     **farmer_create_detail
 #                 })
@@ -496,7 +496,7 @@ def create_farmer_visit(
         #check dublicate mobile number
         if 'contact_number' in farmer_create_detail:
             existing_farmer = frappe.get_all(
-                "Farmer Details",
+                "Farmer Detail",
                 filters={"contact_number": farmer_create_detail['contact_number']},
                 fields=["name", "first_name", "last_name"]
             )
@@ -527,7 +527,7 @@ def create_farmer_visit(
 
         #create farmer record
         farmer = frappe.get_doc({
-            "doctype": "Farmer Details",
+            "doctype": "Farmer Detail",
             "registered_by": employee,
             "assigned_sales_person": employee,
             **farmer_create_detail
@@ -617,8 +617,8 @@ def create_farmer_revisit(
         
         employee = result["employee"]
 
-        # Farmer details
-        farmer = frappe.get_doc("Farmer Details", farmer_id)
+        # Farmer detail
+        farmer = frappe.get_doc("Farmer Detail", farmer_id)
 
         if not farmer:
             frappe.local.response['http_status_code'] = 404
@@ -737,7 +737,7 @@ def get_assigned_farmers() -> Dict[str, Any]:
         
         # Get farmers registered by the employee
         farmers = frappe.get_all(
-            "Farmer Details",
+            "Farmer Detail",
             filters={"assigned_sales_person": employee},
             fields=[
                 "name",
@@ -815,11 +815,11 @@ def get_assigned_farmers_list() -> Dict[str, Any]:
             filters["first_name"] = ("like", f"%{first_name}%")
         
         # Get total count for pagination
-        total_farmers = frappe.db.count("Farmer Details", filters=filters)
+        total_farmers = frappe.db.count("Farmer Detail", filters=filters)
         
         # Get farmers with pagination
         farmers = frappe.get_all(
-            "Farmer Details",
+            "Farmer Detail",
             filters=filters,
             fields=["name", "first_name", "last_name", "age", "prospect_type"],
             start=offset,
@@ -885,7 +885,7 @@ def update_farmer_details(farmer_id: str, update_data: Dict[str, Any]) -> Dict[s
         employee = result["employee"]
         
         # Validate farmer exists and belongs to the employee
-        farmer = frappe.get_doc("Farmer Details", farmer_id)
+        farmer = frappe.get_doc("Farmer Detail", farmer_id)
         if farmer.assigned_sales_person != employee:
             frappe.local.response['http_status_code'] = 403
             return {
@@ -917,7 +917,7 @@ def update_farmer_details(farmer_id: str, update_data: Dict[str, Any]) -> Dict[s
                         
                     # Check for duplicate contact number
                     existing = frappe.get_all(
-                        "Farmer Details",
+                        "Farmer Detail",
                         filters={
                             "contact_number": update_data[field],
                             "name": ("!=", farmer_id)
@@ -959,7 +959,7 @@ def update_farmer_details(farmer_id: str, update_data: Dict[str, Any]) -> Dict[s
                 "http_status_code": 400
             }
         
-        # Update farmer details
+        # Update farmer detail
         farmer.update(update_fields)
         farmer.save()
         
@@ -967,7 +967,7 @@ def update_farmer_details(farmer_id: str, update_data: Dict[str, Any]) -> Dict[s
         return {
             "success": True,
             "status": "success",
-            "message": "Farmer details updated successfully",
+            "message": "Farmer detail updated successfully",
             "code": "FARMER_UPDATED",
             "data": {
                 "farmer_id": farmer_id,
@@ -987,7 +987,7 @@ def update_farmer_details(farmer_id: str, update_data: Dict[str, Any]) -> Dict[s
         }
     except Exception as e:
         frappe.local.response['http_status_code'] = 500
-        return handle_error_response(e, "Error updating farmer details")
+        return handle_error_response(e, "Error updating farmer detail")
 
 @frappe.whitelist(allow_guest=True, methods=["GET"])
 def get_visits_list() -> Dict[str, Any]:
@@ -1071,8 +1071,8 @@ def get_visits_list() -> Dict[str, Any]:
         
         # Get additional details for each visit
         for visit in visits:
-            # Get farmer details
-            farmer_doc = frappe.get_doc("Farmer Details", visit.farmer)
+            # Get farmer detail
+            farmer_doc = frappe.get_doc("Farmer Detail", visit.farmer)
             visit["farmer_name"] = f"{farmer_doc.first_name} {farmer_doc.last_name}"
             
             # Get village name if village exists
@@ -1164,8 +1164,8 @@ def get_pending_revisits() -> Dict[str, Any]:
         
         # Get additional details for each visit
         for visit in visits:
-            # Get farmer details
-            farmer_doc = frappe.get_doc("Farmer Details", visit.farmer)
+            # Get farmer detail
+            farmer_doc = frappe.get_doc("Farmer Detail", visit.farmer)
             visit["farmer_name"] = f"{farmer_doc.first_name} {farmer_doc.last_name}"
             visit["farmer_contact"] = farmer_doc.contact_number
             visit["prospect_type"] = farmer_doc.prospect_type
@@ -1257,7 +1257,7 @@ def get_prospect_statistics() -> Dict[str, Any]:
         
         # Get total farmers count
         total_farmers = len(frappe.get_all(
-            "Farmer Details",
+            "Farmer Detail",
             filters=base_filters,
             fields=["name"]
         ))
@@ -1270,7 +1270,7 @@ def get_prospect_statistics() -> Dict[str, Any]:
             filters = base_filters.copy()
             filters["prospect_type"] = prospect_type
             count = len(frappe.get_all(
-                "Farmer Details",
+                "Farmer Detail",
                 filters=filters,
                 fields=["name"]
             ))
@@ -1376,8 +1376,8 @@ def get_today_visits() -> Dict[str, Any]:
         
         # Get additional details for each visit
         for visit in visits:
-            # Get farmer details
-            farmer_doc = frappe.get_doc("Farmer Details", visit.farmer)
+            # Get farmer detail
+            farmer_doc = frappe.get_doc("Farmer Detail", visit.farmer)
             visit["farmer_name"] = f"{farmer_doc.first_name} {farmer_doc.last_name}"
             
             # Get village name if village exists
@@ -1434,7 +1434,7 @@ def get_farmer_details() -> Dict[str, Any]:
         
         # Check if farmer exists and belongs to the logged-in employee
         farmer = frappe.get_all(
-            "Farmer Details",
+            "Farmer Detail",
             filters={
                 "name": farmer_id,
                 "assigned_sales_person": employee
@@ -1495,7 +1495,7 @@ def get_farmer_details() -> Dict[str, Any]:
         return {
             "success": True,
             "status": "success",
-            "message": "Farmer details retrieved successfully",
+            "message": "Farmer detail retrieved successfully",
             "code": "FARMER_DETAILS_RETRIEVED",
             "data": {
                 "farmer": farmer,
@@ -1506,7 +1506,7 @@ def get_farmer_details() -> Dict[str, Any]:
 
     except Exception as e:
         frappe.local.response['http_status_code'] = 500
-        return handle_error_response(e, "Error retrieving farmer details")
+        return handle_error_response(e, "Error retrieving farmer detail")
 
 @frappe.whitelist(allow_guest=True, methods=["GET"])
 def get_farmer_pending_revisits() -> Dict[str, Any]:
@@ -1540,7 +1540,7 @@ def get_farmer_pending_revisits() -> Dict[str, Any]:
         
         # Check if farmer exists and belongs to the logged-in employee
         farmer = frappe.get_all(
-            "Farmer Details",
+            "Farmer Detail",
             filters={
                 "name": farmer_id
             },

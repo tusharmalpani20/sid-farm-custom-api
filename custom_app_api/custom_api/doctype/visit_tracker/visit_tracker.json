@@ -48,7 +48,7 @@
    "fieldname": "farmer",
    "fieldtype": "Link",
    "label": "Farmer",
-   "options": "Farmer Details"
+   "options": "Farmer Detail"
   },
   {
    "fieldname": "visit_date",

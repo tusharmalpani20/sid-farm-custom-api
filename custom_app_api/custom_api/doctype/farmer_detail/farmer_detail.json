@@ -51,7 +51,7 @@
    "hidden": 1,
    "label": "Amended From",
    "no_copy": 1,
-   "options": "Farmer Details",
+   "options": "Farmer Detail",
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
@@ -240,7 +240,7 @@
  "modified": "2024-12-18 14:53:21.915314",
  "modified_by": "Administrator",
  "module": "Custom API",
- "name": "Farmer Details",
+ "name": "Farmer Detail",
  "naming_rule": "Expression",
  "owner": "Administrator",
  "permissions": [
