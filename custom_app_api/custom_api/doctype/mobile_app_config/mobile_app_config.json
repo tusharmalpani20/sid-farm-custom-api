@@ -12,7 +12,7 @@
  ],
  "fields": [
   {
-   "fieldname": "sf_partner_break",
+   "fieldname": "sf_partner_section",
    "fieldtype": "Section Break",
    "label": "SF Partner"
   },
@@ -23,7 +23,7 @@
    "options": "Designation Mapping"
   },
   {
-   "fieldname": "sf_farmer_tracker_break",
+   "fieldname": "sf_farmer_tracker_section",
    "fieldtype": "Section Break",
    "label": "SF Farmer Tracker"
   },
