@@ -10,11 +10,27 @@ import json
 import pytz
 
 @frappe.whitelist(allow_guest=True)
-def send_otp(phone_number):
+def send_otp(phone_number, app_name = 'sf_partner' , app_version = '1.0.0' ):
     try:
         # Log the incoming request
-        frappe.logger("otp").info(f"OTP request received for phone: {phone_number}")
+        frappe.logger("otp").info(f"OTP request received for phone: {phone_number} for app: {app_name}")
 
+        # Get valid apps from Mobile App Config structure
+        mobile_config_meta = frappe.get_meta('Mobile App Config')
+        valid_apps = [
+            field.fieldname for field in mobile_config_meta.fields 
+            if field.fieldtype == "Section Break"
+        ]
+
+        if app_name not in valid_apps:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Invalid app name",
+                "code": "INVALID_APP",
+                "http_status_code": 400
+            }
 
         #if phone number is 1234567890, then we will simply send success response
         if phone_number == "1234567890":
@@ -46,7 +62,8 @@ def send_otp(phone_number):
                 "cell_number": phone_number,
                 "status": "Active"
             },
-            fieldname=["name", "employee_name", "cell_number"]
+            fieldname=["name", "employee_name", "cell_number", "designation"],
+            as_dict=1
         )
         
         if not employee:
@@ -57,6 +74,21 @@ def send_otp(phone_number):
                 "message": "No active employee found with this number",
                 "code": "EMPLOYEE_NOT_FOUND",
                 "http_status_code": 400
+            }
+
+        # Check app access based on designation
+        app_config = frappe.get_doc("Mobile App Config")
+        access_field = f"{app_name}_access"
+        allowed_designations = [d.designation for d in getattr(app_config, access_field, [])]
+        
+        if employee.designation not in allowed_designations:
+            frappe.local.response['http_status_code'] = 403
+            return {
+                "success": False,
+                "status": "error",
+                "message": "You don't have access to this application",
+                "code": "ACCESS_DENIED",
+                "http_status_code": 403
             }
 
         # Expire any existing active OTPs by setting expires_at to current IST time
@@ -97,7 +129,9 @@ def send_otp(phone_number):
             "provider": "Text Local",
             "send_at": current_ist_time,
             "expires_at": current_ist_time + timedelta(minutes=2),
-            "is_expired": 0
+            "is_expired": 0,
+            "app_name": app_name,
+            "app_version": app_version
         })
         otp_doc.insert()
 
@@ -141,8 +175,25 @@ def send_otp(phone_number):
         }
 
 @frappe.whitelist(allow_guest=True)
-def verify_otp(phone_number, otp_code):
+def verify_otp(phone_number, otp_code, app_name = 'sf_partner' , app_version = '1.0.0'):
     try:
+
+        # Get valid apps from Mobile App Config structure
+        mobile_config_meta = frappe.get_meta('Mobile App Config')
+        valid_apps = [
+            field.fieldname for field in mobile_config_meta.fields 
+            if field.fieldtype == "Section Break"
+        ]
+
+        if app_name not in valid_apps:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Invalid app name",
+                "code": "INVALID_APP",
+                "http_status_code": 400
+            }
 
         if phone_number == "1234567890":
 
@@ -164,7 +215,8 @@ def verify_otp(phone_number, otp_code):
             existing_tokens = frappe.get_all("DP Mobile Token",
                 filters={
                     "employee": employee.name,
-                    "status": "Active"
+                    "status": "Active",
+                    "app_name": app_name
                 },
                 fields=["name"]
             )
@@ -182,10 +234,11 @@ def verify_otp(phone_number, otp_code):
                 "status": "Active",
                 "created_at": current_ist_time,
                 "expires_at": current_ist_time + timedelta(days=30),
-                "last_login": current_ist_time
+                "last_login": current_ist_time,
+                "app_name": app_name,
+                "app_version": app_version
             })
             token_doc.insert()
-            
             # 3. Generate JWT token
             secret_key = frappe.conf.get('jwt_secret_key')
             jwt_payload = {
@@ -222,6 +275,7 @@ def verify_otp(phone_number, otp_code):
             filters={
                 "phone": phone_number,
                 "code": otp_code,
+                "app_name": app_name,
                 "is_expired": 0,
                 "verified_at": None
             },
@@ -263,9 +317,24 @@ def verify_otp(phone_number, otp_code):
                 "cell_number": phone_number,
                 "status": "Active"
             },
-            fieldname=["name", "employee_name", "cell_number"],
+            fieldname=["name", "employee_name", "cell_number", "designation"],
             as_dict=1
         )
+
+        # Check app access based on designation
+        app_config = frappe.get_doc("Mobile App Config")
+        access_field = f"{app_name}_access"
+        allowed_designations = [d.designation for d in getattr(app_config, access_field, [])]
+        
+        if employee.designation not in allowed_designations:
+            frappe.local.response['http_status_code'] = 403
+            return {
+                "success": False,
+                "status": "error",
+                "message": "You don't have access to this application",
+                "code": "ACCESS_DENIED",
+                "http_status_code": 403
+            }
 
         # Get IST timezone
         ist = pytz.timezone('Asia/Kolkata')
@@ -275,7 +344,8 @@ def verify_otp(phone_number, otp_code):
         existing_tokens = frappe.get_all("DP Mobile Token",
             filters={
                 "employee": employee.name,
-                "status": "Active"
+                "status": "Active",
+                "app_name": app_name
             },
             fields=["name"]
         )
@@ -293,7 +363,9 @@ def verify_otp(phone_number, otp_code):
             "status": "Active",
             "created_at": current_ist_time,
             "expires_at": current_ist_time + timedelta(days=30),
-            "last_login": current_ist_time
+            "last_login": current_ist_time,
+            "app_name": app_name,
+            "app_version": app_version
         })
         token_doc.insert()
         
@@ -329,8 +401,26 @@ def verify_otp(phone_number, otp_code):
         }
 
 @frappe.whitelist(allow_guest=True)
-def resend_otp(phone_number):
+def resend_otp(phone_number, app_name = 'sf_partner' , app_version = '1.0.0'):
     try:
+
+        # Get valid apps from Mobile App Config structure
+        mobile_config_meta = frappe.get_meta('Mobile App Config')
+        valid_apps = [
+            field.fieldname for field in mobile_config_meta.fields 
+            if field.fieldtype == "Section Break"
+        ]
+
+        if app_name not in valid_apps:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Invalid app name",
+                "code": "INVALID_APP",
+                "http_status_code": 400
+            }
+
         # First verify if employee exists 
         employee = frappe.get_value("Employee",
             filters={
@@ -339,6 +429,21 @@ def resend_otp(phone_number):
             },
             fieldname=["name"]
         )
+
+        # Check app access based on designation
+        app_config = frappe.get_doc("Mobile App Config")
+        access_field = f"{app_name}_access"
+        allowed_designations = [d.designation for d in getattr(app_config, access_field, [])]
+        
+        if employee.designation not in allowed_designations:
+            frappe.local.response['http_status_code'] = 403
+            return {
+                "success": False,
+                "status": "error",
+                "message": "You don't have access to this application",
+                "code": "ACCESS_DENIED",
+                "http_status_code": 403
+            }
         
         if not employee:
             frappe.local.response['http_status_code'] = 400
@@ -355,6 +460,7 @@ def resend_otp(phone_number):
             filters={
                 "phone": phone_number,
                 "is_expired": 1,
+                "app_name": app_name,
                 "verified_at": None
             },
             fields=["name"]
@@ -364,7 +470,7 @@ def resend_otp(phone_number):
             frappe.db.set_value("OTP", otp.name, "is_expired", 1)
 
         # Generate and send new OTP (reuse send_otp logic)
-        return send_otp(phone_number)
+        return send_otp(phone_number, app_name, app_version)
 
     except Exception as e:  
         frappe.log_error(str(e), "OTP Resend Error")

@@ -172,10 +172,10 @@ def get_max_table_row_id(table_name: Optional[str] = None) -> Dict[str, Any]:
 @frappe.whitelist()
 def create_attendance() -> Dict[str, Any]:
     """
-    Create a new attendance record and submit it
-    Request body should contain attendance details
+    Create multiple attendance records
+    Request body should contain an array of attendance details
     Returns:
-        Dict containing status, message and data
+        Dict containing status, message, and summary of created/failed records
     """
     try:
         if not frappe.request.json:
@@ -185,84 +185,114 @@ def create_attendance() -> Dict[str, Any]:
                 "http_status_code": 400
             }
         
-        attendance_data = frappe.request.json
-        
-        # Validate required fields
-        required_fields = ["naming_series", "employee", "employee_name", "status", 
-                         "attendance_date", "company"]
-        missing_fields = [field for field in required_fields 
-                         if not attendance_data.get(field)]
-        
-        if missing_fields:
-            frappe.local.response['http_status_code'] = 400
+        attendance_records = frappe.request.json
+        if not isinstance(attendance_records, list):
             return {
                 "status": "error",
-                "message": "Missing required fields: {}".format(", ".join(missing_fields)),
-                "http_status_code": 400
-            }
-        # Check if attendance already exists
-        existing_attendance = frappe.db.exists("Attendance", {
-            "employee": attendance_data.get("employee"),
-            "attendance_date": attendance_data.get("attendance_date"),
-            "docstatus": ["!=", 2]  # Not cancelled
-        })
-        
-        if existing_attendance:
-            frappe.local.response['http_status_code'] = 400
-            return {
-                "status": "error",
-                "message": "Attendance already exists for this employee on this date",
-                "http_status_code": 400
-            }
-        
-        # Get employee details and validate status
-        employee = frappe.get_doc("Employee", attendance_data.get("employee"))
-        if not employee or employee.status != "Active":
-            frappe.local.response['http_status_code'] = 400
-            return {
-                "status": "error",
-                "message": "Employee is not active or does not exist",
+                "message": _("Expected an array of attendance records"),
                 "http_status_code": 400
             }
 
-        # Add custom_route and fetch total_delivery from Route
-        if employee.custom_route:
-            attendance_data["custom_route"] = employee.custom_route
-            
-            # Get total_delivery from Route doctype
-            route_total_delivery = frappe.db.get_value(
-                "Route",
-                employee.custom_route,
-                "total_delivery"
-            )
-            
-            if route_total_delivery:
-                attendance_data["custom_total_deliveries"] = route_total_delivery
+        results = {
+            "success": [],
+            "errors": []
+        }
         
-        # Create new attendance record
-        attendance = frappe.get_doc({
-            "doctype": "Attendance",
-            **attendance_data
-        })
+        for attendance_data in attendance_records:
+            try:
+                # Validate required fields
+                required_fields = ["naming_series", "employee", "employee_name", "status", 
+                                "attendance_date", "company"]
+                missing_fields = [field for field in required_fields 
+                                if not attendance_data.get(field)]
+                
+                if missing_fields:
+                    results["errors"].append({
+                        "employee": attendance_data.get("employee"),
+                        "attendance_date": attendance_data.get("attendance_date"),
+                        "error": f"Missing required fields: {', '.join(missing_fields)}"
+                    })
+                    continue
+
+                # Check if attendance already exists
+                existing_attendance = frappe.db.exists("Attendance", {
+                    "employee": attendance_data.get("employee"),
+                    "attendance_date": attendance_data.get("attendance_date"),
+                    "docstatus": ["!=", 2]  # Not cancelled
+                })
+                
+                if existing_attendance:
+                    results["errors"].append({
+                        "employee": attendance_data.get("employee"),
+                        "attendance_date": attendance_data.get("attendance_date"),
+                        "error": "Attendance already exists for this employee on this date"
+                    })
+                    continue
+
+                # Get employee details and validate status
+                employee = frappe.get_doc("Employee", attendance_data.get("employee"))
+                if not employee or employee.status != "Active":
+                    results["errors"].append({
+                        "employee": attendance_data.get("employee"),
+                        "attendance_date": attendance_data.get("attendance_date"),
+                        "error": "Employee is not active or does not exist"
+                    })
+                    continue
+
+                # Add custom_route and fetch total_delivery from Route
+                if employee.custom_route:
+                    attendance_data["custom_route"] = employee.custom_route
+                    route_total_delivery = frappe.db.get_value(
+                        "Route",
+                        employee.custom_route,
+                        "total_delivery"
+                    )
+                    if route_total_delivery:
+                        attendance_data["custom_total_deliveries"] = route_total_delivery
+
+                # Create new attendance record
+                attendance = frappe.get_doc({
+                    "doctype": "Attendance",
+                    **attendance_data
+                })
+                
+                attendance.insert()
+                
+                results["success"].append({
+                    "name": attendance.name,
+                    "employee": attendance.employee,
+                    "attendance_date": attendance.attendance_date,
+                    "custom_route": attendance.custom_route,
+                    "docstatus": attendance.docstatus
+                })
+
+            except Exception as e:
+                results["errors"].append({
+                    "employee": attendance_data.get("employee"),
+                    "attendance_date": attendance_data.get("attendance_date"),
+                    "error": str(e)
+                })
+
+        # Prepare summary message
+        success_count = len(results["success"])
+        error_count = len(results["errors"])
+        total_count = success_count + error_count
         
-        attendance.insert()
-        # Don't submit the document here anymore
-        # attendance.submit()  # Removed
-        
+        summary_message = (
+            f"Processed {total_count} attendance records. "
+            f"Successfully created: {success_count}, "
+            f"Failed: {error_count}"
+        )
+
         return {
-            "status": "success",
-            "message": "Attendance created successfully",
-            "data": {
-                "name": attendance.name,
-                "employee": attendance.employee,
-                "attendance_date": attendance.attendance_date,
-                "custom_route": attendance.custom_route,
-                "docstatus": attendance.docstatus
-            }
+            "status": "success" if success_count > 0 else "error",
+            "message": summary_message,
+            "data": results,
+            "http_status_code": 200 if success_count > 0 else 400
         }
         
     except Exception as e:
-        return handle_error_response(e, "Error creating attendance record")
+        return handle_error_response(e, "Error processing attendance records")
 
 
 @frappe.whitelist(allow_guest=True, methods=["GET"])
@@ -675,3 +705,98 @@ def mobile_punch_out() -> Dict[str, Any]:
         
     except Exception as e:
         return handle_error_response(e, "Error updating punch out time")
+
+# @frappe.whitelist()
+# def create_attendance() -> Dict[str, Any]:
+#     """
+#     Create a new attendance record and submit it
+#     Request body should contain attendance details
+#     Returns:
+#         Dict containing status, message and data
+#     """
+#     try:
+#         if not frappe.request.json:
+#             return {
+#                 "status": "error",
+#                 "message": _("Request body is required"),
+#                 "http_status_code": 400
+#             }
+        
+#         attendance_data = frappe.request.json
+        
+#         # Validate required fields
+#         required_fields = ["naming_series", "employee", "employee_name", "status", 
+#                          "attendance_date", "company"]
+#         missing_fields = [field for field in required_fields 
+#                          if not attendance_data.get(field)]
+        
+#         if missing_fields:
+#             frappe.local.response['http_status_code'] = 400
+#             return {
+#                 "status": "error",
+#                 "message": "Missing required fields: {}".format(", ".join(missing_fields)),
+#                 "http_status_code": 400
+#             }
+#         # Check if attendance already exists
+#         existing_attendance = frappe.db.exists("Attendance", {
+#             "employee": attendance_data.get("employee"),
+#             "attendance_date": attendance_data.get("attendance_date"),
+#             "docstatus": ["!=", 2]  # Not cancelled
+#         })
+        
+#         if existing_attendance:
+#             frappe.local.response['http_status_code'] = 400
+#             return {
+#                 "status": "error",
+#                 "message": "Attendance already exists for this employee on this date",
+#                 "http_status_code": 400
+#             }
+        
+#         # Get employee details and validate status
+#         employee = frappe.get_doc("Employee", attendance_data.get("employee"))
+#         if not employee or employee.status != "Active":
+#             frappe.local.response['http_status_code'] = 400
+#             return {
+#                 "status": "error",
+#                 "message": "Employee is not active or does not exist",
+#                 "http_status_code": 400
+#             }
+
+#         # Add custom_route and fetch total_delivery from Route
+#         if employee.custom_route:
+#             attendance_data["custom_route"] = employee.custom_route
+            
+#             # Get total_delivery from Route doctype
+#             route_total_delivery = frappe.db.get_value(
+#                 "Route",
+#                 employee.custom_route,
+#                 "total_delivery"
+#             )
+            
+#             if route_total_delivery:
+#                 attendance_data["custom_total_deliveries"] = route_total_delivery
+        
+#         # Create new attendance record
+#         attendance = frappe.get_doc({
+#             "doctype": "Attendance",
+#             **attendance_data
+#         })
+        
+#         attendance.insert()
+#         # Don't submit the document here anymore
+#         # attendance.submit()  # Removed
+        
+#         return {
+#             "status": "success",
+#             "message": "Attendance created successfully",
+#             "data": {
+#                 "name": attendance.name,
+#                 "employee": attendance.employee,
+#                 "attendance_date": attendance.attendance_date,
+#                 "custom_route": attendance.custom_route,
+#                 "docstatus": attendance.docstatus
+#             }
+#         }
+        
+#     except Exception as e:
+#         return handle_error_response(e, "Error creating attendance record")

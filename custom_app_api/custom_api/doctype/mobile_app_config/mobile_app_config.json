@@ -1,0 +1,60 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-02-07 11:19:28.318318",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "sf_partner_section",
+  "sf_partner_access",
+  "sf_farmer_tracker_section",
+  "sf_farmer_tracker_access"
+ ],
+ "fields": [
+  {
+   "fieldname": "sf_partner",
+   "fieldtype": "Section Break",
+   "label": "SF Partner"
+  },
+  {
+   "fieldname": "sf_partner_access",
+   "fieldtype": "Table MultiSelect",
+   "label": "Designation Access",
+   "options": "Designation Mapping"
+  },
+  {
+   "fieldname": "sf_farmer_tracker",
+   "fieldtype": "Section Break",
+   "label": "SF Farmer Tracker"
+  },
+  {
+   "fieldname": "sf_farmer_tracker_access",
+   "fieldtype": "Table MultiSelect",
+   "label": "Designation Access",
+   "options": "Designation Mapping"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-02-07 11:28:59.802794",
+ "modified_by": "Administrator",
+ "module": "Custom API",
+ "name": "Mobile App Config",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

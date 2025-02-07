@@ -20,6 +20,22 @@
    "reqd": 1
   },
   {
+    "fieldname": "designation",
+    "fieldtype": "Data",
+    "label": "Designation",
+    "options": "Designation",
+    "reqd": 0,
+    "fetch_from": "employee.designation"
+  },
+  {
+    "fieldname": "grad",
+    "fieldtype": "Data",
+    "label": "Grade",
+    "options": "Employee Grade",
+    "reqd": 0,
+    "fetch_from": "employee.grade"
+  },
+  {
    "fieldname": "expires_at",
    "fieldtype": "Datetime",
    "in_list_view": 1,
@@ -39,6 +55,21 @@
    "label": "Status",
    "options": "Active\nExpired",
    "reqd": 1
+  },
+  {
+    "fieldname": "app_name",
+    "fieldtype": "Data",
+    "label": "App Name",
+    "reqd": 1,
+    "default": "SF Partner"
+  },
+  {
+    "fieldname": "app_version",
+    "fieldtype": "Data",
+    "label": "App Version",
+    "reqd": 0,
+    "hidden": 1,
+    "default": "1.0.0"
   }
  ],
  "index_web_pages_for_search": 1,
