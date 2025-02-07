@@ -115,7 +115,8 @@
     "fieldname" : "village",
     "field_type" : "Link",
     "label" : "Village",
-    "options" : "Village"
+    "options" : "Village",
+    "reqd" : 1 
   },
   {
     "fieldname" : "mandal",
