@@ -78,10 +78,17 @@ def get_columns():
             "width": 150
         },
         {
-            "label": _("Zone"),
-            "fieldname": "zone",
+            "label": _("Designation"),
+            "fieldname": "designation",
             "fieldtype": "Link",
-            "options": "Zone",
+            "options": "Designation",
+            "width": 150
+        },
+        {
+            "label": _("Route"),
+            "fieldname": "route",
+            "fieldtype": "Link",
+            "options": "Route",
             "width": 150
         },
         {
@@ -90,6 +97,13 @@ def get_columns():
             "fieldtype": "Link",
             "options": "Point",
             "width": 200
+        },
+        {
+            "label": _("Zone"),
+            "fieldname": "zone",
+            "fieldtype": "Link",
+            "options": "Zone",
+            "width": 150
         },
         {
             "label": _("Status"),
@@ -138,7 +152,13 @@ def get_point_wise_attendance(filters):
 
     employees = frappe.get_all(
         "Employee",
-        fields=["name", "employee_name", "custom_point"],
+        fields=[
+            "name", 
+            "employee_name", 
+            "custom_point",
+            "designation",
+            "custom_route"
+        ],
         filters=employee_filters
     )
 
@@ -172,6 +192,8 @@ def get_point_wise_attendance(filters):
         row_data = {
             "employee": employee.name,
             "employee_name": employee.employee_name,
+            "designation": employee.designation,
+            "route": employee.custom_route,
             "zone": point_zone_map.get(employee.custom_point, ""),
             "point": employee.custom_point,
             "status": status,

@@ -64,5 +64,47 @@ frappe.query_reports["Point Wise Attendance Live"] = {
 			fieldtype: "Check",
 			default: 1,
 		}
-	]
+	],
+	
+	onload: function(report) {
+		// Set up auto-refresh interval
+		report.page.add_inner_button(__('Auto Refresh'), function() {
+			if (!report.auto_refresh_interval) {
+				console.log('Starting auto-refresh...');
+				// Start auto-refresh
+				report.auto_refresh_interval = setInterval(() => {
+					console.log('Auto-refresh triggered at:', new Date().toLocaleTimeString());
+					report.refresh();
+				}, 60000); // 60000 ms = 1 minute
+				
+				// Change button label
+				report.page.inner_toolbar.find('.btn:contains("Auto Refresh")').text(__('Stop Auto Refresh'));
+				frappe.show_alert({
+					message: __('Auto-refresh enabled - refreshing every minute'),
+					indicator: 'green'
+				}, 3);
+			} else {
+				console.log('Stopping auto-refresh...');
+				// Stop auto-refresh
+				clearInterval(report.auto_refresh_interval);
+				report.auto_refresh_interval = null;
+				
+				// Reset button label
+				report.page.inner_toolbar.find('.btn:contains("Stop Auto Refresh")').text(__('Auto Refresh'));
+				frappe.show_alert({
+					message: __('Auto-refresh disabled'),
+					indicator: 'orange'
+				}, 3);
+			}
+		});
+	},
+
+	onclose: function(report) {
+		// Clean up interval when report is closed
+		if (report.auto_refresh_interval) {
+			console.log('Cleaning up auto-refresh on report close');
+			clearInterval(report.auto_refresh_interval);
+			report.auto_refresh_interval = null;
+		}
+	}
 };
