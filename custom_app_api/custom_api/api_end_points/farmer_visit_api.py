@@ -724,12 +724,8 @@ def get_assigned_farmers() -> Dict[str, Any]:
                 "state",
                 "pincode",
                 "prospect_type",
-                "prospect_type",
                 "bmc",
-                "age",
-                "family_background",
-                "financial_status",
-                "educational_qualification"
+                "age"
             ]
         )
         
