@@ -342,134 +342,6 @@ def get_assigned_villages() -> Dict[str, Any]:
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error retrieving assigned villages")
 
-# @frappe.whitelist(allow_guest=True, methods=["POST"])
-# def create_farmer_visit(
-#     farmer_name: str = None,
-#     farmer_create_detail: Dict = None,
-#     visit_tracker_detail: Dict[str, Any] = None
-# ) -> Dict[str, Any]:
-#     """
-#     Creates a farmer visit record with optional farmer creation
-#     Required header: Authorization Bearer token
-#     """
-#     # Start transaction
-#     frappe.db.begin()
-    
-#     try:
-#         # Verify authorization
-#         is_valid, result = verify_dp_token(frappe.request.headers)
-#         if not is_valid:
-#             frappe.db.rollback()
-#             frappe.local.response['http_status_code'] = 401
-#             return result
-        
-#         employee = result["employee"]
-        
-#         # Validate input parameters
-#         if not farmer_name and not farmer_create_detail:
-#             frappe.db.rollback()
-#             frappe.local.response['http_status_code'] = 400
-#             return {
-#                 "success": False,
-#                 "status": "error",
-#                 "message": "Either farmer_name or farmer_create_detail must be provided",
-#                 "code": "INVALID_INPUT",
-#                 "http_status_code": 400
-#             }
-
-#         try:
-#             # Create new farmer if details provided
-#             if farmer_create_detail:
-#                 # Check for duplicate mobile number
-#                 if 'contact_number' in farmer_create_detail:
-#                     existing_farmer = frappe.get_all(
-#                         "Farmer Detail",
-#                         filters={"contact_number": farmer_create_detail['contact_number']},
-#                         fields=["name", "first_name", "last_name"]
-#                     )
-                    
-#                     if existing_farmer:
-#                         frappe.db.rollback()
-#                         farmer_info = existing_farmer[0]
-#                         frappe.local.response['http_status_code'] = 400
-#                         return {
-#                             "success": False,
-#                             "status": "error",
-#                             "message": f"Mobile number {farmer_create_detail['contact_number']} is already registered "
-#                                      f"with farmer {farmer_info.first_name} {farmer_info.last_name} ({farmer_info.name})",
-#                             "code": "DUPLICATE_MOBILE",
-#                             "http_status_code": 400
-#                         }
-
-#                 farmer = frappe.get_doc({
-#                     "doctype": "Farmer Detail",
-#                     "registered_by": employee,
-#                     **farmer_create_detail
-#                 })
-#                 farmer.insert()
-#                 farmer_name = farmer.name
-
-#             # Handle base64 image
-#             if visit_tracker_detail and "visit_image" in visit_tracker_detail:
-#                 try:
-#                     image_result = handle_base64_image(
-#                         visit_tracker_detail["visit_image"],
-#                         prefix="visit"
-#                     )
-#                     visit_tracker_detail["visit_image"] = image_result["file_url"]
-#                 except Exception as e:
-#                     frappe.db.rollback()
-#                     frappe.local.response['http_status_code'] = 400
-#                     return {
-#                         "success": False,
-#                         "status": "error",
-#                         "message": f"Failed to process image: {str(e)}",
-#                         "code": "IMAGE_PROCESSING_FAILED",
-#                         "http_status_code": 400
-#                     }
-
-#             # Create visit tracker record
-#             visit = frappe.get_doc({
-#                 "doctype": "Visit Tracker",
-#                 "farmer": farmer_name,
-#                 "visited_by": employee,
-#                 **visit_tracker_detail
-#             })
-#             visit.insert()
-#             visit.submit()  # Submit the document
-
-#             # If everything is successful, commit the transaction
-#             frappe.db.commit()
-
-#             frappe.local.response['http_status_code'] = 201
-#             return {
-#                 "success": True,
-#                 "status": "success",
-#                 "message": "Visit record created successfully",
-#                 "code": "VISIT_CREATED",
-#                 "data": {
-#                     "visit_id": visit.name,
-#                     "farmer_id": farmer_name
-#                 },
-#                 "http_status_code": 201
-#             }
-
-#         except Exception as e:
-#             frappe.db.rollback()
-#             frappe.local.response['http_status_code'] = 400
-#             return {
-#                 "success": False,
-#                 "status": "error",
-#                 "message": str(e),
-#                 "code": "CREATION_FAILED",
-#                 "http_status_code": 400
-#             }
-
-#     except Exception as e:
-#         frappe.db.rollback()
-#         frappe.local.response['http_status_code'] = 500
-#         return handle_error_response(e, "Error creating farmer visit")
-
 @frappe.whitelist(allow_guest=True, methods=["POST"])
 def create_farmer_visit(
     farmer_create_detail: Dict,
@@ -479,11 +351,19 @@ def create_farmer_visit(
     Creates a farmer and it's visit record
     Required header: Authorization Bearer token
     """
-
     # Start transaction
     frappe.db.begin()
 
     try:
+        # Log incoming request data
+        frappe.log_error(
+            title="Create Farmer Visit - Request Data",
+            message={
+                "farmer_create_detail": farmer_create_detail,
+                "visit_tracker_detail": visit_tracker_detail
+            }
+        )
+
         # Verify authorization
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
@@ -525,6 +405,15 @@ def create_farmer_visit(
             elif farmer_create_detail['annual_income'] == ">3Lakh":
                 farmer_create_detail['financial_status'] = "Good"
 
+        # Log farmer creation attempt
+        frappe.log_error(
+            title="Create Farmer Visit - Creating Farmer",
+            message={
+                "employee": employee,
+                "farmer_data": farmer_create_detail
+            }
+        )
+
         #create farmer record
         farmer = frappe.get_doc({
             "doctype": "Farmer Detail",
@@ -534,8 +423,16 @@ def create_farmer_visit(
         })
 
         farmer.insert()
-
         farmer_name = farmer.name
+
+        # Log successful farmer creation
+        frappe.log_error(
+            title="Create Farmer Visit - Farmer Created",
+            message={
+                "farmer_id": farmer_name,
+                "farmer_data": farmer.as_dict()
+            }
+        )
 
         #handle base64 image
         if visit_tracker_detail and "visit_image" in visit_tracker_detail:
@@ -556,6 +453,15 @@ def create_farmer_visit(
                     "http_status_code": 400
                 }
         
+        # Log visit creation attempt
+        frappe.log_error(
+            title="Create Farmer Visit - Creating Visit",
+            message={
+                "farmer_id": farmer_name,
+                "visit_data": visit_tracker_detail
+            }
+        )
+
         #create visit tracker record
         visit = frappe.get_doc({
             "doctype": "Visit Tracker",
@@ -565,6 +471,15 @@ def create_farmer_visit(
         })
         visit.insert()
         visit.submit()
+
+        # Log successful visit creation
+        frappe.log_error(
+            title="Create Farmer Visit - Visit Created",
+            message={
+                "visit_id": visit.name,
+                "visit_data": visit.as_dict()
+            }
+        )
 
         #commit transaction
         frappe.db.commit()
@@ -584,6 +499,15 @@ def create_farmer_visit(
         }
 
     except Exception as e:
+        frappe.log_error(
+            title="Create Farmer Visit - Error",
+            message={
+                "error": str(e),
+                "farmer_create_detail": farmer_create_detail,
+                "visit_tracker_detail": visit_tracker_detail,
+                "traceback": frappe.get_traceback()
+            }
+        )
         frappe.db.rollback()
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error creating farmer and visit record")
@@ -608,6 +532,17 @@ def create_farmer_revisit(
     frappe.db.begin()
 
     try:
+        # Log incoming request data
+        frappe.log_error(
+            title="Create Farmer Revisit - Request Data",
+            message={
+                "farmer_id": farmer_id,
+                "farmer_prospect_type": farmer_prospect_type,
+                "previous_visit_id": previous_visit_id,
+                "visit_tracker_detail": visit_tracker_detail
+            }
+        )
+
         # Verify authorization
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
@@ -616,6 +551,15 @@ def create_farmer_revisit(
             return result
         
         employee = result["employee"]
+
+        # Log farmer fetch attempt
+        frappe.log_error(
+            title="Create Farmer Revisit - Fetching Farmer",
+            message={
+                "farmer_id": farmer_id,
+                "employee": employee
+            }
+        )
 
         # Farmer detail
         farmer = frappe.get_doc("Farmer Detail", farmer_id)
@@ -674,6 +618,16 @@ def create_farmer_revisit(
                     "http_status_code": 400
                 }
 
+        # Log visit creation attempt
+        frappe.log_error(
+            title="Create Farmer Revisit - Creating Visit",
+            message={
+                "farmer_id": farmer_id,
+                "visit_data": visit_tracker_detail,
+                "previous_visit_id": previous_visit_id
+            }
+        )
+
         # Create visit tracker record
         visit_data = {
             "doctype": "Visit Tracker",
@@ -700,6 +654,15 @@ def create_farmer_revisit(
         # Update the farmer's prospect type
         farmer.db_set('prospect_type', farmer_prospect_type, update_modified=True)
 
+        # Log successful visit creation
+        frappe.log_error(
+            title="Create Farmer Revisit - Visit Created",
+            message={
+                "visit_id": visit.name,
+                "visit_data": visit.as_dict()
+            }
+        )
+
         frappe.db.commit()
 
         frappe.local.response['http_status_code'] = 201
@@ -716,6 +679,17 @@ def create_farmer_revisit(
         }
 
     except Exception as e:
+        frappe.log_error(
+            title="Create Farmer Revisit - Error",
+            message={
+                "error": str(e),
+                "farmer_id": farmer_id,
+                "farmer_prospect_type": farmer_prospect_type,
+                "previous_visit_id": previous_visit_id,
+                "visit_tracker_detail": visit_tracker_detail,
+                "traceback": frappe.get_traceback()
+            }
+        )
         frappe.db.rollback()
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error creating farmer revisit")
