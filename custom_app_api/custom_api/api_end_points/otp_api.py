@@ -18,7 +18,7 @@ def send_otp(phone_number, app_name = 'sf_partner' , app_version = '1.0.0' ):
         # Get valid apps from Mobile App Config structure
         mobile_config_meta = frappe.get_meta('Mobile App Config')
         valid_apps = [
-            field.fieldname for field in mobile_config_meta.fields 
+            field.fieldname.replace('_section', '') for field in mobile_config_meta.fields 
             if field.fieldtype == "Section Break"
         ]
 
@@ -182,7 +182,7 @@ def verify_otp(phone_number, otp_code, app_name = 'sf_partner' , app_version = '
         # Get valid apps from Mobile App Config structure
         mobile_config_meta = frappe.get_meta('Mobile App Config')
         valid_apps = [
-            field.fieldname for field in mobile_config_meta.fields 
+            field.fieldname.replace('_section', '') for field in mobile_config_meta.fields 
             if field.fieldtype == "Section Break"
         ]
 
@@ -408,7 +408,7 @@ def resend_otp(phone_number, app_name = 'sf_partner' , app_version = '1.0.0'):
         # Get valid apps from Mobile App Config structure
         mobile_config_meta = frappe.get_meta('Mobile App Config')
         valid_apps = [
-            field.fieldname for field in mobile_config_meta.fields 
+            field.fieldname.replace('_section', '') for field in mobile_config_meta.fields 
             if field.fieldtype == "Section Break"
         ]
 
