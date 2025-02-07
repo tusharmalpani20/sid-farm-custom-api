@@ -80,7 +80,7 @@ def send_otp(phone_number, app_name = 'sf_partner' , app_version = '1.0.0' ):
         # Check app access based on designation
         app_config = frappe.get_doc("Mobile App Config")
         access_field = f"{app_name}_access"
-        allowed_designations = [d.designation for d in getattr(app_config, access_field, [])]
+        allowed_designations = [d.cluster for d in getattr(app_config, access_field, [])]
         
         if employee.designation not in allowed_designations:
             frappe.local.response['http_status_code'] = 403
@@ -325,7 +325,7 @@ def verify_otp(phone_number, otp_code, app_name = 'sf_partner' , app_version = '
         # Check app access based on designation
         app_config = frappe.get_doc("Mobile App Config")
         access_field = f"{app_name}_access"
-        allowed_designations = [d.designation for d in getattr(app_config, access_field, [])]
+        allowed_designations = [d.cluster for d in getattr(app_config, access_field, [])]
         
         if employee.designation not in allowed_designations:
             frappe.local.response['http_status_code'] = 403
@@ -434,7 +434,7 @@ def resend_otp(phone_number, app_name = 'sf_partner' , app_version = '1.0.0'):
         # Check app access based on designation
         app_config = frappe.get_doc("Mobile App Config")
         access_field = f"{app_name}_access"
-        allowed_designations = [d.designation for d in getattr(app_config, access_field, [])]
+        allowed_designations = [d.cluster for d in getattr(app_config, access_field, [])]
         
         if employee.designation not in allowed_designations:
             frappe.local.response['http_status_code'] = 403
