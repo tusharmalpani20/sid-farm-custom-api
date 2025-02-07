@@ -32,6 +32,7 @@ def send_otp(phone_number, app_name = 'sf_partner' , app_version = '1.0.0' ):
                 "http_status_code": 400
             }
 
+
         #if phone number is 1234567890, then we will simply send success response
         if phone_number == "1234567890":
             return {
