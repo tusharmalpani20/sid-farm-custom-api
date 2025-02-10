@@ -212,14 +212,14 @@ def get_bmc_list() -> Dict[str, Any]:
                     "http_status_code": 404
                 }
 
-        # Get BMCs in those mandals
-        bmc_list = frappe.get_all(
-            "BMC",
+        # Get BMCs that have any of the specified mandals in their mandal_list
+        bmc_mandals = frappe.get_all(
+            "Mandal Map",
             filters={"mandal": ["in", mandals]},
-            fields=["name", "bmc_name", "state", "location", "mandal"]
+            fields=["parent as bmc", "mandal"]
         )
         
-        if not bmc_list:
+        if not bmc_mandals:
             frappe.local.response['http_status_code'] = 404
             return {
                 "success": False,
@@ -228,6 +228,21 @@ def get_bmc_list() -> Dict[str, Any]:
                 "code": "NO_BMCS_FOUND",
                 "http_status_code": 404
             }
+
+        # Group mandals by BMC
+        bmc_dict = {}
+        for entry in bmc_mandals:
+            if entry.bmc not in bmc_dict:
+                bmc_doc = frappe.get_doc("BMC", entry.bmc)
+                bmc_dict[entry.bmc] = {
+                    "name": entry.bmc,
+                    "bmc_name": bmc_doc.bmc_name,
+                    "state": bmc_doc.state,
+                    "mandals": []
+                }
+            bmc_dict[entry.bmc]["mandals"].append(entry.mandal)
+
+        bmc_list = list(bmc_dict.values())
 
         frappe.local.response['http_status_code'] = 200
         return {
