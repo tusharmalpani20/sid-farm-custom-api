@@ -5,6 +5,14 @@ frappe.ui.form.on("Employee", {
 	refresh: function(frm) {
 		console.log('Employee form refresh triggered');
 		
+		frm.set_query('reports_to', function() {
+			return {
+				filters: {
+					grade: ['!=', 'L5']
+				}
+			};
+		});
+
 		// Skip for admin and system users
 		if (frappe.user.has_role('Administrator') || frappe.user.has_role('System Manager')) {
 			console.log('User is Admin/System Manager - skipping restrictions');
@@ -66,14 +74,7 @@ frappe.ui.form.on("Employee", {
 				}
 			}
 		});
-		console.log("hello world")
-		frm.set_query('reports_to', function() {
-			return {
-				filters: {
-					grade: ['!=', 'L5']
-				}
-			};
-		});
+		
 	},
 
 	custom_is_notice_period: function(frm) {
