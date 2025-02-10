@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class MandaleMap(Document):
+class MandalMap(Document):
 	pass
