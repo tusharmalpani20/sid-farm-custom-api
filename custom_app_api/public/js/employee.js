@@ -70,7 +70,7 @@ frappe.ui.form.on("Employee", {
 		frm.set_query('reports_to', function() {
 			return {
 				filters: {
-					grade : "L5"
+					grade: ['!=', 'L5']
 				}
 			};
 		});
