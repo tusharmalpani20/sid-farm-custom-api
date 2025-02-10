@@ -185,12 +185,12 @@ scheduler_events = {
             "custom_app_api.cron_functions.create_job_vacancy.check_routes_for_vacancies",
 			"custom_app_api.cron_functions.import_routes.import_routes",
         ],
-		"30 9 * * *": [
-			"custom_app_api.cron_functions.attendance_cron.auto_mark_employee_absent_and_submit_all_todays_attendance"
-		],
-		"45 9 * * *": [
-			"custom_app_api.cron_functions.additional_salary_extra_km.calculate_extra_km_salary"
-		],
+		# "30 9 * * *": [
+		# 	"custom_app_api.cron_functions.attendance_cron.auto_mark_employee_absent_and_submit_all_todays_attendance"
+		# ],
+		# "45 9 * * *": [
+		# 	"custom_app_api.cron_functions.additional_salary_extra_km.calculate_extra_km_salary"
+		# ],
 		"0 10 * * *": [
 			#"custom_app_api.cron_functions.email_report.send_point_wise_attendance_report"
 			"custom_app_api.cron_functions.additional_salary_route_bonus.generate_route_payout"
