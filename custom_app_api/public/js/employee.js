@@ -66,7 +66,7 @@ frappe.ui.form.on("Employee", {
 				}
 			}
 		});
-
+		console.log("hello world")
 		frm.set_query('reports_to', function() {
 			return {
 				filters: {
