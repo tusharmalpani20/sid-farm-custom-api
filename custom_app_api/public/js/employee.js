@@ -66,6 +66,14 @@ frappe.ui.form.on("Employee", {
 				}
 			}
 		});
+
+		frm.set_query('reports_to', function() {
+			return {
+				filters: {
+					grade : "L5"
+				}
+			};
+		});
 	},
 
 	custom_is_notice_period: function(frm) {
