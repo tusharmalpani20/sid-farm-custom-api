@@ -1,6 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
+ "allow_import": 1,
  "autoname": "format:BMC-{bmc_name}-{state}-{###}",
  "creation": "2024-12-17 16:29:21.944488",
  "doctype": "DocType",
@@ -27,7 +28,6 @@
   {
    "fieldname": "mandal_list",
    "fieldtype": "Table MultiSelect",
-   "in_list_view": 1,
    "label": "Mandal List",
    "options": "Mandal Map",
    "reqd": 1,
