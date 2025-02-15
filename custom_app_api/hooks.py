@@ -212,9 +212,9 @@ scheduler_events = {
 	# "all": [
 	# 	"custom_app_api.tasks.all"
 	# ],
-	# "daily": [
-	# 	"custom_app_api.tasks.daily"
-	# ],
+	"daily": [
+        "custom_app_api.cron_functions.calculate_employee_age.calculate_employee_age"
+    ],
 	"hourly": [
 	  # "custom_app_api.tasks.hourly"
 	  #"custom_app_api.cron_functions.salary_slip_cron.generate_salary_slips_for_active_employees",

@@ -78,6 +78,12 @@ def get_columns():
             "width": 150
         },
         {
+            "label": _("Mobile Number"),
+            "fieldname" : "cell_number",
+            "fieldtype": "Data",
+            "width": 150
+        },
+        {
             "label": _("Designation"),
             "fieldname": "designation",
             "fieldtype": "Link",
@@ -154,7 +160,8 @@ def get_point_wise_attendance(filters):
         "Employee",
         fields=[
             "name", 
-            "employee_name", 
+            "employee_name",
+            "cell_number",
             "custom_point",
             "designation",
             "custom_route"
@@ -192,6 +199,7 @@ def get_point_wise_attendance(filters):
         row_data = {
             "employee": employee.name,
             "employee_name": employee.employee_name,
+            "cell_number" : employee.cell_number,
             "designation": employee.designation,
             "route": employee.custom_route,
             "zone": point_zone_map.get(employee.custom_point, ""),
