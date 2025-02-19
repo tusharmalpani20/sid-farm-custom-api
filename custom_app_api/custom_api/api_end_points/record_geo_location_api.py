@@ -35,13 +35,13 @@ def record_location() -> Dict[str, Any]:
             # frappe.local.response['http_status_code'] = result.get("http_status_code", 401)
             # return result
             # We have commented the above code and added the below code to return the error message, since we want the recording to stop
-            frappe.local.response['http_status_code'] = 400
+            frappe.local.response['http_status_code'] = 401
             return {
                 "success": False,
                 "status": "error",
                 "message": "Location recording stopped - You have already punched out for today",
                 "code": "STOP_LOCATION_RECORDING",
-                "http_status_code": 400
+                "http_status_code": 401
             }
             
         
