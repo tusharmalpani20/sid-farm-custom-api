@@ -16,12 +16,21 @@ def record_location() -> Dict[str, Any]:
     }
     """
     try:
+        print("Starting location recording process")
         # Verify token and authenticate
+        print(f"Request Headers: {frappe.request.headers}")
         is_valid, result = verify_dp_token(frappe.request.headers)
         if not is_valid:
+            print(f"Token Verification Failed - Result: {result}")
+            print(f"Headers: {frappe.request.headers}")
             frappe.log_error(
                 title="Token Verification Failed",
-                message=f"Invalid token: {result}"
+                message=f"""
+                Invalid token details:
+                Result: {result}
+                Headers: {frappe.request.headers}
+                Request Data: {frappe.request.json if frappe.request.json else 'No data'}
+                """
             )
             # frappe.local.response['http_status_code'] = result.get("http_status_code", 401)
             # return result
@@ -37,12 +46,20 @@ def record_location() -> Dict[str, Any]:
             
         
         employee = result["employee"]
+        print(f"Processing request for employee: {employee}")
         
         # Get request data
         if not frappe.request.json:
+            print("Request body is missing")
             frappe.log_error(
                 title="Missing Request Body",
-                message="Request body is missing in location recording"
+                message=f"""
+                Request details:
+                Headers: {frappe.request.headers}
+                Employee: {employee}
+                Method: {frappe.request.method}
+                Path: {frappe.request.path}
+                """
             )
             frappe.local.response['http_status_code'] = 400
             return {
@@ -54,6 +71,7 @@ def record_location() -> Dict[str, Any]:
             }
         
         data = frappe.request.json
+        print(f"Request data received: {data}")
         required_fields = ["latitude", "longitude", "accuracy", "recorded_at"]
         
         # Validate required fields
@@ -73,6 +91,7 @@ def record_location() -> Dict[str, Any]:
                 }
         
         try:
+            print(f"Fetching attendance for employee {employee} on {frappe.utils.today()}")
             # Get today's attendance
             attendance = frappe.get_value("Attendance", 
                 {
@@ -82,10 +101,19 @@ def record_location() -> Dict[str, Any]:
                     "status": "Present"
                 }, ["name", "custom_mobile_punch_out_at"])
             
+            print(f"Attendance record found: {attendance}")
+            
             if not attendance:
+                print(f"No attendance found for employee {employee}")
                 frappe.log_error(
                     title="No Attendance Found",
-                    message=f"No approved attendance found for employee {employee} on {frappe.utils.today()}"
+                    message=f"""
+                    Details:
+                    Employee: {employee}
+                    Date: {frappe.utils.today()}
+                    Request Data: {data}
+                    Headers: {frappe.request.headers}
+                    """
                 )
                 frappe.local.response['http_status_code'] = 400
                 return {
@@ -96,13 +124,22 @@ def record_location() -> Dict[str, Any]:
                     "http_status_code": 400
                 }
 
-            attendance_name, punch_out_time = attendance  # Unpack the tuple
+            attendance_name, punch_out_time = attendance
+            print(f"Attendance name: {attendance_name}, Punch out time: {punch_out_time}")
 
             # Check if employee has punched out
             if punch_out_time:
+                print(f"Employee {employee} already punched out at {punch_out_time}")
                 frappe.log_error(
                     title="Employee Already Punched Out",
-                    message=f"Employee {employee} has already punched out on {frappe.utils.today()}"
+                    message=f"""
+                    Details:
+                    Employee: {employee}
+                    Date: {frappe.utils.today()}
+                    Punch Out Time: {punch_out_time}
+                    Attendance: {attendance_name}
+                    Request Data: {data}
+                    """
                 )
                 frappe.local.response['http_status_code'] = 400
                 return {
@@ -113,12 +150,18 @@ def record_location() -> Dict[str, Any]:
                     "http_status_code": 400
                 }
             
-            # Check for recent recordings in the last 10 seconds
+            # Check for recent recordings
+            current_time = frappe.utils.now_datetime()
+            check_time = frappe.utils.add_to_date(current_time, seconds=-9)
+            print(f"Checking for recordings between {check_time} and {current_time}")
+            
             last_recording = frappe.get_value("Route Tracking",
                 {
                     "employee": employee,
-                    "recorded_at": [">=", frappe.utils.add_to_date(frappe.utils.now_datetime(), seconds=-9)]
+                    "recorded_at": [">=", check_time]
                 }, "name")
+            
+            print(f"Last recording found: {last_recording}")
             
             if last_recording:
                 frappe.local.response['http_status_code'] = 200
@@ -132,6 +175,7 @@ def record_location() -> Dict[str, Any]:
                 }
             
             # Create route tracking entry
+            print(f"Creating new route tracking entry for {employee}")
             route_tracking = frappe.get_doc({
                 "doctype": "Route Tracking",
                 "attendance": attendance_name,
@@ -143,6 +187,7 @@ def record_location() -> Dict[str, Any]:
             })
             
             route_tracking.insert()
+            print(f"Route tracking entry created: {route_tracking.name}")
             
             frappe.local.response['http_status_code'] = 201
             return {
@@ -156,9 +201,16 @@ def record_location() -> Dict[str, Any]:
             }
             
         except frappe.ValidationError as e:
+            print(f"Validation error occurred: {str(e)}")
             frappe.log_error(
                 title="Validation Error in Location Recording",
-                message=f"Error for employee {employee}: {str(e)}"
+                message=f"""
+                Error details:
+                Employee: {employee}
+                Error: {str(e)}
+                Request Data: {data}
+                Traceback: {frappe.get_traceback()}
+                """
             )
             frappe.local.response['http_status_code'] = 400
             return {
@@ -170,9 +222,16 @@ def record_location() -> Dict[str, Any]:
             }
             
     except Exception as e:
+        print(f"Unexpected error occurred: {str(e)}")
         frappe.log_error(
             title="Location Recording Error",
-            message=f"Unexpected error: {str(e)}\nTraceback: {frappe.get_traceback()}"
+            message=f"""
+            Unexpected error details:
+            Error: {str(e)}
+            Headers: {frappe.request.headers}
+            Request Data: {frappe.request.json if frappe.request.json else 'No data'}
+            Traceback: {frappe.get_traceback()}
+            """
         )
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error recording location")
