@@ -41,6 +41,7 @@ def record_location() -> Dict[str, Any]:
                 "status": "error",
                 "message": "Location recording stopped - You have already punched out for today",
                 "code": "STOP_LOCATION_RECORDING",
+                "code_token": "INVALID_TOKEN",
                 "http_status_code": 401
             }
             

@@ -78,9 +78,16 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
                 "http_status_code": 401
             }
 
-        # Update last_login time
-        token_record.last_login = frappe.utils.now()
-        token_record.save()
+        
+        # Since multiple reuqest from same user were casuing error, document modified error
+        # "_server_messages": "[\"{\\\"message\\\": \\\"Error: Document has been modified after you have opened it (2025-02-19 11:19:51.726123, 2025-02-19 11:20:13.290599). Please refresh to get the latest document.\\\", \\\"title\\\": \\\"Message\\\", \\\"indicator\\\": \\\"red\\\", \\\"raise_exception\\\": 1, \\\"__frappe_exc_id\\\": \\\"166d44d09551bea0cad529572b05cd343aef0a24a373954b7d77c9d1\\\"}\"]"
+
+        
+        # # Update last_login time
+        # token_record.last_login = frappe.utils.now()
+        # token_record.save()
+
+        token_record.db_set('last_login', frappe.utils.now(), update_modified=False)
         
         # Handle Frappe authentication
         # api_key = frappe.conf.get('api_key')
