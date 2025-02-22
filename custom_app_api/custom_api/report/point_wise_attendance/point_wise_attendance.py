@@ -145,6 +145,7 @@ def execute(filters=None):
                         filters={
                             "designation": desig.designation,
                             "company": ("in", filters.companies),
+                            "status": "Active",
                             "custom_point": ("in", [row["point"] for row in data if row.get("point")])
                         },
                         pluck="name"
@@ -283,15 +284,11 @@ def get_point_wise_attendance(filters):
     # Create point to zone mapping
     point_zone_map = {p.name: p.zone_name for p in allowed_points}
     
-    # Modify the point_filters to consider employee status as of the attendance date
+    # Get all points and their employees
     point_filters = {
         "company": ("in", filters.companies),
-        # Check if employee was active on the attendance date
-        "date_of_joining": ("<=", filters.date),
-        "custom_point": ("in", [p.name for p in allowed_points]),
-        # Either the employee is still active or their relieving date is after the attendance date
-        "status": ["in", ["Active", "Left"]],
-        "relieving_date": ["in", [None, "", [">=", filters.date]]]
+        "status": "Active",
+        "custom_point": ("in", [p.name for p in allowed_points])
     }
     
     # Add points filter if specified
@@ -321,7 +318,18 @@ def get_point_wise_attendance(filters):
         # Get zone for this point
         zone = point_zone_map.get(point_data.point, "")
 
-        # Get attendance directly for this point and date
+        # Get employees for this point
+        point_employees = frappe.get_all(
+            "Employee",
+            fields=["name"],
+            filters={
+                "custom_point": point_data.point,
+                "company": ("in", filters.companies),
+                "status": "Active"
+            }
+        )
+
+        # Get attendance for these employees
         attendance_counts = frappe.get_all(
             "Attendance",
             fields=[
@@ -330,17 +338,8 @@ def get_point_wise_attendance(filters):
             ],
             filters={
                 "attendance_date": filters.date,
-                "docstatus": 1,
-                "employee": ("in", 
-                    frappe.get_all(
-                        "Employee",
-                        filters={
-                            "custom_point": point_data.point,
-                            "company": ("in", filters.companies),
-                        },
-                        pluck="name"
-                    )
-                )
+                "employee": ("in", [emp.name for emp in point_employees]),
+                "docstatus": 1
             },
             group_by="status"
         )
