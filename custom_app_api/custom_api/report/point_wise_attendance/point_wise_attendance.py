@@ -145,7 +145,6 @@ def execute(filters=None):
                         filters={
                             "designation": desig.designation,
                             "company": ("in", filters.companies),
-                            "status": "Active",
                             "custom_point": ("in", [row["point"] for row in data if row.get("point")])
                         },
                         pluck="name"
@@ -318,18 +317,7 @@ def get_point_wise_attendance(filters):
         # Get zone for this point
         zone = point_zone_map.get(point_data.point, "")
 
-        # Get employees for this point
-        point_employees = frappe.get_all(
-            "Employee",
-            fields=["name"],
-            filters={
-                "custom_point": point_data.point,
-                "company": ("in", filters.companies),
-                "status": "Active"
-            }
-        )
-
-        # Get attendance for these employees
+        # Get attendance directly for this point and date
         attendance_counts = frappe.get_all(
             "Attendance",
             fields=[
@@ -338,8 +326,17 @@ def get_point_wise_attendance(filters):
             ],
             filters={
                 "attendance_date": filters.date,
-                "employee": ("in", [emp.name for emp in point_employees]),
-                "docstatus": 1
+                "docstatus": 1,
+                "employee": ("in", 
+                    frappe.get_all(
+                        "Employee",
+                        filters={
+                            "custom_point": point_data.point,
+                            "company": ("in", filters.companies),
+                        },
+                        pluck="name"
+                    )
+                )
             },
             group_by="status"
         )
