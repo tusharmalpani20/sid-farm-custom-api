@@ -279,7 +279,7 @@ def get_additional_salary_records():
             SELECT 
                 name, salary_component, custom_reason, custom_total_amount,
                 payroll_date, workflow_state, workflow_action_taken_on, 
-                employee, amount, custom_pay_in_installment
+                employee, amount, custom_pay_in_installment , creation
             FROM `tabAdditional Salary`
             WHERE {conditions}
         """.format(conditions=' AND '.join(conditions))
@@ -314,7 +314,8 @@ def get_additional_salary_records():
                 "ifsc_no": employee.custom_ifsc_no,
                 "payroll_date": salary.payroll_date,
                 "action_taken_on": salary.workflow_action_taken_on,
-                "status": salary.workflow_state
+                "status": salary.workflow_state,
+                "created_at": salary.creation
             })
 
         return {

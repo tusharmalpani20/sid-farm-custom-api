@@ -30,6 +30,18 @@
      },
      {
       "role": "Employee"
+     },
+     {
+      "role": "Analyst Team"
+     },
+     {
+      "role": "Mid-Mile Lead(MML)"
+     },
+     {
+      "role": "Zonal Mid-Mile Lead(ZMML)"
+     },
+     {
+      "role": "Pan India Mid Mile Manager(PMMM)"
      }
     ]
    }
