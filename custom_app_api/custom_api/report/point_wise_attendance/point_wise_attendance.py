@@ -283,11 +283,15 @@ def get_point_wise_attendance(filters):
     # Create point to zone mapping
     point_zone_map = {p.name: p.zone_name for p in allowed_points}
     
-    # Get all points and their employees
+    # Modify the point_filters to consider employee status as of the attendance date
     point_filters = {
         "company": ("in", filters.companies),
-        "status": "Active",
-        "custom_point": ("in", [p.name for p in allowed_points])
+        # Check if employee was active on the attendance date
+        "date_of_joining": ("<=", filters.date),
+        "custom_point": ("in", [p.name for p in allowed_points]),
+        # Either the employee is still active or their relieving date is after the attendance date
+        "status": ["in", ["Active", "Left"]],
+        "relieving_date": ["in", [None, "", [">=", filters.date]]]
     }
     
     # Add points filter if specified
