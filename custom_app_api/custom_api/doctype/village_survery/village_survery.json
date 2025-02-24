@@ -1,0 +1,185 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:{village_name}-Survey-####",
+ "creation": "2024-12-17 16:17:21.183867",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "basic_details_section",
+  "village_name",
+  "village_prospect_type",
+  "column_break_basic",
+  "latitude",
+  "longitude",
+  "ngo_section",
+  "has_ngo_fpo_sfg",
+  "ngo_fpo_sfg_details",
+  "dairy_details_section",
+  "existing_dairy_farms",
+  "dairy_farmers_count",
+  "new_interested_farmers",
+  "milk_details_section",
+  "total_cow_milk_qty",
+  "total_buffalo_milk_qty",
+  "total_milk_qty",
+  "competitor_section",
+  "competitor_details",
+  "has_direct_sales",
+  "remarks_section",
+  "remarks"
+ ],
+ "fields": [
+  {
+   "fieldname": "basic_details_section",
+   "fieldtype": "Section Break",
+   "label": "Basic Details"
+  },
+  {
+   "fieldname": "village_name",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Village Name",
+   "options": "Village",
+   "reqd": 1
+  },
+  {
+   "fieldname": "village_prospect_type",
+   "fieldtype": "Select",
+   "label": "Village Prospect Type",
+   "options": "Warm\nCold\nHot\nLost\nConverted",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_basic",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "latitude",
+   "fieldtype": "Float",
+   "label": "Latitude"
+  },
+  {
+   "fieldname": "longitude",
+   "fieldtype": "Float",
+   "label": "Longitude"
+  },
+  {
+   "fieldname": "ngo_section",
+   "fieldtype": "Section Break",
+   "label": "NGO/FPO/SFG Details"
+  },
+  {
+   "fieldname": "has_ngo_fpo_sfg",
+   "fieldtype": "Select",
+   "label": "Does village have NGOs/FPOs/SFGs",
+   "options": "\nYes\nNo",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.has_ngo_fpo_sfg == 'Yes'",
+   "fieldname": "ngo_fpo_sfg_details",
+   "fieldtype": "Text Editor",
+   "label": "NGO/FPO/SFG Details"
+  },
+  {
+   "fieldname": "dairy_details_section",
+   "fieldtype": "Section Break",
+   "label": "Dairy Details"
+  },
+  {
+   "fieldname": "existing_dairy_farms",
+   "fieldtype": "Int",
+   "label": "No of Existing Dairy Farm in the Village",
+   "reqd": 1
+  },
+  {
+   "fieldname": "dairy_farmers_count",
+   "fieldtype": "Int",
+   "label": "No of Dairy Farm Farmers",
+   "reqd": 1
+  },
+  {
+   "fieldname": "new_interested_farmers",
+   "fieldtype": "Int",
+   "label": "No of New farmers interested",
+   "reqd": 1
+  },
+  {
+   "fieldname": "milk_details_section",
+   "fieldtype": "Section Break",
+   "label": "Milk Production Details"
+  },
+  {
+   "fieldname": "total_cow_milk_qty",
+   "fieldtype": "Float",
+   "label": "Total Milk COW Qty in the Village/In Ltr",
+   "reqd": 1
+  },
+  {
+   "fieldname": "total_buffalo_milk_qty",
+   "fieldtype": "Float",
+   "label": "Total Milk BUF Qty in the Village/In Ltr",
+   "reqd": 1
+  },
+  {
+   "fieldname": "total_milk_qty",
+   "fieldtype": "Float",
+   "label": "Total Milk Qty in the Village/In Ltr",
+   "reqd": 1
+  },
+  {
+   "fieldname": "competitor_section",
+   "fieldtype": "Section Break",
+   "label": "Competitor Details"
+  },
+  {
+   "fieldname": "competitor_details",
+   "fieldtype": "Table",
+   "label": "Competitor Details",
+   "options": "Village Survery Competitive Dairy Pricing"
+  },
+  {
+   "fieldname": "has_direct_sales",
+   "fieldtype": "Select",
+   "label": "Direct Sales",
+   "options": "\nYes\nNo",
+   "reqd": 1
+  },
+  {
+   "fieldname": "remarks_section",
+   "fieldtype": "Section Break",
+   "label": "Additional Information"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Text Editor",
+   "label": "Remarks"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-02-24 14:52:35.537175",
+ "modified_by": "Administrator",
+ "module": "Custom API",
+ "name": "Village Survey",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
