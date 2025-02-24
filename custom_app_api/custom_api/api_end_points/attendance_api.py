@@ -87,7 +87,7 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
         # token_record.last_login = frappe.utils.now()
         # token_record.save()
 
-        token_record.db_set('last_login', frappe.utils.now(), update_modified=False)
+        #token_record.db_set('last_login', frappe.utils.now(), update_modified=False)
         
         # Handle Frappe authentication
         # api_key = frappe.conf.get('api_key')
