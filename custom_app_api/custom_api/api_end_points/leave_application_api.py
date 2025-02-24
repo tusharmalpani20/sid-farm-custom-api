@@ -82,16 +82,28 @@ def create_leave_application() -> Dict[str, Any]:
             employee_details = frappe.get_doc("Employee", employee)
 
             try:
-                if employee_details.designation in ["Delivery Partner", "Backup Delivery Partner", "Agent Delivery Partner", "Extra Delivery Partner", "Last Mile Executive"]:
-                    leave_application.set_workflow_state('Pending L1 Approval(LM)')
+                workflow_state = None
+                if employee_details.designation in ["Delivery Partner", "Backup Delivery Partner", 
+                    "Agent Delivery Partner", "Extra Delivery Partner", "Last Mile Executive"]:
+                    workflow_state = 'Pending L1 Approval(LM)'
                 elif employee_details.designation in ["Sorter"]:
-                    leave_application.set_workflow_state('Pending L1(MM)')
+                    workflow_state = 'Pending L1(MM)'
                 
-                leave_application.save(ignore_permissions=True)
-            except frappe.ValidationError as e:
+                if workflow_state:
+                    # Set custom field for designation to help with workflow conditions
+                    leave_application.custom_emp_designation = employee_details.designation
+                    # Set the workflow state
+                    leave_application.workflow_state = workflow_state
+                    leave_application.save(ignore_permissions=True)
+                else:
+                    frappe.logger().warning(f"No workflow state defined for designation: {employee_details.designation}")
+                    
+            except Exception as e:
                 frappe.logger().error(f"Workflow transition failed: {str(e)}")
-                frappe.throw(_("Unable to set initial workflow state"))
-
+                # Don't throw error, continue with application creation
+                frappe.log_error(f"Workflow state setting failed for {leave_application.name}: {str(e)}", 
+                    "Leave Application Workflow Error")
+            
             frappe.logger().debug(f"Leave application created successfully: {leave_application.name}")
             frappe.local.response['http_status_code'] = 201
             return {
