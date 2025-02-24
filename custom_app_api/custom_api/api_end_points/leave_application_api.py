@@ -72,6 +72,26 @@ def create_leave_application() -> Dict[str, Any]:
             })
             
             leave_application.insert()
+
+            # if employee designation is doc.designation in ["Delivery Partner","Backup Delivery Partner","Agent Delivery Partner","Extra Delivery Partner","Last Mile Executive"]
+            # Then the workflow state should be Pending L1 Approval(LM)
+            # doc.designation is in ["Sorter"]
+            # Then the workflow state should be Pending L1(MM)
+
+            # get employee details
+            employee_details = frappe.get_doc("Employee", employee)
+
+            try:
+                if employee_details.designation in ["Delivery Partner", "Backup Delivery Partner", "Agent Delivery Partner", "Extra Delivery Partner", "Last Mile Executive"]:
+                    leave_application.set_workflow_state('Pending L1 Approval(LM)')
+                elif employee_details.designation in ["Sorter"]:
+                    leave_application.set_workflow_state('Pending L1(MM)')
+                
+                leave_application.save(ignore_permissions=True)
+            except frappe.ValidationError as e:
+                frappe.logger().error(f"Workflow transition failed: {str(e)}")
+                frappe.throw(_("Unable to set initial workflow state"))
+
             frappe.logger().debug(f"Leave application created successfully: {leave_application.name}")
             frappe.local.response['http_status_code'] = 201
             return {
