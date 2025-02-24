@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class VillageSurveryCompetitiveDairyPricing(Document):
+class VillageSurveyCompetitiveDairyPricing(Document):
 	pass
