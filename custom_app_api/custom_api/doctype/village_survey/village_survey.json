@@ -151,8 +151,10 @@
   }
  ],
  "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "track_changes": 1,
  "links": [],
- "modified": "2025-02-24 14:52:35.537175",
+ "modified": "2025-02-24 16:00:35.537175",
  "modified_by": "Administrator",
  "module": "Custom API",
  "name": "Village Survey",
