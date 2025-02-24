@@ -140,13 +140,6 @@
    "options": "Village Survey Competitive Dairy Pricing"
   },
   {
-   "fieldname": "has_direct_sales",
-   "fieldtype": "Select",
-   "label": "Direct Sales",
-   "options": "\nYes\nNo",
-   "reqd": 1
-  },
-  {
    "fieldname": "remarks_section",
    "fieldtype": "Section Break",
    "label": "Additional Information"
