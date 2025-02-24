@@ -137,7 +137,7 @@
    "fieldname": "competitor_details",
    "fieldtype": "Table",
    "label": "Competitor Details",
-   "options": "Village Survery Competitive Dairy Pricing"
+   "options": "Village Survey Competitive Dairy Pricing"
   },
   {
    "fieldname": "has_direct_sales",
