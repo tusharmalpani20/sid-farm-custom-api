@@ -158,7 +158,7 @@ def record_location() -> Dict[str, Any]:
             
             last_recording = frappe.get_value("Route Tracking",
                 {
-                    "employee": employee,
+                    "attendance": attendance_name,
                     "recorded_at": [">=", check_time]
                 }, "name")
             
