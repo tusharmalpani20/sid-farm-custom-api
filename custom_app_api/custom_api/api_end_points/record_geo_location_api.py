@@ -156,12 +156,15 @@ def record_location() -> Dict[str, Any]:
             check_time = frappe.utils.add_to_date(current_time, seconds=-9)
             print(f"Checking for recordings between {check_time} and {current_time}")
             
-            last_recording = frappe.get_value("Route Tracking",
-                {
-                    "attendance": attendance_name,
-                    "recorded_at": [">=", check_time]
-                }, "name")
+            last_recording = frappe.db.sql("""
+                SELECT name 
+                FROM `tabRoute Tracking`
+                WHERE attendance = %s 
+                AND recorded_at >= %s
+                LIMIT 1
+            """, (attendance_name, check_time), as_dict=0)
             
+            last_recording = last_recording[0][0] if last_recording else None
             print(f"Last recording found: {last_recording}")
             
             if last_recording:
