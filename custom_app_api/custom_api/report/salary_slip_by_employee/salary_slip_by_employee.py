@@ -46,6 +46,12 @@ def get_columns(filters):
             "fieldtype": "Data",
             "width": 120
         },
+        {   
+            "label": _("Payment Days"),
+            "fieldname": "payment_days",
+            "fieldtype": "Data",
+            "width": 120
+        },
         {
             "label": _("Route"),
             "fieldname": "route",
