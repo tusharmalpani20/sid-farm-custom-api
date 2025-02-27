@@ -48,7 +48,7 @@ def get_columns(filters):
         },
         {   
             "label": _("Working Days"),
-            "fieldname": "working_days",
+            "fieldname": "total_working_days",
             "fieldtype": "Float",
             "width": 120
         },
@@ -231,7 +231,7 @@ def get_salary_slip_data(filters):
             ss.workflow_state,
             ss.employee,
             ss.employee_name,
-            ss.working_days,
+            ss.total_working_days,
             ss.net_pay,
             e.custom_route,
             e.custom_point,
@@ -311,7 +311,7 @@ def get_salary_slip_data(filters):
             "salary_slip_id": slip.salary_slip_id,
             "employee": slip.employee,
             "employee_name": slip.employee_name,
-            "working_days": slip.working_days,
+            "total_working_days": slip.total_working_days,
             "route": slip.custom_route,
             "point": slip.custom_point,
             "area": slip.custom_area,
