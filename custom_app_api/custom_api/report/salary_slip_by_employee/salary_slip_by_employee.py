@@ -49,7 +49,7 @@ def get_columns(filters):
         {   
             "label": _("Payment Days"),
             "fieldname": "payment_days",
-            "fieldtype": "Data",
+            "fieldtype": "Float",
             "width": 120
         },
         {
