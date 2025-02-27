@@ -47,8 +47,8 @@ def get_columns(filters):
             "width": 120
         },
         {   
-            "label": _("Payment Days"),
-            "fieldname": "payment_days",
+            "label": _("Working Days"),
+            "fieldname": "working_days",
             "fieldtype": "Float",
             "width": 120
         },
@@ -215,13 +215,13 @@ def get_salary_slip_data(filters):
     # Modify docstatus condition based on workflow states
     if filters.get("include_draft"):
         workflow_states = (
-            "'Pending', 'Approved by LMH', 'Approved', 'Rejected by LMH', "
-            "'Rejected', 'Approved by LMM', 'Rejected by LMM'"
+            "'Pending', 'Approved by LMM', 'Rejected by LMM', "
+            "'Cancelled'"
         )
         docstatus_condition = "ss.docstatus in (0, 1, 2)"
     else:
         # Only show approved documents
-        workflow_states = "'Approved by LMH', 'Approved'"
+        workflow_states = "'Approved by PLMM'"
         docstatus_condition = "ss.docstatus = 1"
     
     query = """
@@ -231,7 +231,7 @@ def get_salary_slip_data(filters):
             ss.workflow_state,
             ss.employee,
             ss.employee_name,
-            ss.payment_days,
+            ss.working_days,
             ss.net_pay,
             e.custom_route,
             e.custom_point,
@@ -311,7 +311,7 @@ def get_salary_slip_data(filters):
             "salary_slip_id": slip.salary_slip_id,
             "employee": slip.employee,
             "employee_name": slip.employee_name,
-            "payment_days": slip.payment_days,
+            "working_days": slip.working_days,
             "route": slip.custom_route,
             "point": slip.custom_point,
             "area": slip.custom_area,
@@ -330,12 +330,10 @@ def get_salary_slip_data(filters):
             # Map workflow states to display status
             status_map = {
                 "Pending": "Pending",
-                "Approved by LMH": "Approved by LMH",
-                "Approved": "Approved",
-                "Rejected by LMH": "Rejected by LMH",
-                "Rejected": "Rejected",
-                "Approved by LMM": "Pending LMH Approval",
-                "Rejected by LMM": "Rejected by LMM"
+                "Approved by LMM": "Approved by LMM",
+                "Rejected by LMM": "Rejected by LMM",
+                "Approved by PLMM": "Approved by PLMM",
+                "Cancelled": "Cancelled"
             }
             row["status"] = status_map.get(slip.workflow_state, slip.workflow_state)
 
@@ -361,7 +359,6 @@ def get_salary_slip_data(filters):
 
         row["total_deductions"] = total_deductions
         row["net_pay"] = slip.net_pay
-
         data.append(row)
 
     return data
