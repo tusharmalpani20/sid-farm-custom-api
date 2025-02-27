@@ -47,10 +47,10 @@ def get_columns(filters):
             "width": 120
         },
         {   
-            "label": _("Working Days"),
-            "fieldname": "total_working_days",
+            "label": _("Payment Days"),
+            "fieldname": "payment_days",
             "fieldtype": "Float",
-            "width": 120
+            "width": 100
         },
         {
             "label": _("Route"),
@@ -231,7 +231,7 @@ def get_salary_slip_data(filters):
             ss.workflow_state,
             ss.employee,
             ss.employee_name,
-            ss.total_working_days,
+            ss.payment_days,
             ss.net_pay,
             e.custom_route,
             e.custom_point,
@@ -311,7 +311,7 @@ def get_salary_slip_data(filters):
             "salary_slip_id": slip.salary_slip_id,
             "employee": slip.employee,
             "employee_name": slip.employee_name,
-            "total_working_days": slip.total_working_days,
+            "payment_days": slip.payment_days,
             "route": slip.custom_route,
             "point": slip.custom_point,
             "area": slip.custom_area,
