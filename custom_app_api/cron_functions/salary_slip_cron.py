@@ -145,7 +145,7 @@ def generate_salary_slips_for_specific_month():
     """
     try:
 
-        target_date = "2024-12-06"
+        target_date = "2025-02-06"
         # Convert string date to datetime
         target_datetime = datetime.strptime(target_date, '%Y-%m-%d')
         

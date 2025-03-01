@@ -170,7 +170,7 @@
    },
    {
     "fieldname" : "survey_done_date",
-    "fieldtype" : "Datetime",
+    "fieldtype" : "Date",
     "label" : "Survey Done Date"
    },
   {
