@@ -125,22 +125,26 @@ def get_competitor_companies() -> Dict[str, Any]:
         return handle_error_response(e, "Error retrieving competitor companies")
 
 @frappe.whitelist(allow_guest=True, methods=["POST"])
-def create_village_survey(
-    survey_data: Dict[str, Any],
-    competitor_details: List[Dict[str, Any]] = None
-) -> Dict[str, Any]:
+def create_village_survey() -> Dict[str, Any]:
     """
     Creates a new village survey with competitor details
     Required header: Authorization Bearer token
-    Body: 
-        survey_data: JSON object containing survey data (including survey_image as base64)
-        competitor_details: List of competitor pricing details
+    Body: JSON object containing:
+        - survey details
+        - competitor_details (optional)
+        - survey_image (optional base64 image)
     """
     frappe.db.begin()
     
     try:
-        # Log incoming request data (excluding base64 image for log size)
-        log_data = survey_data.copy()
+        # Get request data
+        request_data = frappe.request.get_json()
+        
+        # Extract competitor details if present
+        competitor_details = request_data.pop("competitor_details", None)
+        
+        # Create a copy for logging (without image data)
+        log_data = request_data.copy()
         if "survey_image" in log_data:
             log_data["survey_image"] = "<<base64_image_data>>"
         
@@ -160,7 +164,7 @@ def create_village_survey(
             return result
 
         # Verify village exists
-        if "village_name" not in survey_data:
+        if "village_name" not in request_data:
             frappe.db.rollback()
             frappe.local.response['http_status_code'] = 400
             return {
@@ -171,27 +175,27 @@ def create_village_survey(
                 "http_status_code": 400
             }
 
-        village = frappe.db.exists("Village", survey_data["village_name"])
+        village = frappe.db.exists("Village", request_data["village_name"])
         if not village:
             frappe.db.rollback()
             frappe.local.response['http_status_code'] = 404
             return {
                 "success": False,
                 "status": "error",
-                "message": f"Village '{survey_data['village_name']}' not found",
+                "message": f"Village '{request_data['village_name']}' not found",
                 "code": "VILLAGE_NOT_FOUND",
                 "http_status_code": 404
             }
 
         # Handle base64 image if provided
-        if "survey_image" in survey_data:
+        if "survey_image" in request_data:
             try:
                 image_result = handle_base64_image(
-                    survey_data["survey_image"],
+                    request_data["survey_image"],
                     prefix="survey"
                 )
-                survey_data["survey_image_url"] = image_result["file_url"]
-                del survey_data["survey_image"]
+                request_data["survey_image_url"] = image_result["file_url"]
+                del request_data["survey_image"]
             except Exception as e:
                 frappe.db.rollback()
                 frappe.local.response['http_status_code'] = 400
@@ -205,7 +209,7 @@ def create_village_survey(
 
         # Prepare competitor details if provided
         if competitor_details:
-            survey_data["competitor_details"] = []
+            request_data["competitor_details"] = []
             for competitor in competitor_details:
                 # Validate required fields
                 required_fields = ["company_name", "pricing_type", "price_per_litre", "has_direct_sales"]
@@ -233,12 +237,12 @@ def create_village_survey(
                         "http_status_code": 404
                     }
                 
-                survey_data["competitor_details"].append(competitor)
+                request_data["competitor_details"].append(competitor)
 
         # Create village survey document
         survey = frappe.get_doc({
             "doctype": "Village Survey",
-            **survey_data
+            **request_data
         })
         
         survey.insert()
@@ -274,7 +278,7 @@ def create_village_survey(
             title="Create Village Survey - Error",
             message={
                 "error": str(e),
-                "survey_data": log_data if 'log_data' in locals() else survey_data,
+                "request_data": log_data if 'log_data' in locals() else request_data,
                 "competitor_details": competitor_details,
                 "traceback": frappe.get_traceback()
             }
