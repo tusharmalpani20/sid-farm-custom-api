@@ -33,6 +33,40 @@
     },
     {
       "role": "Finance"
-    }
+    },
+    {
+      "role": "HR Manager"
+    },
+    {
+      "role": "HR User"
+    },
+    {
+      "role": "Employee"
+    },
+    {
+      "role": "Analyst Team"
+    },
+    {
+      "role": "Mid-Mile Lead(MML)"
+    },
+    {
+      "role": "Zonal Mid-Mile Lead(ZMML)"
+    },
+    {
+      "role": "Pan India Mid Mile Manager(PMMM)"
+    },
+    {
+      "role": "Pan India Last Mile Manager(PLMM)"
+    },
+    {
+      "role": "Last Mile Zonal Head(LMZH)"
+    },
+    {
+      "role": "Last Mile Manager(LMM)"
+    },
+    {"role" : "Last Mile Lead(LML)"},
+    {"role" : "Mid-Mile Lead(MML)"},
+    {"role" : "Finance"},
+    {"role" : "Founder Office"}
   ]
 }
