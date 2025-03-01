@@ -125,6 +125,87 @@ def get_competitor_companies() -> Dict[str, Any]:
         return handle_error_response(e, "Error retrieving competitor companies")
 
 @frappe.whitelist(allow_guest=True, methods=["POST"])
+def upload_survey_image() -> Dict[str, Any]:
+    """
+    Uploads a survey image and returns the file URL
+    Required header: Authorization Bearer token
+    Body: 
+        image: Base64 encoded image string
+        survey_id: ID of the village survey (optional, for existing surveys)
+    """
+    try:
+        # Verify authorization
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        if not is_valid:
+            frappe.local.response['http_status_code'] = 401
+            return result
+
+        request_data = frappe.request.get_json()
+        image_data = request_data.get('image')
+        survey_id = request_data.get('survey_id')
+
+        if not image_data:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Image data is required",
+                "code": "IMAGE_REQUIRED",
+                "http_status_code": 400
+            }
+
+        # If survey_id is provided, verify it exists
+        if survey_id:
+            if not frappe.db.exists("Village Survey", survey_id):
+                frappe.local.response['http_status_code'] = 404
+                return {
+                    "success": False,
+                    "status": "error",
+                    "message": "Survey not found",
+                    "code": "SURVEY_NOT_FOUND",
+                    "http_status_code": 404
+                }
+
+        # Add survey_id to the prefix if available
+        prefix = f"survey_{survey_id}" if survey_id else "survey"
+        image_result = handle_base64_image(image_data, prefix=prefix)
+        
+        # If survey_id exists, update the document with the new image URL
+        if survey_id:
+            try:
+                survey = frappe.get_doc("Village Survey", survey_id)
+                survey.survey_image_url = image_result["file_url"]
+                survey.save()
+                frappe.db.commit()
+            except Exception as e:
+                frappe.log_error(
+                    title="Upload Survey Image - Update Error",
+                    message={"error": str(e), "survey_id": survey_id}
+                )
+                # Continue anyway as we still have the uploaded image URL
+
+        frappe.local.response['http_status_code'] = 200
+        return {
+            "success": True,
+            "status": "success",
+            "message": "Image uploaded successfully",
+            "code": "IMAGE_UPLOADED",
+            "data": {
+                "file_url": image_result["file_url"],
+                "survey_id": survey_id
+            },
+            "http_status_code": 200
+        }
+
+    except Exception as e:
+        frappe.log_error(
+            title="Upload Survey Image - Error",
+            message={"error": str(e), "traceback": frappe.get_traceback()}
+        )
+        frappe.local.response['http_status_code'] = 500
+        return handle_error_response(e, "Error uploading image")
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
 def create_village_survey(
     survey_data: Dict[str, Any],
     competitor_details: List[Dict[str, Any]] = None
@@ -133,7 +214,7 @@ def create_village_survey(
     Creates a new village survey with competitor details
     Required header: Authorization Bearer token
     Body: 
-        survey_data: JSON object containing survey data
+        survey_data: JSON object containing survey data (including optional survey_image_url)
         competitor_details: List of competitor pricing details
     """
     frappe.db.begin()
@@ -155,24 +236,14 @@ def create_village_survey(
             frappe.local.response['http_status_code'] = 401
             return result
 
-        # Handle survey image if present
+        # Remove image handling section since it's now handled separately
+        # Just use the provided image URL if it exists
         if "survey_image" in survey_data:
-            try:
-                image_result = handle_base64_image(
-                    survey_data["survey_image"],
-                    prefix="survey"
-                )
-                survey_data["survey_image"] = image_result["file_url"]
-            except Exception as e:
-                frappe.db.rollback()
-                frappe.local.response['http_status_code'] = 400
-                return {
-                    "success": False,
-                    "status": "error",
-                    "message": f"Failed to process image: {str(e)}",
-                    "code": "IMAGE_PROCESSING_FAILED",
-                    "http_status_code": 400
-                }
+            frappe.log_error(
+                title="Create Village Survey - Warning",
+                message="Deprecated: survey_image field used. Please use survey_image_url instead."
+            )
+            del survey_data["survey_image"]
 
         # Prepare competitor details if provided
         if competitor_details:
