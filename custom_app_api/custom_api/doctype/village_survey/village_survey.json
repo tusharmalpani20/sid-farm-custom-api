@@ -27,7 +27,8 @@
   "competitor_details",
   "has_direct_sales",
   "remarks_section",
-  "remarks"
+  "remarks",
+  "amended_from"
  ],
  "fields": [
   {
@@ -160,7 +161,16 @@
    "fieldname": "remarks",
    "fieldtype": "Text Editor",
    "label": "Remarks"
-  }
+  },
+  {
+    "fieldname": "amended_from",
+    "fieldtype": "Link",
+    "label": "Amended From",
+    "no_copy": 1,
+    "options": "Village Survey",
+    "print_hide": 1,
+    "read_only": 1
+}
  ],
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
