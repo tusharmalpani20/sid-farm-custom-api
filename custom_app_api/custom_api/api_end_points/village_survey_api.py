@@ -311,6 +311,8 @@ def get_village_surveys() -> Dict[str, Any]:
         if not is_valid:
             frappe.local.response['http_status_code'] = 401
             return result
+        
+        employee = result["employee"]
 
         # Get query parameters
         village = frappe.request.args.get('village')
@@ -322,6 +324,7 @@ def get_village_surveys() -> Dict[str, Any]:
 
         # Build filters
         filters = {"docstatus": 1}  # Only get submitted documents
+        filters = { "survey_done_by" : employee }
         if village:
             filters["village_name"] = village
         if prospect_type:
