@@ -247,7 +247,7 @@ def create_village_survey() -> Dict[str, Any]:
             "doctype": "Village Survey",
             **request_data,
             "survey_done_by": employee,
-            "survey_done_date": frappe.utils.now()
+            "survey_done_date": frappe.utils.now().strftime("%Y-%m-%d")
         })
         
         survey.insert()
