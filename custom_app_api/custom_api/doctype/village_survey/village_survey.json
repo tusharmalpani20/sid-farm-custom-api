@@ -1,7 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "format:.village_name.-Survey-.####",
+ "autoname": "format:{village_name}-Survey-####",
  "creation": "2025-02-24 14:17:21.183867",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -89,7 +89,7 @@
    "reqd": 1
   },
   {
-   "depends_on": "eval:doc.has_ngo_fpo_sfg == 'Yes'",
+   "depends_on": "eval:doc.has_ngo_fpo_sfg == \"Yes\"",
    "fieldname": "ngo_fpo_sfg_details",
    "fieldtype": "Text Editor",
    "label": "NGO/FPO/SFG Details"
