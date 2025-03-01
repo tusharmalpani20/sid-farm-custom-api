@@ -152,9 +152,9 @@ def generate_salary_slips_for_specific_month():
         # Get all active employees
         active_employees = frappe.get_all(
             "Employee",
-            filters={
-                "status": "Active"
-            },
+            # filters={
+            #     "status": "Active"
+            # },
             fields=["name", "employee_name"]
         )
 
