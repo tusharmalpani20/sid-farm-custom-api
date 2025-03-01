@@ -162,6 +162,17 @@
    "fieldtype": "Text Editor",
    "label": "Remarks"
   },
+   {
+    "fieldname" : "survey_done_by",
+    "fieldtype" : "Link",
+    "label" : "Survey Done By",
+    "options" : "Employee"
+   },
+   {
+    "fieldname" : "survey_done_date",
+    "fieldtype" : "Datetime",
+    "label" : "Survey Done Date"
+   },
   {
     "fieldname": "amended_from",
     "fieldtype": "Link",

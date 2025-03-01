@@ -162,6 +162,8 @@ def create_village_survey() -> Dict[str, Any]:
             frappe.db.rollback()
             frappe.local.response['http_status_code'] = 401
             return result
+        
+        employee = result["employee"]
 
         # Verify village exists
         if "village_name" not in request_data:
@@ -243,7 +245,9 @@ def create_village_survey() -> Dict[str, Any]:
         # Create village survey document
         survey = frappe.get_doc({
             "doctype": "Village Survey",
-            **request_data
+            **request_data,
+            "survey_done_by": employee,
+            "survey_done_at": datetime.now()
         })
         
         survey.insert()
