@@ -1,7 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "format:{village_name}-Survey-####",
+ "autoname": "format:.village_name.-Survey-.####",
  "creation": "2025-02-24 14:17:21.183867",
  "doctype": "DocType",
  "engine": "InnoDB",
@@ -57,13 +57,25 @@
   {
    "fieldname": "latitude",
    "fieldtype": "Float",
-   "label": "Latitude"
+   "label": "Latitude",
+   "hidden": 1
   },
   {
    "fieldname": "longitude",
    "fieldtype": "Float",
-   "label": "Longitude"
+   "label": "Longitude",
+   "hidden": 1
   },
+  {
+    "fieldname": "map",
+    "fieldtype": "Geolocation",
+    "label": "Map"
+   },
+   {
+    "fieldname": "survey_image",
+    "fieldtype": "Attach Image",
+    "label": "Survey Image"
+   },
   {
    "fieldname": "ngo_section",
    "fieldtype": "Section Break",
