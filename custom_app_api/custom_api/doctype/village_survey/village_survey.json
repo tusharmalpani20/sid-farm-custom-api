@@ -1,7 +1,7 @@
 {
  "actions": [],
  "allow_rename": 1,
- "autoname": "format:{village_name}-Survey-####",
+ "autoname": "format:VS-{village_name}-{####}",
  "creation": "2025-02-24 14:17:21.183867",
  "doctype": "DocType",
  "engine": "InnoDB",
