@@ -191,13 +191,12 @@ def create_village_survey() -> Dict[str, Any]:
         if "survey_image" in request_data:
             try:
                 image_result = handle_base64_image(
-                    request_data["survey_image"],
+                    request_data.get("survey_image"),
                     prefix="survey"
                 )
                 # Set both the image field and URL
-                request_data["survey_image"] = image_result["file_url"]  # This links the image to the document
+                request_data["survey_image"] = image_result["file_url"]
                 request_data["survey_image_url"] = image_result["file_url"]
-                del request_data["survey_image_base64"]  # Remove the base64 data if you renamed the original key
             except Exception as e:
                 frappe.db.rollback()
                 frappe.local.response['http_status_code'] = 400
