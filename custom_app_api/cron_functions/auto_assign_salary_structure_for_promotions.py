@@ -1,5 +1,5 @@
 import frappe
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 from frappe import _
 
 def auto_assign_salary_structure():
@@ -128,7 +128,7 @@ def auto_assign_salary_structure():
 def handle_salary_slip_creation(employee, promotion_date, salary_structure):
     try:
         # Convert promotion_date to datetime if it's a date object
-        if isinstance(promotion_date, datetime.date):
+        if isinstance(promotion_date, date):
             promotion_dt = datetime.combine(promotion_date, datetime.min.time())
         else:
             promotion_dt = datetime.strptime(promotion_date, '%Y-%m-%d')
@@ -164,8 +164,8 @@ def handle_salary_slip_creation(employee, promotion_date, salary_structure):
             
         for slip in existing_slips:
             # Convert dates to datetime objects for comparison
-            slip_start = datetime.combine(slip.start_date, datetime.min.time()) if isinstance(slip.start_date, datetime.date) else datetime.strptime(slip.start_date, '%Y-%m-%d')
-            slip_end = datetime.combine(slip.end_date, datetime.min.time()) if isinstance(slip.end_date, datetime.date) else datetime.strptime(slip.end_date, '%Y-%m-%d')
+            slip_start = datetime.combine(slip.start_date, datetime.min.time()) if isinstance(slip.start_date, date) else datetime.strptime(slip.start_date, '%Y-%m-%d')
+            slip_end = datetime.combine(slip.end_date, datetime.min.time()) if isinstance(slip.end_date, date) else datetime.strptime(slip.end_date, '%Y-%m-%d')
             
             # Check if promotion date falls within this slip's period
             if slip_start <= promotion_dt <= slip_end:
