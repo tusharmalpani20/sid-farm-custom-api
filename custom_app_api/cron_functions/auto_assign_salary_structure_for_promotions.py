@@ -4,7 +4,7 @@ from frappe import _
 
 def auto_assign_salary_structure():
     try:
-        frappe.logger().info("Starting automatic salary structure assignment process")
+        print("Starting automatic salary structure assignment process")
         
         # Get today's date in YYYY-MM-DD format
         today = datetime.now().strftime('%Y-%m-%d')
@@ -21,10 +21,10 @@ def auto_assign_salary_structure():
         )
         
         if not promotions:
-            frappe.logger().info(f"No promotions found for date: {today}")
+            print(f"No promotions found for date: {today}")
             return
             
-        frappe.logger().info(f"Found {len(promotions)} promotion(s) to process")
+        print(f"Found {len(promotions)} promotion(s) to process")
         
         # Create a dict to track processed employees to handle duplicates
         processed_employees = set()
@@ -33,7 +33,7 @@ def auto_assign_salary_structure():
         for promotion in promotions:
             try:
                 if promotion.employee in processed_employees:
-                    frappe.logger().info(f"Skipping duplicate promotion for employee: {promotion.employee}")
+                    print(f"Skipping duplicate promotion for employee: {promotion.employee}")
                     continue
                     
                 # Get the promotion doc to access child table
@@ -48,9 +48,7 @@ def auto_assign_salary_structure():
                         
                 # Skip if no designation change found
                 if not new_designation:
-                    frappe.logger().warning(
-                        f"No designation change found in promotion {promotion.name} for employee {promotion.employee}"
-                    )
+                    print(f"No designation change found in promotion {promotion.name} for employee {promotion.employee}")
                     continue
                     
                 processed_employees.add(promotion.employee)
@@ -63,10 +61,8 @@ def auto_assign_salary_structure():
                 )
                 
                 if not salary_structure:
-                    frappe.logger().error(
-                        f"No salary structure mapping found for designation {new_designation}. "
-                        f"Promotion: {promotion.name}, Employee: {promotion.employee}"
-                    )
+                    print(f"No salary structure mapping found for designation {new_designation}. "
+                          f"Promotion: {promotion.name}, Employee: {promotion.employee}")
                     continue
                     
                 # Get employee details
@@ -83,10 +79,8 @@ def auto_assign_salary_structure():
                 )
                 
                 if existing_assignment:
-                    frappe.logger().warning(
-                        f"Salary Structure Assignment already exists for employee {promotion.employee} "
-                        f"on {today}. Promotion: {promotion.name}"
-                    )
+                    print(f"Salary Structure Assignment already exists for employee {promotion.employee} "
+                          f"on {today}. Promotion: {promotion.name}")
                     continue
                     
                 # Create new salary structure assignment
@@ -104,11 +98,9 @@ def auto_assign_salary_structure():
                 frappe.db.commit()
                 successful_assignments += 1
                 
-                frappe.logger().info(
-                    f"Successfully created Salary Structure Assignment for employee {promotion.employee}. "
-                    f"Promotion: {promotion.name}, New Designation: {new_designation}, "
-                    f"Salary Structure: {salary_structure}"
-                )
+                print(f"Successfully created Salary Structure Assignment for employee {promotion.employee}. "
+                      f"Promotion: {promotion.name}, New Designation: {new_designation}, "
+                      f"Salary Structure: {salary_structure}")
                 
                 handle_salary_slip_creation(
                     employee=employee,
@@ -118,20 +110,16 @@ def auto_assign_salary_structure():
                 
             except Exception as e:
                 frappe.db.rollback()
-                frappe.logger().error(
-                    f"Error processing promotion {promotion.name} for employee {promotion.employee}: {str(e)}"
-                )
+                print(f"Error processing promotion {promotion.name} for employee {promotion.employee}: {str(e)}")
                 
         # Log final summary
-        frappe.logger().info(
-            f"Salary structure assignment process completed. "
-            f"Total promotions: {len(promotions)}, "
-            f"Successful assignments: {successful_assignments}, "
-            f"Skipped/Failed: {len(promotions) - successful_assignments}"
-        )
+        print(f"Salary structure assignment process completed. "
+              f"Total promotions: {len(promotions)}, "
+              f"Successful assignments: {successful_assignments}, "
+              f"Skipped/Failed: {len(promotions) - successful_assignments}")
         
     except Exception as e:
-        frappe.logger().error(f"Fatal error in auto_assign_salary_structure: {str(e)}")
+        print(f"Fatal error in auto_assign_salary_structure: {str(e)}")
         frappe.log_error(
             message=f"Fatal error in auto_assign_salary_structure: {str(e)}",
             title="Salary Structure Assignment Error"
@@ -143,10 +131,8 @@ def handle_salary_slip_creation(employee, promotion_date, salary_structure):
         month_start = frappe.utils.get_first_day(promotion_dt)
         month_end = frappe.utils.get_last_day(promotion_dt)
         
-        frappe.logger().info(
-            f"Processing salary slips for employee {employee.name} "
-            f"for promotion date {promotion_date}"
-        )
+        print(f"Processing salary slips for employee {employee.name} "
+              f"for promotion date {promotion_date}")
         
         # Get existing salary slips for this month
         existing_slips = frappe.get_all(
@@ -190,10 +176,8 @@ def handle_salary_slip_creation(employee, promotion_date, salary_structure):
                         end_date=month_end,
                         salary_structure=salary_structure
                     )
-                frappe.logger().info(
-                    f"Found submitted salary slip covering promotion date. "
-                    f"Slip: {slip.name}, Period: {slip.start_date} to {slip.end_date}"
-                )
+                print(f"Found submitted salary slip covering promotion date. "
+                      f"Slip: {slip.name}, Period: {slip.start_date} to {slip.end_date}")
                 return
             
             # If promotion date is after this submitted slip
@@ -218,10 +202,8 @@ def handle_salary_slip_creation(employee, promotion_date, salary_structure):
                 existing_slip.end_date = (promotion_dt - timedelta(days=1)).strftime('%Y-%m-%d')
                 existing_slip.save()
                 
-                frappe.logger().info(
-                    f"Updated existing draft salary slip {slip.name} to end on "
-                    f"{existing_slip.end_date}"
-                )
+                print(f"Updated existing draft salary slip {slip.name} to end on "
+                      f"{existing_slip.end_date}")
                 
                 # Create new slip from promotion date
                 create_salary_slip(
@@ -233,9 +215,7 @@ def handle_salary_slip_creation(employee, promotion_date, salary_structure):
                 return
                 
     except Exception as e:
-        frappe.logger().error(
-            f"Error handling salary slip creation for employee {employee.name}: {str(e)}"
-        )
+        print(f"Error handling salary slip creation for employee {employee.name}: {str(e)}")
 
 def create_salary_slip(employee, start_date, end_date, salary_structure):
     """Create a new salary slip for the given period"""
@@ -252,10 +232,8 @@ def create_salary_slip(employee, start_date, end_date, salary_structure):
         )
         
         if existing_slip:
-            frappe.logger().info(
-                f"Salary slip already exists for employee {employee.name} "
-                f"from {start_date} to {end_date}. Skipping creation."
-            )
+            print(f"Salary slip already exists for employee {employee.name} "
+                  f"from {start_date} to {end_date}. Skipping creation.")
             return
             
         salary_slip = frappe.get_doc({
@@ -269,12 +247,8 @@ def create_salary_slip(employee, start_date, end_date, salary_structure):
         
         salary_slip.insert()
         
-        frappe.logger().info(
-            f"Created new salary slip for employee {employee.name} "
-            f"from {start_date} to {end_date} with structure {salary_structure}"
-        )
+        print(f"Created new salary slip for employee {employee.name} "
+              f"from {start_date} to {end_date} with structure {salary_structure}")
         
     except Exception as e:
-        frappe.logger().error(
-            f"Error creating salary slip for employee {employee.name}: {str(e)}"
-        )
+        print(f"Error creating salary slip for employee {employee.name}: {str(e)}")
