@@ -146,7 +146,7 @@ def handle_salary_slip_creation(employee, promotion_date, salary_structure):
             fields=["name", "start_date", "end_date", "docstatus", "workflow_state"],
             order_by="start_date"
         )
-        
+        print(existing_slips)
         # Case 1: No existing salary slips
         if not existing_slips:
             create_salary_slip(
