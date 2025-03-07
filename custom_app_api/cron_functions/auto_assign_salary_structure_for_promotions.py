@@ -127,7 +127,12 @@ def auto_assign_salary_structure():
 
 def handle_salary_slip_creation(employee, promotion_date, salary_structure):
     try:
-        promotion_dt = datetime.strptime(promotion_date, '%Y-%m-%d')
+        # Convert promotion_date to datetime if it's a date object
+        if isinstance(promotion_date, datetime.date):
+            promotion_dt = datetime.combine(promotion_date, datetime.min.time())
+        else:
+            promotion_dt = datetime.strptime(promotion_date, '%Y-%m-%d')
+            
         month_start = frappe.utils.get_first_day(promotion_dt)
         month_end = frappe.utils.get_last_day(promotion_dt)
         
@@ -158,8 +163,9 @@ def handle_salary_slip_creation(employee, promotion_date, salary_structure):
             return
             
         for slip in existing_slips:
-            slip_start = datetime.strptime(slip.start_date, '%Y-%m-%d')
-            slip_end = datetime.strptime(slip.end_date, '%Y-%m-%d')
+            # Convert dates to datetime objects for comparison
+            slip_start = datetime.combine(slip.start_date, datetime.min.time()) if isinstance(slip.start_date, datetime.date) else datetime.strptime(slip.start_date, '%Y-%m-%d')
+            slip_end = datetime.combine(slip.end_date, datetime.min.time()) if isinstance(slip.end_date, datetime.date) else datetime.strptime(slip.end_date, '%Y-%m-%d')
             
             # Check if promotion date falls within this slip's period
             if slip_start <= promotion_dt <= slip_end:
@@ -179,7 +185,7 @@ def handle_salary_slip_creation(employee, promotion_date, salary_structure):
                 if slip.docstatus == 0 and slip.workflow_state == "Pending":
                     # Update existing pending slip to end before promotion
                     existing_slip = frappe.get_doc("Salary Slip", slip.name)
-                    existing_slip.end_date = (promotion_dt - timedelta(days=1)).strftime('%Y-%m-%d')
+                    existing_slip.end_date = (promotion_dt - timedelta(days=1)).date()
                     existing_slip.save()
                     
                     print(f"Updated existing pending salary slip {slip.name} to end on "
