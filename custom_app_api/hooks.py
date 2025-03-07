@@ -50,7 +50,8 @@ doctype_js = {
 	"Route Tracking" : "public/js/route_tracking.js",
 	"Delivery Records" : "public/js/delivery_records.js",
 	"Visit Tracker" : "public/js/visit_tracker.js",
-	"Attendance" : "public/js/attendance.js"
+	"Attendance" : "public/js/attendance.js",
+	"Employee Promotion" : "public/js/employee_promotion.js"
 }
 doctype_list_js = {
 	# "doctype" : "public/js/doctype_list.js"
