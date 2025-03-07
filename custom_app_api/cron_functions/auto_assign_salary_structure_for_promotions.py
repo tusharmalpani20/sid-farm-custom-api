@@ -141,12 +141,12 @@ def handle_salary_slip_creation(employee, promotion_date, salary_structure):
                 "employee": employee.name,
                 "start_date": [">=", month_start],
                 "end_date": ["<=", month_end],
-                "workflow_state": ["not in", ["Pending"]]
+                "docstatus": ["!=", 2]  # Not cancelled
             },
             fields=["name", "start_date", "end_date", "docstatus", "workflow_state"],
             order_by="start_date"
         )
-        print(existing_slips)
+        
         # Case 1: No existing salary slips
         if not existing_slips:
             create_salary_slip(
@@ -156,64 +156,44 @@ def handle_salary_slip_creation(employee, promotion_date, salary_structure):
                 salary_structure=salary_structure
             )
             return
-        
-        # Separate submitted and draft slips
-        submitted_slips = [slip for slip in existing_slips if slip.docstatus == 1]
-        draft_slips = [slip for slip in existing_slips if slip.docstatus == 0]
-        
-        # Handle submitted slips first
-        for slip in submitted_slips:
+            
+        for slip in existing_slips:
             slip_start = datetime.strptime(slip.start_date, '%Y-%m-%d')
             slip_end = datetime.strptime(slip.end_date, '%Y-%m-%d')
             
-            # If promotion date falls within a submitted slip period
+            # Check if promotion date falls within this slip's period
             if slip_start <= promotion_dt <= slip_end:
-                # Check if there's remaining period in the month after this slip
-                if slip_end < datetime.strptime(month_end, '%Y-%m-%d'):
+                # Case 1: Submitted salary slip
+                if slip.docstatus == 1:
+                    print(f"Found submitted salary slip {slip.name} covering promotion date. "
+                          f"Skipping new salary slip creation.")
+                    return
+                    
+                # Case 2: Draft but already approved (not in pending)
+                if slip.docstatus == 0 and slip.workflow_state != "Pending":
+                    print(f"Found approved draft salary slip {slip.name} covering promotion date. "
+                          f"Skipping new salary slip creation.")
+                    return
+                    
+                # Case 3: Draft and pending
+                if slip.docstatus == 0 and slip.workflow_state == "Pending":
+                    # Update existing pending slip to end before promotion
+                    existing_slip = frappe.get_doc("Salary Slip", slip.name)
+                    existing_slip.end_date = (promotion_dt - timedelta(days=1)).strftime('%Y-%m-%d')
+                    existing_slip.save()
+                    
+                    print(f"Updated existing pending salary slip {slip.name} to end on "
+                          f"{existing_slip.end_date}")
+                    
+                    # Create new slip from promotion date
                     create_salary_slip(
                         employee=employee,
-                        start_date=(slip_end + timedelta(days=1)).strftime('%Y-%m-%d'),
+                        start_date=promotion_date,
                         end_date=month_end,
                         salary_structure=salary_structure
                     )
-                print(f"Found submitted salary slip covering promotion date. "
-                      f"Slip: {slip.name}, Period: {slip.start_date} to {slip.end_date}")
-                return
-            
-            # If promotion date is after this submitted slip
-            if promotion_dt > slip_end:
-                create_salary_slip(
-                    employee=employee,
-                    start_date=promotion_date,
-                    end_date=month_end,
-                    salary_structure=salary_structure
-                )
-                return
-        
-        # Handle draft slips
-        for slip in draft_slips:
-            slip_start = datetime.strptime(slip.start_date, '%Y-%m-%d')
-            slip_end = datetime.strptime(slip.end_date, '%Y-%m-%d')
-            
-            # If slip is in draft and covers promotion date
-            if slip_start <= promotion_dt <= slip_end:
-                # Update existing draft slip to end before promotion
-                existing_slip = frappe.get_doc("Salary Slip", slip.name)
-                existing_slip.end_date = (promotion_dt - timedelta(days=1)).strftime('%Y-%m-%d')
-                existing_slip.save()
-                
-                print(f"Updated existing draft salary slip {slip.name} to end on "
-                      f"{existing_slip.end_date}")
-                
-                # Create new slip from promotion date
-                create_salary_slip(
-                    employee=employee,
-                    start_date=promotion_date,
-                    end_date=month_end,
-                    salary_structure=salary_structure
-                )
-                return
-                
+                    return
+                    
     except Exception as e:
         print(f"Error handling salary slip creation for employee {employee.name}: {str(e)}")
 
