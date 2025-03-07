@@ -1,5 +1,5 @@
 import frappe
-from datetime import datetime
+from datetime import datetime, timedelta
 from frappe import _
 
 def auto_assign_salary_structure():
@@ -110,6 +110,12 @@ def auto_assign_salary_structure():
                     f"Salary Structure: {salary_structure}"
                 )
                 
+                handle_salary_slip_creation(
+                    employee=employee,
+                    promotion_date=today,
+                    salary_structure=salary_structure
+                )
+                
             except Exception as e:
                 frappe.db.rollback()
                 frappe.logger().error(
@@ -129,4 +135,146 @@ def auto_assign_salary_structure():
         frappe.log_error(
             message=f"Fatal error in auto_assign_salary_structure: {str(e)}",
             title="Salary Structure Assignment Error"
+        )
+
+def handle_salary_slip_creation(employee, promotion_date, salary_structure):
+    try:
+        promotion_dt = datetime.strptime(promotion_date, '%Y-%m-%d')
+        month_start = frappe.utils.get_first_day(promotion_dt)
+        month_end = frappe.utils.get_last_day(promotion_dt)
+        
+        frappe.logger().info(
+            f"Processing salary slips for employee {employee.name} "
+            f"for promotion date {promotion_date}"
+        )
+        
+        # Get existing salary slips for this month
+        existing_slips = frappe.get_all(
+            "Salary Slip",
+            filters={
+                "employee": employee.name,
+                "start_date": [">=", month_start],
+                "end_date": ["<=", month_end],
+                "workflow_state": ["not in", ["Pending"]]
+            },
+            fields=["name", "start_date", "end_date", "docstatus", "workflow_state"],
+            order_by="start_date"
+        )
+        
+        # Case 1: No existing salary slips
+        if not existing_slips:
+            create_salary_slip(
+                employee=employee,
+                start_date=promotion_date,
+                end_date=month_end,
+                salary_structure=salary_structure
+            )
+            return
+        
+        # Separate submitted and draft slips
+        submitted_slips = [slip for slip in existing_slips if slip.docstatus == 1]
+        draft_slips = [slip for slip in existing_slips if slip.docstatus == 0]
+        
+        # Handle submitted slips first
+        for slip in submitted_slips:
+            slip_start = datetime.strptime(slip.start_date, '%Y-%m-%d')
+            slip_end = datetime.strptime(slip.end_date, '%Y-%m-%d')
+            
+            # If promotion date falls within a submitted slip period
+            if slip_start <= promotion_dt <= slip_end:
+                # Check if there's remaining period in the month after this slip
+                if slip_end < datetime.strptime(month_end, '%Y-%m-%d'):
+                    create_salary_slip(
+                        employee=employee,
+                        start_date=(slip_end + timedelta(days=1)).strftime('%Y-%m-%d'),
+                        end_date=month_end,
+                        salary_structure=salary_structure
+                    )
+                frappe.logger().info(
+                    f"Found submitted salary slip covering promotion date. "
+                    f"Slip: {slip.name}, Period: {slip.start_date} to {slip.end_date}"
+                )
+                return
+            
+            # If promotion date is after this submitted slip
+            if promotion_dt > slip_end:
+                create_salary_slip(
+                    employee=employee,
+                    start_date=promotion_date,
+                    end_date=month_end,
+                    salary_structure=salary_structure
+                )
+                return
+        
+        # Handle draft slips
+        for slip in draft_slips:
+            slip_start = datetime.strptime(slip.start_date, '%Y-%m-%d')
+            slip_end = datetime.strptime(slip.end_date, '%Y-%m-%d')
+            
+            # If slip is in draft and covers promotion date
+            if slip_start <= promotion_dt <= slip_end:
+                # Update existing draft slip to end before promotion
+                existing_slip = frappe.get_doc("Salary Slip", slip.name)
+                existing_slip.end_date = (promotion_dt - timedelta(days=1)).strftime('%Y-%m-%d')
+                existing_slip.save()
+                
+                frappe.logger().info(
+                    f"Updated existing draft salary slip {slip.name} to end on "
+                    f"{existing_slip.end_date}"
+                )
+                
+                # Create new slip from promotion date
+                create_salary_slip(
+                    employee=employee,
+                    start_date=promotion_date,
+                    end_date=month_end,
+                    salary_structure=salary_structure
+                )
+                return
+                
+    except Exception as e:
+        frappe.logger().error(
+            f"Error handling salary slip creation for employee {employee.name}: {str(e)}"
+        )
+
+def create_salary_slip(employee, start_date, end_date, salary_structure):
+    """Create a new salary slip for the given period"""
+    try:
+        # Check if a salary slip already exists for this period
+        existing_slip = frappe.db.exists(
+            "Salary Slip",
+            {
+                "employee": employee.name,
+                "start_date": start_date,
+                "end_date": end_date,
+                "docstatus": ["!=", 2]  # Not cancelled
+            }
+        )
+        
+        if existing_slip:
+            frappe.logger().info(
+                f"Salary slip already exists for employee {employee.name} "
+                f"from {start_date} to {end_date}. Skipping creation."
+            )
+            return
+            
+        salary_slip = frappe.get_doc({
+            "doctype": "Salary Slip",
+            "employee": employee.name,
+            "salary_structure": salary_structure,
+            "start_date": start_date,
+            "end_date": end_date,
+            "company": employee.company
+        })
+        
+        salary_slip.insert()
+        
+        frappe.logger().info(
+            f"Created new salary slip for employee {employee.name} "
+            f"from {start_date} to {end_date} with structure {salary_structure}"
+        )
+        
+    except Exception as e:
+        frappe.logger().error(
+            f"Error creating salary slip for employee {employee.name}: {str(e)}"
         )
