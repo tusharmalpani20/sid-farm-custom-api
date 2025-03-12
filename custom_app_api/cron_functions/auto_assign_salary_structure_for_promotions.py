@@ -202,7 +202,7 @@ def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_dat
         # Get the existing salary slip
         existing_slip = frappe.get_doc("Salary Slip", slip_name)
         
-        # Get basic salary from earnings
+        # Get and log basic salary from earnings
         basic_salary = 0
         for earning in existing_slip.earnings:
             if earning.salary_component == "Basic":
@@ -213,55 +213,116 @@ def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_dat
             print(f"No Basic salary component found in slip {slip_name}")
             return
             
+        print(f"Current month's basic salary: {basic_salary}")
+        
         # Calculate days for proration
         days_until_promotion = (promotion_date.date() - existing_slip.start_date).days
         total_days = (existing_slip.end_date - existing_slip.start_date).days + 1
         
-        # Calculate prorated amounts
+        # Calculate and log prorated amounts
         prorated_old_amount = (basic_salary / total_days) * days_until_promotion
         prorated_new_amount = (basic_salary / total_days) * (total_days - days_until_promotion)
         
-        # 1. Submit and then cancel existing salary slip
+        print(f"""
+        Proration details:
+        - Total days in month: {total_days}
+        - Days until promotion: {days_until_promotion}
+        - Days after promotion: {total_days - days_until_promotion}
+        - Original basic salary: {basic_salary}
+        - Prorated old amount: {prorated_old_amount}
+        - Prorated new amount: {prorated_new_amount}
+        """)
+        
+        # 1. Cancel existing salary structure assignments
+        existing_assignments = frappe.get_all(
+            "Salary Structure Assignment",
+            filters={
+                "employee": employee.name,
+                "docstatus": ["!=", 2]  # Not cancelled
+            },
+            fields=["name"]
+        )
+        
+        print(f"Found {len(existing_assignments)} existing salary structure assignments")
+        
+        for assignment in existing_assignments:
+            try:
+                assignment_doc = frappe.get_doc("Salary Structure Assignment", assignment.name)
+                if assignment_doc.docstatus == 1:  # If submitted
+                    assignment_doc.cancel()
+                    print(f"Cancelled salary structure assignment: {assignment.name}")
+                elif assignment_doc.docstatus == 0:  # If draft
+                    assignment_doc.delete()
+                    print(f"Deleted draft salary structure assignment: {assignment.name}")
+            except Exception as e:
+                print(f"Error handling assignment {assignment.name}: {str(e)}")
+        
+        frappe.db.commit()
+        
+        # 2. Create new salary structure assignment from promotion date
+        new_assignment = frappe.get_doc({
+            "doctype": "Salary Structure Assignment",
+            "employee": employee.name,
+            "salary_structure": new_salary_structure,
+            "from_date": frappe.utils.get_first_day(frappe.utils.today()) , #promotion_date.date(),
+            "company": employee.company
+        })
+        
+        new_assignment.insert()
+        new_assignment.submit()
+        print(f"Created and submitted new salary structure assignment: {new_assignment.name}")
+        
+        frappe.db.commit()
+        
+        # 3. Submit and cancel existing salary slip
         existing_slip.flags.ignore_permissions = True
-        existing_slip.submit()  # First submit
+        existing_slip.submit()
+        print(f"Submitted existing salary slip: {existing_slip.name}")
         frappe.db.commit()
         
-        existing_slip.cancel()  # Then cancel
+        existing_slip.cancel()
+        print(f"Cancelled existing salary slip: {existing_slip.name}")
         frappe.db.commit()
         
-        # 2. Create Additional Salary for old salary structure period
-        create_prorated_additional_salary(
+        # 4. Create Additional Salary for old salary structure period
+        old_additional = create_prorated_additional_salary(
             employee=employee,
             amount=prorated_old_amount,
             from_date=existing_slip.start_date,
             to_date=promotion_date.date() - timedelta(days=1),
             salary_component="Prorated Addition",
-            reason=f"Prorated salary for period before promotion (Old Structure)"
+            reason=f"Prorated salary for period before promotion (Old Structure)\n"
+                  f"Basic: {basic_salary}, Days: {days_until_promotion}/{total_days}"
         )
+        print(f"Created additional salary for old structure: {old_additional.name}, Amount: {prorated_old_amount}")
         
-        # 3. Create new salary slip
+        # 5. Create new salary slip
         new_salary_slip = create_salary_slip(
             employee=employee,
             start_date=existing_slip.start_date,
             end_date=existing_slip.end_date,
             salary_structure=new_salary_structure
         )
+        print(f"Created new salary slip: {new_salary_slip.name if new_salary_slip else 'Failed'}")
         
-        # 4. Create Additional Salary for deduction
-        create_prorated_additional_salary(
+        # 6. Create Additional Salary for deduction
+        new_additional = create_prorated_additional_salary(
             employee=employee,
             amount=-prorated_new_amount,  # Negative amount for deduction
             from_date=promotion_date.date(),
             to_date=existing_slip.end_date,
             salary_component="Prorated Deduction",
-            reason=f"Prorated salary adjustment for period after promotion (New Structure)"
+            reason=f"Prorated salary adjustment for period after promotion (New Structure)\n"
+                  f"Basic: {basic_salary}, Days: {total_days - days_until_promotion}/{total_days}"
         )
+        print(f"Created additional salary for new structure: {new_additional.name}, Amount: {-prorated_new_amount}")
         
         print(f"Successfully handled prorated salary for employee {employee.name}")
         
     except Exception as e:
         print(f"Error handling prorated salary: {str(e)}")
         frappe.log_error(message=str(e), title="Prorated Salary Processing Error")
+        frappe.db.rollback()
 
 def create_prorated_additional_salary(employee, amount, from_date, to_date, salary_component, reason):
     """Create Additional Salary entry for prorated amount"""
@@ -318,7 +379,7 @@ def create_salary_slip(employee, start_date, end_date, salary_structure):
         if existing_slip:
             print(f"Salary slip already exists for employee {employee.name} "
                   f"from {start_date} to {end_date}. Skipping creation.")
-            return
+            return None
             
         salary_slip = frappe.get_doc({
             "doctype": "Salary Slip",
@@ -334,5 +395,8 @@ def create_salary_slip(employee, start_date, end_date, salary_structure):
         print(f"Created new salary slip for employee {employee.name} "
               f"from {start_date} to {end_date} with structure {salary_structure}")
         
+        return salary_slip
+        
     except Exception as e:
         print(f"Error creating salary slip for employee {employee.name}: {str(e)}")
+        return None
