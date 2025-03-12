@@ -219,20 +219,6 @@ def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_dat
         days_until_promotion = (promotion_date.date() - existing_slip.start_date).days
         total_days = (existing_slip.end_date - existing_slip.start_date).days + 1
         
-        # Calculate and log prorated amounts
-        prorated_old_amount = (basic_salary / total_days) * days_until_promotion
-        prorated_new_amount = (basic_salary / total_days) * (total_days - days_until_promotion)
-        
-        print(f"""
-        Proration details:
-        - Total days in month: {total_days}
-        - Days until promotion: {days_until_promotion}
-        - Days after promotion: {total_days - days_until_promotion}
-        - Original basic salary: {basic_salary}
-        - Prorated old amount: {prorated_old_amount}
-        - Prorated new amount: {prorated_new_amount}
-        """)
-        
         # 1. Cancel existing salary structure assignments
         existing_assignments = frappe.get_all(
             "Salary Structure Assignment",
@@ -259,12 +245,12 @@ def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_dat
         
         frappe.db.commit()
         
-        # 2. Create new salary structure assignment from promotion date
+        # 2. Create new salary structure assignment from first day of month
         new_assignment = frappe.get_doc({
             "doctype": "Salary Structure Assignment",
             "employee": employee.name,
             "salary_structure": new_salary_structure,
-            "from_date": frappe.utils.get_first_day(frappe.utils.today()) , #promotion_date.date(),
+            "from_date": existing_slip.start_date,  # First day of month
             "company": employee.company
         })
         
@@ -284,38 +270,64 @@ def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_dat
         print(f"Cancelled existing salary slip: {existing_slip.name}")
         frappe.db.commit()
         
-        # 4. Create Additional Salary for old salary structure period
+        # 4. Create Additional Salary for old salary structure period (full amount)
         old_additional = create_prorated_additional_salary(
             employee=employee,
-            amount=prorated_old_amount,
+            amount=basic_salary,  # Full old basic salary
             from_date=existing_slip.start_date,
-            to_date=promotion_date.date() - timedelta(days=1),
+            to_date=existing_slip.end_date,
             salary_component="Prorated Addition",
-            reason=f"Prorated salary for period before promotion (Old Structure)\n"
-                  f"Basic: {basic_salary}, Days: {days_until_promotion}/{total_days}"
+            reason=f"Full salary for old structure\n"
+                  f"Basic: {basic_salary}"
         )
-        print(f"Created additional salary for old structure: {old_additional.name}, Amount: {prorated_old_amount}")
+        print(f"Created additional salary for old structure: {old_additional.name}, Amount: {basic_salary}")
         
-        # 5. Create new salary slip
+        # 5. Create new salary slip to get new basic salary
         new_salary_slip = create_salary_slip(
             employee=employee,
             start_date=existing_slip.start_date,
             end_date=existing_slip.end_date,
             salary_structure=new_salary_structure
         )
-        print(f"Created new salary slip: {new_salary_slip.name if new_salary_slip else 'Failed'}")
         
-        # 6. Create Additional Salary for deduction
+        if not new_salary_slip:
+            raise Exception("Failed to create new salary slip")
+            
+        # Get new basic salary
+        new_basic_salary = 0
+        for earning in new_salary_slip.earnings:
+            if earning.salary_component == "Basic":
+                new_basic_salary = earning.amount
+                break
+                
+        if not new_basic_salary:
+            raise Exception("No Basic salary component found in new salary slip")
+            
+        print(f"New basic salary: {new_basic_salary}")
+        
+        # Calculate prorated deduction amount based on days before promotion
+        prorated_deduction = (new_basic_salary / total_days) * days_until_promotion
+        
+        # 6. Create Additional Salary for deduction of new structure's prorated amount
         new_additional = create_prorated_additional_salary(
             employee=employee,
-            amount=-prorated_new_amount,  # Negative amount for deduction
-            from_date=promotion_date.date(),
-            to_date=existing_slip.end_date,
+            amount=-prorated_deduction,  # Negative amount for deduction
+            from_date=existing_slip.start_date,
+            to_date=promotion_date.date() - timedelta(days=1),
             salary_component="Prorated Deduction",
-            reason=f"Prorated salary adjustment for period after promotion (New Structure)\n"
-                  f"Basic: {basic_salary}, Days: {total_days - days_until_promotion}/{total_days}"
+            reason=f"Deduction for days before promotion (New Structure)\n"
+                  f"New Basic: {new_basic_salary}, Days: {days_until_promotion}/{total_days}"
         )
-        print(f"Created additional salary for new structure: {new_additional.name}, Amount: {-prorated_new_amount}")
+        print(f"Created additional salary for new structure: {new_additional.name}, Amount: {-prorated_deduction}")
+        
+        print(f"""
+        Final Proration Summary:
+        - Total days in month: {total_days}
+        - Days until promotion: {days_until_promotion}
+        - Old basic salary: {basic_salary} (Added in full)
+        - New basic salary: {new_basic_salary}
+        - Deducted amount: {prorated_deduction} (For {days_until_promotion} days of new structure)
+        """)
         
         print(f"Successfully handled prorated salary for employee {employee.name}")
         
