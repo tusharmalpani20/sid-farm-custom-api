@@ -270,7 +270,7 @@ def get_columns(filters=None):
     
     # Add designation-wise breakdown columns if requested
     if filters and filters.get("show_designation_wise_breakdown"):
-        # Get all designations for the selected company/points
+        # Get all designations for the selected company
         designations = frappe.get_all(
             "Employee",
             fields=["designation"],
@@ -288,49 +288,36 @@ def get_columns(filters=None):
             columns.extend([
                 {
                     "label": _(f"{designation} Total"),
-                    "fieldname": f"{designation}_total",
+                    "fieldname": f"{designation.replace(' ', '_')}_total",
                     "fieldtype": "Int",
                     "width": 100
                 },
                 {
                     "label": _(f"{designation} Present"),
-                    "fieldname": f"{designation}_present",
+                    "fieldname": f"{designation.replace(' ', '_')}_present",
                     "fieldtype": "Int",
                     "width": 100
                 },
                 {
                     "label": _(f"{designation} Absent"),
-                    "fieldname": f"{designation}_absent",
+                    "fieldname": f"{designation.replace(' ', '_')}_absent",
                     "fieldtype": "Int",
                     "width": 100
                 },
                 {
                     "label": _(f"{designation} On Leave"),
-                    "fieldname": f"{designation}_on_leave",
+                    "fieldname": f"{designation.replace(' ', '_')}_on_leave",
                     "fieldtype": "Int",
                     "width": 100
                 },
                 {
                     "label": _(f"{designation} Attendance %"),
-                    "fieldname": f"{designation}_attendance_percentage",
+                    "fieldname": f"{designation.replace(' ', '_')}_attendance_percentage",
                     "fieldtype": "Percent",
                     "width": 100
                 }
             ])
     
-
-    # Add designation-wise breakdown columns if requested
-    if filters and filters.get("show_designation_wise_breakdown"):
-        # Add a simple test column to verify the filter is working
-        columns.append({
-            "label": _("Designation Test"),
-            "fieldname": "designation_test",
-            "fieldtype": "Data",
-            "width": 100
-        })
-        
-        # If the test column appears, then we can implement the full designation columns
-
     return columns
 
 def get_point_wise_attendance(filters):
@@ -452,10 +439,13 @@ def get_point_wise_attendance(filters):
         # Add designation-wise breakdown if requested
         if filters.get("show_designation_wise_breakdown"):
             for designation in all_designations:
+                # Replace spaces with underscores for fieldnames
+                safe_designation = designation.replace(" ", "_")
+                
                 # Get employees for this designation at this point
                 desig_employees = frappe.get_all(
                     "Employee",
-                    fields=["name", "count(*) as total"],
+                    fields=["name"],
                     filters={
                         "custom_point": point_data.point,
                         "designation": designation,
@@ -464,56 +454,55 @@ def get_point_wise_attendance(filters):
                     }
                 )
                 
+                # Get total employees for this designation
+                desig_total = len(desig_employees)
+                
                 # Skip if no employees with this designation at this point
-                if not desig_employees:
-                    row_data[f"{designation}_total"] = 0
-                    row_data[f"{designation}_present"] = 0
-                    row_data[f"{designation}_absent"] = 0
-                    row_data[f"{designation}_on_leave"] = 0
-                    row_data[f"{designation}_attendance_percentage"] = 0
+                if desig_total == 0:
+                    row_data[f"{safe_designation}_total"] = 0
+                    row_data[f"{safe_designation}_present"] = 0
+                    row_data[f"{safe_designation}_absent"] = 0
+                    row_data[f"{safe_designation}_on_leave"] = 0
+                    row_data[f"{safe_designation}_attendance_percentage"] = 0
                     continue
                 
-                # Get total employees for this designation
-                desig_total = desig_employees[0].total if desig_employees else 0
-                
                 # Get attendance for these employees
-                if desig_employees:
-                    desig_attendance = frappe.get_all(
-                        "Attendance",
-                        fields=[
-                            "status",
-                            "count(*) as count"
-                        ],
-                        filters={
-                            "attendance_date": filters.date,
-                            "employee": ("in", [emp.name for emp in desig_employees]),
-                            "docstatus": 1
-                        },
-                        group_by="status"
-                    )
+                desig_attendance = frappe.get_all(
+                    "Attendance",
+                    fields=[
+                        "status",
+                        "count(*) as count"
+                    ],
+                    filters={
+                        "attendance_date": filters.date,
+                        "employee": ("in", [emp.name for emp in desig_employees]),
+                        "docstatus": 1
+                    },
+                    group_by="status"
+                )
 
-                    # Initialize counters for this designation
-                    desig_present = desig_absent = desig_on_leave = 0
+                # Initialize counters for this designation
+                desig_present = desig_absent = desig_on_leave = 0
 
-                    # Process attendance counts for this designation
-                    for count_data in desig_attendance:
-                        if count_data.status in ["Present", "Work From Home"]:
-                            desig_present = count_data.count
-                        elif count_data.status == "Absent":
-                            desig_absent = count_data.count
-                        elif count_data.status == "On Leave":
-                            desig_on_leave = count_data.count
+                # Process attendance counts for this designation
+                for count_data in desig_attendance:
+                    if count_data.status in ["Present", "Work From Home"]:
+                        desig_present = count_data.count
+                    elif count_data.status == "Absent":
+                        desig_absent = count_data.count
+                    elif count_data.status == "On Leave":
+                        desig_on_leave = count_data.count
 
-                    # Calculate attendance percentage for this designation
-                    desig_total_marked = desig_present + desig_absent + desig_on_leave
-                    desig_attendance_percentage = (desig_present / desig_total_marked * 100) if desig_total_marked else 0
+                # Calculate attendance percentage for this designation
+                desig_total_marked = desig_present + desig_absent + desig_on_leave
+                desig_attendance_percentage = (desig_present / desig_total_marked * 100) if desig_total_marked else 0
 
-                    # Add designation data to row
-                    row_data[f"{designation}_total"] = desig_total
-                    row_data[f"{designation}_present"] = desig_present
-                    row_data[f"{designation}_absent"] = desig_absent
-                    row_data[f"{designation}_on_leave"] = desig_on_leave
-                    row_data[f"{designation}_attendance_percentage"] = desig_attendance_percentage
+                # Add designation data to row
+                row_data[f"{safe_designation}_total"] = desig_total
+                row_data[f"{safe_designation}_present"] = desig_present
+                row_data[f"{safe_designation}_absent"] = desig_absent
+                row_data[f"{safe_designation}_on_leave"] = desig_on_leave
+                row_data[f"{safe_designation}_attendance_percentage"] = desig_attendance_percentage
 
         data.append(row_data)
 
@@ -529,10 +518,11 @@ def get_point_wise_attendance(filters):
             # Initialize designation counters for zone
             if filters.get("show_designation_wise_breakdown"):
                 for designation in all_designations:
-                    zone_wise_data[zone][f"{designation}_total"] = 0
-                    zone_wise_data[zone][f"{designation}_present"] = 0
-                    zone_wise_data[zone][f"{designation}_absent"] = 0
-                    zone_wise_data[zone][f"{designation}_on_leave"] = 0
+                    safe_designation = designation.replace(" ", "_")
+                    zone_wise_data[zone][f"{safe_designation}_total"] = 0
+                    zone_wise_data[zone][f"{safe_designation}_present"] = 0
+                    zone_wise_data[zone][f"{safe_designation}_absent"] = 0
+                    zone_wise_data[zone][f"{safe_designation}_on_leave"] = 0
         
         zone_wise_data[zone]["total_employees"] += point_data.total_employees
         zone_wise_data[zone]["present"] += present
@@ -542,10 +532,11 @@ def get_point_wise_attendance(filters):
         # Aggregate designation data for zone
         if filters.get("show_designation_wise_breakdown"):
             for designation in all_designations:
-                zone_wise_data[zone][f"{designation}_total"] += row_data.get(f"{designation}_total", 0)
-                zone_wise_data[zone][f"{designation}_present"] += row_data.get(f"{designation}_present", 0)
-                zone_wise_data[zone][f"{designation}_absent"] += row_data.get(f"{designation}_absent", 0)
-                zone_wise_data[zone][f"{designation}_on_leave"] += row_data.get(f"{designation}_on_leave", 0)
+                safe_designation = designation.replace(" ", "_")
+                zone_wise_data[zone][f"{safe_designation}_total"] += row_data.get(f"{safe_designation}_total", 0)
+                zone_wise_data[zone][f"{safe_designation}_present"] += row_data.get(f"{safe_designation}_present", 0)
+                zone_wise_data[zone][f"{safe_designation}_absent"] += row_data.get(f"{safe_designation}_absent", 0)
+                zone_wise_data[zone][f"{safe_designation}_on_leave"] += row_data.get(f"{safe_designation}_on_leave", 0)
 
     # Sort by zone and then attendance percentage
     data.sort(key=lambda x: (x["zone"] or "", x["attendance_percentage"]), reverse=True)
@@ -576,19 +567,20 @@ def get_point_wise_attendance(filters):
     # Add designation totals to grand total row
     if filters.get("show_designation_wise_breakdown"):
         for designation in all_designations:
-            grand_total_row[f"{designation}_total"] = sum(row.get(f"{designation}_total", 0) for row in data)
-            grand_total_row[f"{designation}_present"] = sum(row.get(f"{designation}_present", 0) for row in data)
-            grand_total_row[f"{designation}_absent"] = sum(row.get(f"{designation}_absent", 0) for row in data)
-            grand_total_row[f"{designation}_on_leave"] = sum(row.get(f"{designation}_on_leave", 0) for row in data)
+            safe_designation = designation.replace(" ", "_")
+            grand_total_row[f"{safe_designation}_total"] = sum(row.get(f"{safe_designation}_total", 0) for row in data)
+            grand_total_row[f"{safe_designation}_present"] = sum(row.get(f"{safe_designation}_present", 0) for row in data)
+            grand_total_row[f"{safe_designation}_absent"] = sum(row.get(f"{safe_designation}_absent", 0) for row in data)
+            grand_total_row[f"{safe_designation}_on_leave"] = sum(row.get(f"{safe_designation}_on_leave", 0) for row in data)
             
             desig_total_marked = (
-                grand_total_row[f"{designation}_present"] + 
-                grand_total_row[f"{designation}_absent"] + 
-                grand_total_row[f"{designation}_on_leave"]
+                grand_total_row[f"{safe_designation}_present"] + 
+                grand_total_row[f"{safe_designation}_absent"] + 
+                grand_total_row[f"{safe_designation}_on_leave"]
             )
             
-            grand_total_row[f"{designation}_attendance_percentage"] = (
-                (grand_total_row[f"{designation}_present"] / desig_total_marked * 100) 
+            grand_total_row[f"{safe_designation}_attendance_percentage"] = (
+                (grand_total_row[f"{safe_designation}_present"] / desig_total_marked * 100) 
                 if desig_total_marked else 0
             )
     
