@@ -221,9 +221,12 @@ def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_dat
         prorated_old_amount = (basic_salary / total_days) * days_until_promotion
         prorated_new_amount = (basic_salary / total_days) * (total_days - days_until_promotion)
         
-        # 1. Cancel existing salary slip
+        # 1. Submit and then cancel existing salary slip
         existing_slip.flags.ignore_permissions = True
-        existing_slip.cancel()
+        existing_slip.submit()  # First submit
+        frappe.db.commit()
+        
+        existing_slip.cancel()  # Then cancel
         frappe.db.commit()
         
         # 2. Create Additional Salary for old salary structure period
