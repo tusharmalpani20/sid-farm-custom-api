@@ -31,6 +31,14 @@ def check_duplicate_promotions(doc):
             
         if existing_date.month == current_month and existing_date.year == current_year:
             status = "Draft" if promotion.docstatus == 0 else "Submitted"
+
+            #Use msgprint with raise_exception for a more visible error
+            frappe.msgprint(
+                msg=error_msg,
+                title="Duplicate Promotion",
+                indicator="red",
+                raise_exception=True
+            )
             frappe.throw(f"Cannot save promotion. Employee {doc.employee} already has a {status} promotion (Document: {promotion.name}) in the same month.")
 
 def before_save(doc, method):
