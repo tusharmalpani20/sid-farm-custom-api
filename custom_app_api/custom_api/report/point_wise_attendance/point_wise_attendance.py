@@ -318,6 +318,19 @@ def get_columns(filters=None):
                 }
             ])
     
+
+    # Add designation-wise breakdown columns if requested
+    if filters and filters.get("show_designation_wise_breakdown"):
+        # Add a simple test column to verify the filter is working
+        columns.append({
+            "label": _("Designation Test"),
+            "fieldname": "designation_test",
+            "fieldtype": "Data",
+            "width": 100
+        })
+        
+        # If the test column appears, then we can implement the full designation columns
+
     return columns
 
 def get_point_wise_attendance(filters):
