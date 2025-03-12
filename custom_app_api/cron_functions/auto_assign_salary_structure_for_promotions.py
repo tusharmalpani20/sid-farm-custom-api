@@ -323,26 +323,34 @@ def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_dat
             
         print(f"New basic salary: {new_basic_salary}")
         
-        # 7. Create Additional Salary for deduction (prorated)
-        prorated_deduction = (new_basic_salary / total_days) * days_until_promotion
-        
+        # 7. Create Additional Salary for deduction (full amount of new basic salary)
         new_additional = create_prorated_additional_salary(
             employee=employee,
-            amount=-prorated_deduction,  # Negative amount for deduction
+            amount=new_basic_salary,  # Full new basic salary (positive)
             from_date=existing_slip.start_date,
             to_date=promotion_date.date() - timedelta(days=1),
             salary_component="Prorated Deduction",
             reason=f"Deduction for days before promotion\nNew Basic: {new_basic_salary}, Days: {days_until_promotion}/{total_days}"
         )
-        print(f"Created additional salary for new structure: {new_additional.name}, Amount: {-prorated_deduction}")
+        print(f"Created additional salary for new structure: {new_additional.name}, Amount: {new_basic_salary}")
+        
+        # 8. Update the new salary slip to reflect the additional salaries
+        if new_salary_slip:
+            try:
+                # Refresh the salary slip to include the additional salaries
+                new_salary_slip.run_method("get_emp_and_working_day_details")
+                new_salary_slip.run_method("calculate_net_pay")
+                new_salary_slip.save(ignore_permissions=True)
+                print(f"Updated new salary slip: {new_salary_slip.name}")
+            except Exception as e:
+                print(f"Warning: Error updating new salary slip: {str(e)}")
         
         print(f"""
         Final Proration Summary:
         - Total days in month: {total_days}
         - Days until promotion: {days_until_promotion}
         - Old basic salary: {basic_salary} (Added in full)
-        - New basic salary: {new_basic_salary}
-        - Deducted amount: {prorated_deduction} (For {days_until_promotion} days of new structure)
+        - New basic salary: {new_basic_salary} (Added in full)
         """)
         
         print(f"Successfully handled prorated salary for employee {employee.name}")
