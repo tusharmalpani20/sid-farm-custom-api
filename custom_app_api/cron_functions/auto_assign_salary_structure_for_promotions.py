@@ -152,11 +152,11 @@ def handle_salary_slip_creation(employee, promotion_date, salary_structure):
             order_by="start_date"
         )
         
-        # Case 1: No existing salary slips
+        # Case 1: No existing salary slips - create new one directly
         if not existing_slips:
             create_salary_slip(
                 employee=employee,
-                start_date=promotion_date,
+                start_date=month_start,
                 end_date=month_end,
                 salary_structure=salary_structure
             )
@@ -169,39 +169,133 @@ def handle_salary_slip_creation(employee, promotion_date, salary_structure):
             
             # Check if promotion date falls within this slip's period
             if slip_start <= promotion_dt <= slip_end:
-                # Case 1: Submitted salary slip
+                # Case 1: Submitted salary slip - skip processing
                 if slip.docstatus == 1:
                     print(f"Found submitted salary slip {slip.name} covering promotion date. "
-                          f"Skipping new salary slip creation.")
+                          f"Skipping processing.")
                     return
                     
-                # Case 2: Draft but already approved (not in pending)
+                # Case 2: Draft but already approved (not in pending) - skip processing
                 if slip.docstatus == 0 and slip.workflow_state != "Pending":
                     print(f"Found approved draft salary slip {slip.name} covering promotion date. "
-                          f"Skipping new salary slip creation.")
+                          f"Skipping processing.")
                     return
                     
-                # Case 3: Draft and pending
+                # Case 3: Draft and pending - handle prorated calculation
                 if slip.docstatus == 0 and slip.workflow_state == "Pending":
-                    # Update existing pending slip to end before promotion
-                    existing_slip = frappe.get_doc("Salary Slip", slip.name)
-                    existing_slip.end_date = (promotion_dt - timedelta(days=1)).date()
-                    existing_slip.save()
-                    
-                    print(f"Updated existing pending salary slip {slip.name} to end on "
-                          f"{existing_slip.end_date}")
-                    
-                    # Create new slip from promotion date
-                    create_salary_slip(
+                    handle_prorated_salary_slip(
+                        slip_name=slip.name,
                         employee=employee,
-                        start_date=promotion_date,
-                        end_date=month_end,
-                        salary_structure=salary_structure
+                        promotion_date=promotion_dt,
+                        old_end_date=slip_end.date(),
+                        new_salary_structure=salary_structure
                     )
                     return
                     
     except Exception as e:
         print(f"Error handling salary slip creation for employee {employee.name}: {str(e)}")
+        frappe.log_error(message=str(e), title="Salary Slip Creation Error")
+
+def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_date, new_salary_structure):
+    """Handle prorated salary calculation when promotion occurs mid-month"""
+    try:
+        # Get the existing salary slip
+        existing_slip = frappe.get_doc("Salary Slip", slip_name)
+        
+        # Get basic salary from earnings
+        basic_salary = 0
+        for earning in existing_slip.earnings:
+            if earning.salary_component == "Basic":
+                basic_salary = earning.amount
+                break
+                
+        if not basic_salary:
+            print(f"No Basic salary component found in slip {slip_name}")
+            return
+            
+        # Calculate days for proration
+        days_until_promotion = (promotion_date.date() - existing_slip.start_date).days
+        total_days = (existing_slip.end_date - existing_slip.start_date).days + 1
+        
+        # Calculate prorated amounts
+        prorated_old_amount = (basic_salary / total_days) * days_until_promotion
+        prorated_new_amount = (basic_salary / total_days) * (total_days - days_until_promotion)
+        
+        # 1. Cancel existing salary slip
+        existing_slip.cancel()
+        frappe.db.commit()
+        
+        # 2. Create Additional Salary for old salary structure period
+        create_prorated_additional_salary(
+            employee=employee,
+            amount=prorated_old_amount,
+            from_date=existing_slip.start_date,
+            to_date=promotion_date.date() - timedelta(days=1),
+            salary_component="Prorated Addition",
+            reason=f"Prorated salary for period before promotion (Old Structure)"
+        )
+        
+        # 3. Create new salary slip
+        new_salary_slip = create_salary_slip(
+            employee=employee,
+            start_date=existing_slip.start_date,
+            end_date=existing_slip.end_date,
+            salary_structure=new_salary_structure
+        )
+        
+        # 4. Create Additional Salary for deduction
+        create_prorated_additional_salary(
+            employee=employee,
+            amount=-prorated_new_amount,  # Negative amount for deduction
+            from_date=promotion_date.date(),
+            to_date=existing_slip.end_date,
+            salary_component="Prorated Deduction",
+            reason=f"Prorated salary adjustment for period after promotion (New Structure)"
+        )
+        
+        print(f"Successfully handled prorated salary for employee {employee.name}")
+        
+    except Exception as e:
+        print(f"Error handling prorated salary: {str(e)}")
+        frappe.log_error(message=str(e), title="Prorated Salary Processing Error")
+
+def create_prorated_additional_salary(employee, amount, from_date, to_date, salary_component, reason):
+    """Create Additional Salary entry for prorated amount"""
+    try:
+        additional_salary = frappe.get_doc({
+            "doctype": "Additional Salary",
+            "employee": employee.name,
+            "salary_component": salary_component,
+            "amount": amount,
+            "payroll_date": from_date,
+            "from_date": from_date,
+            "to_date": to_date,
+            "company": employee.company,
+            "custom_reason": reason,
+            "overwrite_salary_structure_amount": 0
+        })
+        
+        # Bypass workflow and permissions
+        additional_salary.flags.ignore_permissions = True
+        additional_salary.flags.ignore_validate = True
+        additional_salary.flags.ignore_mandatory = True
+        additional_salary.flags.ignore_workflow = True
+        
+        additional_salary.insert()
+        
+        # Set workflow state and docstatus directly
+        frappe.db.set_value('Additional Salary', additional_salary.name, {
+            'workflow_state': 'Submitted',
+            'docstatus': 1
+        })
+        
+        additional_salary.reload()
+        
+        return additional_salary
+        
+    except Exception as e:
+        print(f"Error creating additional salary: {str(e)}")
+        frappe.log_error(message=str(e), title="Additional Salary Creation Error")
 
 def create_salary_slip(employee, start_date, end_date, salary_structure):
     """Create a new salary slip for the given period"""
