@@ -204,7 +204,7 @@ scheduler_events = {
 			"custom_app_api.cron_functions.create_employee_referral_and_additional_salary.process_referral_bonuses"
 		],
 		"30 20 * * *": [
-			# "custom_app_api.cron_functions.auto_assign_salary_structure_for_promotions.auto_assign_salary_structure"
+			"custom_app_api.cron_functions.auto_assign_salary_structure_for_promotions.auto_assign_salary_structure"
 		],
 		"0 23 * * *": [  # Runs at 11:00 PM (23:00) every day
 			"custom_app_api.cron_functions.salary_slip_cron.generate_salary_slips_for_active_employees",
