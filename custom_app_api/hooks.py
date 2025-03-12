@@ -166,6 +166,10 @@ doc_events = {
 	"Employee": {
 		"on_update": ["custom_app_api.doc_events.employee.after_save"]
 	},
+	"Employee Promotion": {
+		"before_save": "custom_app_api.doc_events.employee_promotion.before_save",
+		"before_submit": "custom_app_api.doc_events.employee_promotion.before_submit"
+	},
 	"Job Applicant": {
         "after_insert": "custom_app_api.cron_functions.create_employee_referral_and_additional_salary.create_employee_referral_for_job_applicant"
     },
