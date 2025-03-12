@@ -270,17 +270,29 @@ def get_columns(filters=None):
     
     # Add designation-wise breakdown columns if requested
     if filters and filters.get("show_designation_wise_breakdown"):
-        # Get all designations for the selected company
-        designations = frappe.get_all(
-            "Employee",
-            fields=["designation"],
-            filters={
-                "company": ("in", filters.companies),
-                "status": "Active"
-            },
-            distinct=True,
-            order_by="designation"
-        )
+        # Get designations that actually have employees in the selected points
+        point_condition = ""
+        if filters.get("points"):
+            point_list = "', '".join(filters.get("points"))
+            point_condition = f" AND custom_point IN ('{point_list}')"
+            
+        zone_condition = ""
+        if filters.get("zones"):
+            zone_list = "', '".join(filters.get("zones"))
+            zone_condition = f" AND p.zone_name IN ('{zone_list}')"
+            
+        # Query to get only designations that have employees in the selected points/zones
+        designations = frappe.db.sql("""
+            SELECT DISTINCT e.designation
+            FROM `tabEmployee` e
+            JOIN `tabPoint` p ON e.custom_point = p.name
+            WHERE e.company IN %(companies)s
+            AND e.status = 'Active'
+            {0}
+            {1}
+            ORDER BY e.designation
+        """.format(point_condition, zone_condition), 
+        {"companies": filters.companies}, as_dict=True)
         
         for desig in designations:
             designation = desig.designation
@@ -363,19 +375,17 @@ def get_point_wise_attendance(filters):
     data = []
     zone_wise_data = {}  # For grouping by zone
 
-    # Get all designations if breakdown is requested
-    all_designations = []
+    # Get all designations that have employees in the selected points
     if filters.get("show_designation_wise_breakdown"):
         all_designations = frappe.get_all(
             "Employee",
             fields=["designation"],
-            filters={
-                "company": ("in", filters.companies),
-                "status": "Active"
-            },
+            filters=point_filters,
             distinct=True,
             pluck="designation"
         )
+    else:
+        all_designations = []
 
     for point_data in points:
         if not point_data.point:
