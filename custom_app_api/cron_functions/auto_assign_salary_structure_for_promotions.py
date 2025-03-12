@@ -222,6 +222,7 @@ def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_dat
         prorated_new_amount = (basic_salary / total_days) * (total_days - days_until_promotion)
         
         # 1. Cancel existing salary slip
+        existing_slip.flags.ignore_permissions = True
         existing_slip.cancel()
         frappe.db.commit()
         
