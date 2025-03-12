@@ -86,7 +86,7 @@ Employee: {employee.employee_name} (Grade: L5)"""
                         "company": employee.company,
                         "custom_route": route.name,
                         "custom_reason": reason,
-                        "overwrite_salary_structure_amount": 1
+                        "overwrite_salary_structure_amount": 0
                     })
 
                     # Bypass workflow and permissions

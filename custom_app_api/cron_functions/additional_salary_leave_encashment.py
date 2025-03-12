@@ -87,7 +87,7 @@ No leaves taken during this period."""
                         "payroll_date": cycle_end,
                         "company": employee.company,
                         "custom_reason": reason,
-                        "overwrite_salary_structure_amount": 1
+                        "overwrite_salary_structure_amount": 0
                     })
 
                     # Bypass workflow and permissions

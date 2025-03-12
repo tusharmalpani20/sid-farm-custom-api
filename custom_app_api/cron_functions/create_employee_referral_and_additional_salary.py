@@ -142,7 +142,7 @@ def process_referral_bonuses():
                 "ref_doctype": "Employee Referral",
                 "ref_docname": referral.name,
                 "custom_reason": reason,
-                "overwrite_salary_structure_amount": 1
+                "overwrite_salary_structure_amount": 0
             })
 
             # Bypass workflow and permissions

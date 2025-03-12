@@ -249,13 +249,16 @@ def get_additional_salary_records():
         #     ))
         # """
 
-        # Replace date condition to use workflow_action_taken_on
-        date_condition = """
-            (workflow_action_taken_on IS NOT NULL 
-            AND workflow_action_taken_on BETWEEN %(from_date)s AND %(to_date)s)
-        """
+        # # Replace date condition to use workflow_action_taken_on
+        # date_condition = """
+        #     (workflow_action_taken_on IS NOT NULL 
+        #     AND workflow_action_taken_on BETWEEN %(from_date)s AND %(to_date)s)
+        # """
 
-        conditions.append(date_condition)
+        # conditions.append(date_condition)
+
+        #we will use creation as a filter for from_date and to_date
+        conditions.append("(creation BETWEEN %(from_date)s AND %(to_date)s)")
 
         # Add other filters
         if filters.get('doc_status'):
@@ -284,7 +287,7 @@ def get_additional_salary_records():
             WHERE {conditions}
         """.format(conditions=' AND '.join(conditions))
 
-        frappe.log_error(f"Query: {query}\nParameters: {params}", "Additional Salary Query Debug")
+        # frappe.log_error(f"Query: {query}\nParameters: {params}", "Additional Salary Query Debug")
 
         # Execute query
         additional_salaries = frappe.db.sql(query, params, as_dict=1)

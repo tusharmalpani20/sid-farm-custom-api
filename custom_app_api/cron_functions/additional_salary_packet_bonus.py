@@ -169,7 +169,7 @@ Employee Distribution:
                                 "custom_route": route_data.name,
                                 "custom_attendance_days": days,
                                 "custom_reason": reason,
-                                "overwrite_salary_structure_amount": 1
+                                "overwrite_salary_structure_amount": 0
                             })
 
                             # Bypass workflow and permissions
