@@ -63,6 +63,12 @@ frappe.query_reports["Point Wise Attendance"] = {
 			label: __("Include Company Descendants"),
 			fieldtype: "Check",
 			default: 1,
+		},
+		{
+			fieldname: "show_designation_wise_breakdown",
+			label: __("Show Breakdown by Designation"),
+			fieldtype: "Check",
+			default: 0,
 		}
 	]
 };
