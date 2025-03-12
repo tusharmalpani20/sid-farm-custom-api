@@ -219,6 +219,10 @@ def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_dat
         days_until_promotion = (promotion_date.date() - existing_slip.start_date).days
         total_days = (existing_slip.end_date - existing_slip.start_date).days + 1
         
+        # Get the old salary structure from the existing slip
+        old_salary_structure = existing_slip.salary_structure
+        print(f"Old salary structure: {old_salary_structure}")
+        
         # 1. Cancel existing salary structure assignments
         existing_assignments = frappe.get_all(
             "Salary Structure Assignment",
@@ -245,12 +249,26 @@ def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_dat
         
         frappe.db.commit()
         
-        # 2. Create new salary structure assignment from first day of month
+        # 2. Create old salary structure assignment from first day of month to day before promotion
+        old_assignment = frappe.get_doc({
+            "doctype": "Salary Structure Assignment",
+            "employee": employee.name,
+            "salary_structure": old_salary_structure,
+            "from_date": existing_slip.start_date,
+            "to_date": promotion_date.date() - timedelta(days=1),
+            "company": employee.company
+        })
+        
+        old_assignment.insert()
+        old_assignment.submit()
+        print(f"Created and submitted old salary structure assignment: {old_assignment.name}")
+        
+        # 3. Create new salary structure assignment from promotion date
         new_assignment = frappe.get_doc({
             "doctype": "Salary Structure Assignment",
             "employee": employee.name,
             "salary_structure": new_salary_structure,
-            "from_date": existing_slip.start_date,  # First day of month
+            "from_date": promotion_date.date(),
             "company": employee.company
         })
         
@@ -260,7 +278,7 @@ def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_dat
         
         frappe.db.commit()
         
-        # 3. Submit and cancel existing salary slip
+        # 4. Submit and cancel existing salary slip
         existing_slip.flags.ignore_permissions = True
         existing_slip.submit()
         print(f"Submitted existing salary slip: {existing_slip.name}")
@@ -270,7 +288,7 @@ def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_dat
         print(f"Cancelled existing salary slip: {existing_slip.name}")
         frappe.db.commit()
         
-        # 4. Create Additional Salary for old salary structure period (full amount)
+        # 5. Create Additional Salary for old salary structure period (full amount)
         old_additional = create_prorated_additional_salary(
             employee=employee,
             amount=basic_salary,  # Full old basic salary
@@ -282,12 +300,12 @@ def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_dat
         )
         print(f"Created additional salary for old structure: {old_additional.name}, Amount: {basic_salary}")
         
-        # 5. Create new salary slip to get new basic salary
-        new_salary_slip = create_salary_slip(
+        # 6. Create new salary slip to get new basic salary
+        new_salary_slip = create_salary_slip_for_promotion(
             employee=employee,
             start_date=existing_slip.start_date,
             end_date=existing_slip.end_date,
-            salary_structure=new_salary_structure
+            new_salary_structure=new_salary_structure
         )
         
         if not new_salary_slip:
@@ -308,7 +326,7 @@ def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_dat
         # Calculate prorated deduction amount based on days before promotion
         prorated_deduction = (new_basic_salary / total_days) * days_until_promotion
         
-        # 6. Create Additional Salary for deduction of new structure's prorated amount
+        # 7. Create Additional Salary for deduction of new structure's prorated amount
         new_additional = create_prorated_additional_salary(
             employee=employee,
             amount=-prorated_deduction,  # Negative amount for deduction
@@ -411,4 +429,58 @@ def create_salary_slip(employee, start_date, end_date, salary_structure):
         
     except Exception as e:
         print(f"Error creating salary slip for employee {employee.name}: {str(e)}")
+        return None
+
+def create_salary_slip_for_promotion(employee, start_date, end_date, new_salary_structure):
+    """Create a new salary slip for promotion case with special handling"""
+    try:
+        # Check if a salary slip already exists for this period
+        existing_slip = frappe.db.exists(
+            "Salary Slip",
+            {
+                "employee": employee.name,
+                "start_date": start_date,
+                "end_date": end_date,
+                "docstatus": ["!=", 2]  # Not cancelled
+            }
+        )
+        
+        if existing_slip:
+            print(f"Salary slip already exists for employee {employee.name} "
+                  f"from {start_date} to {end_date}. Skipping creation.")
+            return frappe.get_doc("Salary Slip", existing_slip)
+            
+        # Create salary slip with direct SQL to bypass validation
+        salary_slip = frappe.get_doc({
+            "doctype": "Salary Slip",
+            "employee": employee.name,
+            "salary_structure": new_salary_structure,
+            "start_date": start_date,
+            "end_date": end_date,
+            "company": employee.company,
+            "posting_date": frappe.utils.today()
+        })
+        
+        # Set flags to bypass validations
+        salary_slip.flags.ignore_permissions = True
+        salary_slip.flags.ignore_validate = True
+        
+        # Insert without running validations
+        salary_slip.insert(ignore_permissions=True)
+        
+        # Force calculate earnings and deductions
+        salary_slip.run_method("get_emp_and_working_day_details")
+        salary_slip.run_method("calculate_net_pay")
+        
+        # Save the changes
+        salary_slip.save(ignore_permissions=True)
+        
+        print(f"Created new salary slip for employee {employee.name} "
+              f"from {start_date} to {end_date} with structure {new_salary_structure}")
+        
+        return salary_slip
+        
+    except Exception as e:
+        print(f"Error creating salary slip for employee {employee.name}: {str(e)}")
+        frappe.log_error(message=str(e), title="Salary Slip Creation Error")
         return None
