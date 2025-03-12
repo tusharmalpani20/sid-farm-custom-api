@@ -199,10 +199,9 @@ def handle_salary_slip_creation(employee, promotion_date, salary_structure):
 def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_date, new_salary_structure):
     """Handle prorated salary calculation when promotion occurs mid-month"""
     try:
-        # Get the existing salary slip
+        # 1. Get the existing salary slip and extract basic salary
         existing_slip = frappe.get_doc("Salary Slip", slip_name)
         
-        # Get and log basic salary from earnings
         basic_salary = 0
         for earning in existing_slip.earnings:
             if earning.salary_component == "Basic":
@@ -219,11 +218,17 @@ def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_dat
         days_until_promotion = (promotion_date.date() - existing_slip.start_date).days
         total_days = (existing_slip.end_date - existing_slip.start_date).days + 1
         
-        # Get the old salary structure from the existing slip
-        old_salary_structure = existing_slip.salary_structure
-        print(f"Old salary structure: {old_salary_structure}")
+        # 2. Cancel existing salary slip
+        if existing_slip.docstatus == 0:  # If draft
+            existing_slip.flags.ignore_permissions = True
+            existing_slip.submit()
+            frappe.db.commit()
+            
+            existing_slip.cancel()
+            frappe.db.commit()
+            print(f"Cancelled existing salary slip: {existing_slip.name}")
         
-        # 1. Cancel existing salary structure assignments
+        # 3. Cancel all existing salary structure assignments
         existing_assignments = frappe.get_all(
             "Salary Structure Assignment",
             filters={
@@ -249,26 +254,12 @@ def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_dat
         
         frappe.db.commit()
         
-        # 2. Create old salary structure assignment from first day of month to day before promotion
-        old_assignment = frappe.get_doc({
-            "doctype": "Salary Structure Assignment",
-            "employee": employee.name,
-            "salary_structure": old_salary_structure,
-            "from_date": existing_slip.start_date,
-            "to_date": promotion_date.date() - timedelta(days=1),
-            "company": employee.company
-        })
-        
-        old_assignment.insert()
-        old_assignment.submit()
-        print(f"Created and submitted old salary structure assignment: {old_assignment.name}")
-        
-        # 3. Create new salary structure assignment from promotion date
+        # 4. Create new salary structure assignment
         new_assignment = frappe.get_doc({
             "doctype": "Salary Structure Assignment",
             "employee": employee.name,
             "salary_structure": new_salary_structure,
-            "from_date": promotion_date.date(),
+            "from_date": existing_slip.start_date,  # From beginning of month
             "company": employee.company
         })
         
@@ -278,29 +269,18 @@ def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_dat
         
         frappe.db.commit()
         
-        # 4. Submit and cancel existing salary slip
-        existing_slip.flags.ignore_permissions = True
-        existing_slip.submit()
-        print(f"Submitted existing salary slip: {existing_slip.name}")
-        frappe.db.commit()
-        
-        existing_slip.cancel()
-        print(f"Cancelled existing salary slip: {existing_slip.name}")
-        frappe.db.commit()
-        
-        # 5. Create Additional Salary for old salary structure period (full amount)
+        # 5. Create Additional Salary for old structure (full amount)
         old_additional = create_prorated_additional_salary(
             employee=employee,
             amount=basic_salary,  # Full old basic salary
             from_date=existing_slip.start_date,
             to_date=existing_slip.end_date,
             salary_component="Prorated Addition",
-            reason=f"Full salary for old structure\n"
-                  f"Basic: {basic_salary}"
+            reason=f"Full salary for old structure\nBasic: {basic_salary}"
         )
         print(f"Created additional salary for old structure: {old_additional.name}, Amount: {basic_salary}")
         
-        # 6. Create new salary slip to get new basic salary
+        # 6. Create new salary slip with new structure
         new_salary_slip = create_salary_slip_for_promotion(
             employee=employee,
             start_date=existing_slip.start_date,
@@ -323,18 +303,16 @@ def handle_prorated_salary_slip(slip_name, employee, promotion_date, old_end_dat
             
         print(f"New basic salary: {new_basic_salary}")
         
-        # Calculate prorated deduction amount based on days before promotion
+        # 7. Create Additional Salary for deduction (prorated)
         prorated_deduction = (new_basic_salary / total_days) * days_until_promotion
         
-        # 7. Create Additional Salary for deduction of new structure's prorated amount
         new_additional = create_prorated_additional_salary(
             employee=employee,
             amount=-prorated_deduction,  # Negative amount for deduction
             from_date=existing_slip.start_date,
             to_date=promotion_date.date() - timedelta(days=1),
             salary_component="Prorated Deduction",
-            reason=f"Deduction for days before promotion (New Structure)\n"
-                  f"New Basic: {new_basic_salary}, Days: {days_until_promotion}/{total_days}"
+            reason=f"Deduction for days before promotion\nNew Basic: {new_basic_salary}, Days: {days_until_promotion}/{total_days}"
         )
         print(f"Created additional salary for new structure: {new_additional.name}, Amount: {-prorated_deduction}")
         
@@ -484,3 +462,4 @@ def create_salary_slip_for_promotion(employee, start_date, end_date, new_salary_
         print(f"Error creating salary slip for employee {employee.name}: {str(e)}")
         frappe.log_error(message=str(e), title="Salary Slip Creation Error")
         return None
+
