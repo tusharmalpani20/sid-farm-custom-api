@@ -46,6 +46,18 @@ def get_columns(filters):
             "fieldtype": "Data",
             "width": 120
         },
+        {
+            "label": _("PAN No."),
+            "fieldname": "custom_pan",
+            "fieldtype": "Data",
+            "width": 120
+        },
+        {
+            "label": _("Beneficiary Name"),
+            "fieldname": "custom_beneficiary_name",
+            "fieldtype": "Data",
+            "width": 120
+        },
         {   
             "label": _("Payment Days"),
             "fieldname": "payment_days",
@@ -243,7 +255,9 @@ def get_salary_slip_data(filters):
             e.bank_ac_no,
             e.designation,
             e.reports_to,
-            e.custom_manager_name
+            e.custom_manager_name,
+            e.custom_pan,
+            e.custom_beneficiary_name
         FROM `tabSalary Slip` ss
         JOIN `tabEmployee` e ON ss.employee = e.name
         WHERE {docstatus_condition}
@@ -311,6 +325,8 @@ def get_salary_slip_data(filters):
             "salary_slip_id": slip.salary_slip_id,
             "employee": slip.employee,
             "employee_name": slip.employee_name,
+            "custom_pan": slip.custom_pan,
+            "custom_beneficiary_name": slip.custom_beneficiary_name,
             "payment_days": slip.payment_days,
             "route": slip.custom_route,
             "point": slip.custom_point,
