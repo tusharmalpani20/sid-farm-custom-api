@@ -114,7 +114,6 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
                             SELECT latitude, longitude, recorded_at
                             FROM `tabRoute Tracking`
                             WHERE attendance = %s
-                            AND recorded_at > '2025-03-19 00:00:00'
                             ORDER BY recorded_at ASC
                         """, (attendance_record.name,), as_dict=1)
                         print(f"Time taken to fetch route records for attendance {attendance_record.name}: {time.time() - route_fetch_start:.2f} seconds")
