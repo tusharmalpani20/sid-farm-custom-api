@@ -110,14 +110,12 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
                     if attendance_doc.custom_mobile_punch_in_at:
                         # Get route tracking records for this attendance
                         route_fetch_start = time.time()
-                        route_records = frappe.get_all(
-                            "Route Tracking",
-                            filters={
-                                "attendance": attendance_record.name
-                            },
-                            fields=["latitude", "longitude", "recorded_at"],
-                            order_by="recorded_at ASC"
-                        )
+                        route_records = frappe.db.sql("""
+                            SELECT latitude, longitude, recorded_at
+                            FROM `tabRoute Tracking`
+                            WHERE attendance = %s
+                            ORDER BY recorded_at ASC
+                        """, (attendance_record.name,), as_dict=1)
                         print(f"Time taken to fetch route records for attendance {attendance_record.name}: {time.time() - route_fetch_start:.2f} seconds")
                         
                         # Calculate total distance if route records exist
