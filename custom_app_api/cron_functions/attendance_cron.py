@@ -106,28 +106,30 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
                 try:
                     attendance_doc = frappe.get_doc("Attendance", attendance_record.name)
                     
-                    # Get route tracking records for this attendance
-                    route_fetch_start = time.time()
-                    route_records = frappe.get_all(
-                        "Route Tracking",
-                        filters={
-                            "attendance": attendance_record.name
-                        },
-                        fields=["latitude", "longitude", "recorded_at"],
-                        order_by="recorded_at ASC"
-                    )
-                    print(f"Time taken to fetch route records for attendance {attendance_record.name}: {time.time() - route_fetch_start:.2f} seconds")
-                    
-                    # Calculate total distance if route records exist
-                    if route_records:
-                        distance_calc_start = time.time()
-                        coordinates = [[record.latitude, record.longitude] 
-                                    for record in route_records]
-                        total_distance = calculate_total_distance(coordinates)
+                    # Only process route tracking if there was a punch in
+                    if attendance_doc.custom_mobile_punch_in_at:
+                        # Get route tracking records for this attendance
+                        route_fetch_start = time.time()
+                        route_records = frappe.get_all(
+                            "Route Tracking",
+                            filters={
+                                "attendance": attendance_record.name
+                            },
+                            fields=["latitude", "longitude", "recorded_at"],
+                            order_by="recorded_at ASC"
+                        )
+                        print(f"Time taken to fetch route records for attendance {attendance_record.name}: {time.time() - route_fetch_start:.2f} seconds")
                         
-                        # Update the attendance record with total distance
-                        attendance_doc.custom_kilometers_travelled = total_distance
-                        print(f"Time taken to calculate distance for attendance {attendance_record.name}: {time.time() - distance_calc_start:.2f} seconds")
+                        # Calculate total distance if route records exist
+                        if route_records:
+                            distance_calc_start = time.time()
+                            coordinates = [[record.latitude, record.longitude] 
+                                        for record in route_records]
+                            total_distance = calculate_total_distance(coordinates)
+                            
+                            # Update the attendance record with total distance
+                            attendance_doc.custom_kilometers_travelled = total_distance
+                            print(f"Time taken to calculate distance for attendance {attendance_record.name}: {time.time() - distance_calc_start:.2f} seconds")
                     
                     # Only set punch out time if it hasn't been set yet
                     if not attendance_doc.custom_mobile_punch_out_at:
