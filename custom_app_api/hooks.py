@@ -190,17 +190,16 @@ scheduler_events = {
             "custom_app_api.cron_functions.create_job_vacancy.check_routes_for_vacancies",
 			"custom_app_api.cron_functions.import_routes.import_routes",
         ],
-		# "30 9 * * *": [
-		# 	"custom_app_api.cron_functions.attendance_cron.auto_mark_employee_absent_and_submit_all_todays_attendance"
-		# ],
-		# "45 9 * * *": [
-		# 	"custom_app_api.cron_functions.additional_salary_extra_km.calculate_extra_km_salary"
-		# ],
+		"30 9 * * *": [
+			"custom_app_api.cron_functions.attendance_cron.auto_mark_employee_absent_and_submit_all_todays_attendance"
+		],
+		"45 9 * * *": [
+			"custom_app_api.cron_functions.additional_salary_extra_km.calculate_extra_km_salary"
+		],
 		"0 10 * * *": [
 			#"custom_app_api.cron_functions.email_report.send_point_wise_attendance_report"
 
-			#uncomment this tomorrow : IMPORTANT
-			#"custom_app_api.cron_functions.additional_salary_route_bonus.generate_route_payout"
+			"custom_app_api.cron_functions.additional_salary_route_bonus.generate_route_payout"
 		],
 		"0 22 * * *": [
 			"custom_app_api.cron_functions.create_employee_referral_and_additional_salary.process_referral_bonuses"
@@ -229,8 +228,7 @@ scheduler_events = {
 	  # "custom_app_api.tasks.hourly"
 	  #"custom_app_api.cron_functions.salary_slip_cron.generate_salary_slips_for_active_employees",
 
-	  #uncomment this tomorrow : IMPORTANT
-	  #"custom_app_api.cron_functions.send_auto_email_report.send_custom_time_reports"
+	  "custom_app_api.cron_functions.send_auto_email_report.send_custom_time_reports"
 	],
 	# "weekly": [
 	# 	"custom_app_api.tasks.weekly"
