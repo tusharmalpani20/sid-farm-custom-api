@@ -57,7 +57,7 @@ def generate_route_payout():
                             "employee": employee.name,
                             "salary_component": "Route Payout",
                             "payroll_date": current_date,
-                            "custom_route": route.name,
+                            # "custom_route": route.name,
                             "docstatus": 1
                         }
                     )
@@ -84,7 +84,7 @@ Employee: {employee.employee_name} (Grade: L5)"""
                         "amount": route.payout_amount,
                         "payroll_date": current_date,
                         "company": employee.company,
-                        "custom_route": route.name,
+                        # "custom_route": route.name,
                         "custom_reason": reason,
                         "overwrite_salary_structure_amount": 0
                     })
