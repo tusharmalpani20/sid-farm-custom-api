@@ -66,8 +66,7 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "Previous Route",
-   "options": "Route",
-   "reqd": 1
+   "options": "Route"
   },
   {
    "fetch_from": "previous_route.point_name",
@@ -99,8 +98,7 @@
    "fieldtype": "Link",
    "in_list_view": 1,
    "label": "New Route",
-   "options": "Route",
-   "reqd": 1
+   "options": "Route"
   },
   {
    "fetch_from": "new_route.point_name",
