@@ -1,0 +1,183 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:ERUT-{employee}-{DD}-{MM}-{YYYY}-{##}",
+ "creation": "2025-03-24 11:07:18.323859",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_a7q7",
+  "amended_from",
+  "employee",
+  "employee_name",
+  "update_details_section",
+  "previous_route",
+  "previous_point",
+  "previous_zone",
+  "previous_city",
+  "column_break_labi",
+  "new_route",
+  "new_point",
+  "new_zone",
+  "new_city",
+  "updated_by_details_section",
+  "user",
+  "user_name",
+  "column_break_ilkv",
+  "updated_at"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_a7q7",
+   "fieldtype": "Section Break",
+   "label": "Employee Details"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "Employee Route Update Tool",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  },
+  {
+   "fieldname": "employee",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Employee",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "employee.employee_name",
+   "fieldname": "employee_name",
+   "fieldtype": "Data",
+   "label": "Employee Name"
+  },
+  {
+   "fieldname": "update_details_section",
+   "fieldtype": "Section Break",
+   "label": "Update Details"
+  },
+  {
+   "fieldname": "previous_route",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Previous Route",
+   "options": "Route",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "previous_route.point_name",
+   "fieldname": "previous_point",
+   "fieldtype": "Link",
+   "label": "Previous Point",
+   "options": "Point"
+  },
+  {
+   "fetch_from": "previous_route.zone_name",
+   "fieldname": "previous_zone",
+   "fieldtype": "Link",
+   "label": "Previous Zone",
+   "options": "Zone"
+  },
+  {
+   "fetch_from": "previous_route.city_name",
+   "fieldname": "previous_city",
+   "fieldtype": "Link",
+   "label": "Previous City",
+   "options": "City"
+  },
+  {
+   "fieldname": "column_break_labi",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "new_route",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "New Route",
+   "options": "Route",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "new_route.point_name",
+   "fieldname": "new_point",
+   "fieldtype": "Link",
+   "label": "New Point",
+   "options": "Point"
+  },
+  {
+   "fetch_from": "new_route.zone_name",
+   "fieldname": "new_zone",
+   "fieldtype": "Link",
+   "label": "New Zone",
+   "options": "Zone"
+  },
+  {
+   "fetch_from": "new_route.city_name",
+   "fieldname": "new_city",
+   "fieldtype": "Link",
+   "label": "New City",
+   "options": "City"
+  },
+  {
+   "fieldname": "updated_by_details_section",
+   "fieldtype": "Section Break",
+   "label": "Updated By Details"
+  },
+  {
+   "fieldname": "user",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "User",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "user.full_name",
+   "fieldname": "user_name",
+   "fieldtype": "Data",
+   "label": "User Name"
+  },
+  {
+   "fieldname": "column_break_ilkv",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Now",
+   "fieldname": "updated_at",
+   "fieldtype": "Datetime",
+   "label": "Updated At"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-03-24 11:26:33.772569",
+ "modified_by": "Administrator",
+ "module": "Custom API",
+ "name": "Employee Route Update Tool",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

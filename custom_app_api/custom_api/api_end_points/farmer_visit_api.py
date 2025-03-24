@@ -145,7 +145,8 @@ def get_bmc_list() -> Dict[str, Any]:
             cluster_mapping_doc = frappe.get_all(
                 "Cluster BDE Mapping",
                 filters={"employee": employee},
-                fields=["name"]
+                fields=["name"],
+                limit_page_length=None
             )
             
             if not cluster_mapping_doc:
@@ -162,7 +163,8 @@ def get_bmc_list() -> Dict[str, Any]:
             clusters = frappe.get_all(
                 "Cluster Mapping",
                 filters={"parent": cluster_mapping_doc[0].name},
-                fields=["cluster"]
+                fields=["cluster"],
+                limit_page_length=None
             )
             
             if not clusters:
@@ -181,7 +183,8 @@ def get_bmc_list() -> Dict[str, Any]:
                 cluster_villages = frappe.get_all(
                     "Village Map",
                     filters={"parent": cluster.cluster},
-                    fields=["village"]
+                    fields=["village"],
+                    limit_page_length=None
                 )
                 villages.extend([v.village for v in cluster_villages])
             
@@ -216,7 +219,8 @@ def get_bmc_list() -> Dict[str, Any]:
         bmc_mandals = frappe.get_all(
             "Mandal Map",
             filters={"mandal": ["in", mandals]},
-            fields=["parent as bmc", "mandal"]
+            fields=["parent as bmc", "mandal"],
+            limit_page_length=None
         )
         
         if not bmc_mandals:
@@ -277,7 +281,8 @@ def get_assigned_villages() -> Dict[str, Any]:
         cluster_mapping_doc = frappe.get_all(
             "Cluster BDE Mapping",
             filters={"employee": employee},
-            fields=["name"]
+            fields=["name"],
+            limit_page_length=None
         )
         
         if not cluster_mapping_doc:
@@ -294,7 +299,8 @@ def get_assigned_villages() -> Dict[str, Any]:
         clusters = frappe.get_all(
             "Cluster Mapping",
             filters={"parent": cluster_mapping_doc[0].name},
-            fields=["cluster"]
+            fields=["cluster"],
+            limit_page_length=None
         )
         
         if not clusters:
@@ -313,7 +319,8 @@ def get_assigned_villages() -> Dict[str, Any]:
             cluster_villages = frappe.get_all(
                 "Village Map",
                 filters={"parent": cluster.cluster},
-                fields=["village"]
+                fields=["village"],
+                limit_page_length=None
             )
             villages.extend([v.village for v in cluster_villages])
         
@@ -741,7 +748,8 @@ def get_assigned_farmers() -> Dict[str, Any]:
                 "prospect_type",
                 "bmc",
                 "age"
-            ]
+            ],
+            limit_page_length=None
         )
         
         if not farmers:
@@ -1149,7 +1157,8 @@ def get_pending_revisits() -> Dict[str, Any]:
                 "visit_reason",
                 "comments"
             ],
-            order_by="revisit_on asc"  # Order by revisit date
+            order_by="revisit_on asc",  # Order by revisit date
+            limit_page_length=None
         )
         
         # Get additional details for each visit
@@ -1361,7 +1370,8 @@ def get_today_visits() -> Dict[str, Any]:
                 "follow_up_visit",
                 #"visit_image"
             ],
-            order_by="creation desc"
+            order_by="creation desc",
+            limit_page_length=None
         )
         
         # Get additional details for each visit
@@ -1534,7 +1544,8 @@ def get_farmer_pending_revisits() -> Dict[str, Any]:
             filters={
                 "name": farmer_id
             },
-            fields=["name", "first_name", "last_name", "contact_number", "prospect_type"]
+            fields=["name", "first_name", "last_name", "contact_number", "prospect_type"],
+            limit_page_length=None
         )
         
         if not farmer:
@@ -1568,7 +1579,8 @@ def get_farmer_pending_revisits() -> Dict[str, Any]:
                 "visit_reason",
                 "comments"
             ],
-            order_by="revisit_on asc"  # Order by revisit date
+            order_by="revisit_on asc",  # Order by revisit date
+            limit_page_length=None
         )
         
         # Get village names for visits

@@ -93,7 +93,8 @@ def get_competitor_companies() -> Dict[str, Any]:
         companies = frappe.get_all(
             "Competitive Dairy Companies",
             fields=["name", "company_name"],
-            order_by="company_name"
+            order_by="company_name",
+            limit_page_length=None
         )
 
         if not companies:
@@ -341,7 +342,8 @@ def get_village_surveys() -> Dict[str, Any]:
         total_surveys = frappe.get_all(
             "Village Survey",
             filters=filters,
-            as_list=True
+            as_list=True,
+            limit_page_length=None
         )
         total_count = len(total_surveys)
 
@@ -363,7 +365,8 @@ def get_village_surveys() -> Dict[str, Any]:
             ],
             start=start,
             page_length=page_size,
-            order_by="creation desc"
+            order_by="creation desc",
+            limit_page_length=None
         )
 
         # Get additional details for each survey
@@ -379,7 +382,8 @@ def get_village_surveys() -> Dict[str, Any]:
             competitor_count = frappe.get_all(
                 "Village Survey Competitive Dairy Pricing",
                 filters={"parent": survey.name},
-                as_list=True
+                as_list=True,
+                limit_page_length=None
             )
             survey["competitor_count"] = len(competitor_count)
 
@@ -448,7 +452,8 @@ def get_village_survey_detail() -> Dict[str, Any]:
                 "name": survey_id,
                 "docstatus": 1  # Only get submitted documents
             },
-            fields=["*"]
+            fields=["*"],
+            limit_page_length=None
         )
 
         if not survey:
@@ -481,7 +486,8 @@ def get_village_survey_detail() -> Dict[str, Any]:
                 "pricing_type",
                 "price_per_litre",
                 "has_direct_sales"
-            ]
+            ],
+            limit_page_length=None
         )
 
         # Get company names for competitors

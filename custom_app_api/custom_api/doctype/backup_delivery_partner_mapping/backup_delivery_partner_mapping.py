@@ -65,6 +65,10 @@ def update_employee_mapping(employee, route, point, area, zone):
         
         # Only update if route has changed
         if doc.custom_route != route:
+
+            # Store previous route details
+            previous_route = doc.custom_route
+
             doc.custom_route = route
             # doc.custom_point = point
             # doc.custom_area = area
@@ -75,6 +79,18 @@ def update_employee_mapping(employee, route, point, area, zone):
                 "message": "Employee details updated successfully",
                 "status": "success"
             }
+
+            # Create Employee Route Update Tool record
+            route_update = frappe.get_doc({
+                "doctype": "Employee Route Update Tool",
+                "employee": employee,
+                "previous_route": previous_route,
+                "new_route": route,
+                "user": frappe.session.user,
+                "updated_at": frappe.utils.now()
+            })
+            route_update.insert(ignore_permissions=True)
+            route_update.submit()
         
         return {
             "message": "No changes detected",
