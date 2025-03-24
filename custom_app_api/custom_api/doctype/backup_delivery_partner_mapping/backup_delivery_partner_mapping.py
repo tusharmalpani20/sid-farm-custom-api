@@ -75,11 +75,6 @@ def update_employee_mapping(employee, route, point, area, zone):
             # doc.custom_zone = zone
             doc.save(ignore_permissions=False)
             
-            return {
-                "message": "Employee details updated successfully",
-                "status": "success"
-            }
-
             # Create Employee Route Update Tool record
             route_update = frappe.get_doc({
                 "doctype": "Employee Route Update Tool",
@@ -91,6 +86,11 @@ def update_employee_mapping(employee, route, point, area, zone):
             })
             route_update.insert(ignore_permissions=True)
             route_update.submit()
+
+            return {
+                "message": "Employee details updated successfully",
+                "status": "success"
+            }
         
         return {
             "message": "No changes detected",
