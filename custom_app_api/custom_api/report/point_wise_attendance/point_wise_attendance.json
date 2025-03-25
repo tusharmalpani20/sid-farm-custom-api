@@ -9,7 +9,7 @@
   "idx": 0,
   "is_standard": "Yes",
   "letter_head": "Default",
-  "modified": "2025-03-12 18:03:43.933611",
+  "modified": "2025-03-25 11:03:43.933611",
   "modified_by": "Administrator",
   "module": "Custom API",
   "name": "Point Wise Attendance",
@@ -48,6 +48,9 @@
     },
     {
       "role": "Last Mile Manager(LMM)"
+    },
+    {
+      "role" : "Attendance(Master Access)"
     }
   ]
 }

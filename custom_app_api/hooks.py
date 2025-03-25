@@ -190,6 +190,9 @@ scheduler_events = {
             "custom_app_api.cron_functions.create_job_vacancy.check_routes_for_vacancies",
 			"custom_app_api.cron_functions.import_routes.import_routes",
         ],
+		"0 9 * * *": [
+			"custom_app_api.cron_functions.check_attendance_index_for_route_tracking.check_attendance_index_for_route_tracking"
+		],
 		"30 9 * * *": [
 			"custom_app_api.cron_functions.attendance_cron.auto_mark_employee_absent_and_submit_all_todays_attendance"
 		],
