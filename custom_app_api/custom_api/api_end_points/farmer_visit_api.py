@@ -1610,4 +1610,87 @@ def get_farmer_pending_revisits() -> Dict[str, Any]:
     except Exception as e:
         frappe.local.response['http_status_code'] = 500
         return handle_error_response(e, "Error retrieving farmer's pending revisits")
+    
+@frappe.whitelist(allow_guest=True, methods=["GET"])
+def get_all_pending_revisits_with_farmer_details() -> Dict[str, Any]:
+    """
+    Returns list of all pending revisits with all farmer details
+    Required header: Authorization Bearer token
+    """
+    try:
+        # Verify authorization
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        if not is_valid:
+            frappe.local.response['http_status_code'] = 401
+            return result
+        
+        employee = result["employee"]
+                
+        # Get pending revisits
+        visits = frappe.get_all(
+            "Visit Tracker",
+            filters={
+                "visited_by": employee,
+                "docstatus": 1,  # Only submitted documents
+                "requested_revisit": 1,  # Only visits that requested revisit
+                "follow_up_visit": ("is", "not set")  # No follow-up visit created yet
+            },
+            fields=[
+                "name",
+                "farmer",
+                "visit_date",
+                "visit_type",
+                "village",
+                "revisit_on",
+                "visit_reason",
+                "comments"
+            ],
+            order_by="revisit_on asc",  # Order by revisit date
+            limit_page_length=None
+        )
+        
+        # Get village names for visits
+        for visit in visits:
+            if visit.village:
+                village_doc = frappe.get_doc("Village", visit.village)
+                visit["village_name"] = village_doc.village_name
+        
+        # Now we will get all the farmer details for those visits
+        farmer_id_list = list(set([visit.farmer for visit in visits]))  # Get unique farmer IDs
+        
+        # Get farmer details
+        farmers = frappe.get_all(
+            "Farmer Detail",
+            filters={"name": ["in", farmer_id_list]},
+            fields=["name", "first_name", "last_name", "contact_number", "prospect_type"],
+            limit_page_length=None
+        )
+        
+        # Format farmer details as requested
+        formatted_farmers = [
+            {
+                "id": farmer.name,
+                "name": f"{farmer.first_name} {farmer.last_name}",
+                "contact_number": farmer.contact_number,
+                "prospect_type": farmer.prospect_type
+            }
+            for farmer in farmers
+        ]
+
+        frappe.local.response['http_status_code'] = 200
+        return {
+            "success": True,
+            "status": "success",
+            "message": "Farmer's pending revisits retrieved successfully",
+            "code": "FARMER_REVISITS_RETRIEVED",
+            "data": {
+                "farmers" : formatted_farmers, 
+                "visits": visits
+            },
+            "http_status_code": 200
+        }
+
+    except Exception as e:
+        frappe.local.response['http_status_code'] = 500
+        return handle_error_response(e, "Error retrieving farmer's pending revisits")
 
