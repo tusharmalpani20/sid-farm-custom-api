@@ -1598,6 +1598,8 @@ def get_farmer_pending_revisits() -> Dict[str, Any]:
             "data": {
                 "farmer": {
                     "id": farmer.name,
+                    "first_name": farmer.first_name,
+                    "last_name": farmer.last_name,
                     "name": f"{farmer.first_name} {farmer.last_name}",
                     "contact_number": farmer.contact_number,
                     "prospect_type": farmer.prospect_type
