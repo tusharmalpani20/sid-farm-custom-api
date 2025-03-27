@@ -1670,6 +1670,8 @@ def get_all_pending_revisits_with_farmer_details() -> Dict[str, Any]:
         formatted_farmers = [
             {
                 "id": farmer.name,
+                "first_name": farmer.first_name,
+                "last_name": farmer.last_name,
                 "name": f"{farmer.first_name} {farmer.last_name}",
                 "contact_number": farmer.contact_number,
                 "prospect_type": farmer.prospect_type
