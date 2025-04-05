@@ -542,7 +542,7 @@ def import_routes_v2_1():
                     }
                     print("\n\n")
                     print(state_doc)
-                    print(state_doc.name)
+                    print(state_doc["name"])
                     print("\n\n")
                     
                     # Get or create city
