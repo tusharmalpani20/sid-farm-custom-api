@@ -578,10 +578,6 @@ def import_routes_v2_1():
 Route import v2 completed:
 - Total rows processed: {len(rows)}
 - New cities created: {new_cities_count}
-- New zones created: {new_zones_count}
-- New areas created: {new_areas_count}
-- New points created: {new_points_count}
-- New routes created: {new_routes_count}
 - Timestamp: {datetime.now()}
 """
             print(summary)
