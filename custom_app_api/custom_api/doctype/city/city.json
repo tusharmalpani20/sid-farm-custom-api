@@ -20,6 +20,7 @@
   },
   {
     "fieldname": "sf_analytics_id",
+    "hidden": 1,
     "fieldtype": "Data",
     "label": "SF Analytics ID"
   },
