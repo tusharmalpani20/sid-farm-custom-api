@@ -544,6 +544,7 @@ def import_routes_v2_1():
                     
                     # Get or create city
                     city_doc = None
+                    print(city_sf_analytics_id_map)
                     print(row["city_id"])
                     print(row["city_id"] in city_sf_analytics_id_map)
                     if row["city_id"] in city_sf_analytics_id_map:
