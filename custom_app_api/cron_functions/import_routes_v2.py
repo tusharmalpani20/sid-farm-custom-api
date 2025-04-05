@@ -569,7 +569,7 @@ def import_routes_v2_1():
                     
                 
                 except Exception as e:
-                    # print(f"Error processing row {row}: {str(e)}")
+                    print(f"Error processing row {row}: {str(e)}")
                     frappe.db.rollback()
                     continue
             
