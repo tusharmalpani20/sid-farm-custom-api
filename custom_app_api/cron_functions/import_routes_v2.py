@@ -555,7 +555,10 @@ def import_routes_v2_1():
                             "sf_analytics_id": row["city_id"]
                         })
                         city_doc.insert()
-                        
+                        print("\n\n")
+                        print(city_doc)
+                        print(city_doc.name)
+                        print("\n\n")
                         # Add to map
                         city_name = city_doc.name
                         city_sf_analytics_id_map[row["city_id"]] = {
