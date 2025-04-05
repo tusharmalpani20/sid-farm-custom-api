@@ -39,7 +39,7 @@ def import_routes_v2():
         cities = frappe.get_all("City", fields=["name", "city_name", "sf_analytics_id"], limit_page_length=None)
         for city in cities:
             if city.sf_analytics_id:
-                city_sf_analytics_id_map[city.sf_analytics_id] = {
+                city_sf_analytics_id_map[int(city.sf_analytics_id)] = {
                     "name": city.name,
                     "city_name": city.city_name
                 }
@@ -47,7 +47,7 @@ def import_routes_v2():
         zones = frappe.get_all("Zone", fields=["name", "zone_name", "sf_analytics_id"], limit_page_length=None)
         for zone in zones:
             if zone.sf_analytics_id:
-                zone_sf_analytics_id_map[zone.sf_analytics_id] = {
+                zone_sf_analytics_id_map[int(zone.sf_analytics_id)] = {
                     "name": zone.name,
                     "zone_name": zone.zone_name
                 }
@@ -55,7 +55,7 @@ def import_routes_v2():
         areas = frappe.get_all("Area", fields=["name", "area_name", "sf_analytics_id"], limit_page_length=None)
         for area in areas:
             if area.sf_analytics_id:
-                area_sf_analytics_id_map[area.sf_analytics_id] = {
+                area_sf_analytics_id_map[int(area.sf_analytics_id)] = {
                     "name": area.name,
                     "area_name": area.area_name
                 }
@@ -63,7 +63,7 @@ def import_routes_v2():
         points = frappe.get_all("Point", fields=["name", "point_name", "sf_analytics_id"], limit_page_length=None)
         for point in points:
             if point.sf_analytics_id:
-                point_sf_analytics_id_map[point.sf_analytics_id] = {
+                point_sf_analytics_id_map[int(point.sf_analytics_id)] = {
                     "name": point.name,
                     "point_name": point.point_name
                 }
@@ -134,7 +134,7 @@ def import_routes_v2():
                         city_doc = frappe.get_doc({
                             "doctype": "City",
                             "city_name": row["city"],
-                            "state_name": state_doc.name,
+                            "state_name": state_doc["name"],
                             "sf_analytics_id": row["city_id"]
                         })
                         city_doc.insert()
@@ -157,7 +157,7 @@ def import_routes_v2():
                             "doctype": "Zone",
                             "zone_name": row["zone"],
                             "city_name": city_name,
-                            "state_name": state_doc.name,
+                            "state_name": state_doc["name"],
                             "branch": branch,
                             "sf_analytics_id": row["zone_id"]
                         })
@@ -182,7 +182,7 @@ def import_routes_v2():
                             "area_name": row["area"],
                             "zone_name": zone_name,
                             "city_name": city_name,
-                            "state_name": state_doc.name,
+                            "state_name": state_doc["name"],
                             "branch": branch,
                             "sf_analytics_id": row["area_id"]
                         })
@@ -209,7 +209,7 @@ def import_routes_v2():
                             "area_name": area_name,
                             "zone_name": zone_name,
                             "city_name": city_name,
-                            "state_name": state_doc.name,
+                            "state_name": state_doc["name"],
                             "branch": branch,
                             "sf_analytics_id": row["pickup_point_id"]
                         })
@@ -238,7 +238,7 @@ def import_routes_v2():
                             "area_name": area_name,
                             "zone_name": zone_name,
                             "city_name": city_name,
-                            "state_name": state_doc.name,
+                            "state_name": state_doc["name"],
                             "branch": branch,
                             "total_delivery": row["count_of_customers"],
                             "sf_analytics_id": row["route_id"]
@@ -459,144 +459,3 @@ Mapping of old entries completed:
         print(error_msg)
         frappe.log_error(title="Mapping of Old Entries Failed", message=error_msg)
         raise
-
-def import_routes_v2_1():
-    """
-    Daily cron job to import routes from analytics API with complete hierarchy.
-    This function imports city, zone, area, point, and route based on the updated schema.
-    Runs at the end of each day.
-    """
-    try:
-        print(f"Starting route import v2_1 at {datetime.now()}")
-        
-        # Fetch data from API
-        api_url = frappe.conf.get('analytics_api_url_for_routes_v2')
-        api_key = frappe.conf.get('analytics_api_key_v2')
-        
-        if not api_url or not api_key:
-            frappe.throw("Analytics API configuration missing in site config")
-        
-        print("Fetching data from analytics API...")
-        response = requests.get(api_url, params={"api_key": api_key})
-        
-        if response.status_code != 200:
-            frappe.throw(f"API request failed with status code: {response.status_code}")
-        
-        data = response.json()
-        rows = data["query_result"]["data"]["rows"]
-        print(f"Retrieved {len(rows)} routes from API")
-
-        # Create maps for existing records
-        city_sf_analytics_id_map = {}
-        
-        
-        # Get existing records from Frappe
-        cities = frappe.get_all("City", fields=["name", "city_name", "sf_analytics_id"], limit_page_length=None)
-        for city in cities:
-            if city.sf_analytics_id:
-                city_sf_analytics_id_map[int(city.sf_analytics_id)] = {
-                    "name": city.name,
-                    "city_name": city.city_name
-                }
-        
-        
-        print(f"Found {len(city_sf_analytics_id_map)} existing cities in system")
-        
-        # Process each row
-        new_cities_count = 0
-        
-        # Start transaction
-        frappe.db.begin()
-        
-        try:
-            for row in rows:
-                try:
-                    # Determine state and branch based on city
-                    state_name = None
-                    branch = None
-                    
-                    if row["city"] == "BLR":
-                        state_name = "Karnataka"
-                        branch = "Bengaluru"
-                    elif row["city"] == "HYD":
-                        state_name = "Telangana"
-                        branch = "Hyderabad"
-                    else:
-                        print(f"Unknown city code: {row['city']}, skipping row")
-                        continue
-                    
-                    # # Get or create state
-                    # state_doc = None
-                    # if frappe.db.exists("State", {"state_name": state_name}):
-                    #     state_doc = frappe.get_doc("State", {"state_name": state_name})
-                    # else:
-                    #     state_doc = frappe.get_doc({
-                    #         "doctype": "State",
-                    #         "state_name": state_name
-                    #     })
-                    #     state_doc.insert()
-
-                    state_doc = {
-                        "name": state_name,
-                        "state_name": state_name
-                    }
-                    
-                    
-                    # Get or create city
-                    city_doc = None
-                    print(city_sf_analytics_id_map)
-                    print(row["city_id"])
-                    print(row["city_id"] in city_sf_analytics_id_map)
-                    if row["city_id"] in city_sf_analytics_id_map:
-                        # We already have the city in our map, no need to fetch it again
-                        city_name = city_sf_analytics_id_map[row["city_id"]]["name"]
-                    else:
-                        city_doc = frappe.get_doc({
-                            "doctype": "City",
-                            "city_name": row["city"],
-                            "state_name": state_doc["name"],
-                            "sf_analytics_id": row["city_id"]
-                        })
-                        city_doc.insert()
-                        print("\n\n")
-                        print(city_doc)
-                        print("\n\n")
-                        # Add to map
-                        city_name = city_doc.name
-                        city_sf_analytics_id_map[row["city_id"]] = {
-                            "name": city_name,
-                            "city_name": city_doc.city_name
-                        }
-                        new_cities_count += 1
-                    
-                    
-                
-                except Exception as e:
-                    print(f"Error processing row {row}: {str(e)}")
-                    frappe.db.rollback()
-                    continue
-            
-            # Commit transaction once at the end
-            frappe.db.commit()
-            
-            # Log summary
-            summary = f"""
-Route import v2 completed:
-- Total rows processed: {len(rows)}
-- New cities created: {new_cities_count}
-- Timestamp: {datetime.now()}
-"""
-            print(summary)
-            
-        except Exception as e:
-            frappe.db.rollback()
-            error_msg = f"Route import v2 failed during processing: {str(e)}"
-            print(error_msg)
-            frappe.log_error(title="Route Import v2 Failed", message=error_msg)
-            raise
-
-    except Exception as e:
-        error_msg = f"Route import v2 failed: {str(e)}"
-        print(error_msg)
-        frappe.log_error(title="Route Import v2 Failed", message=error_msg)
-        raise 
