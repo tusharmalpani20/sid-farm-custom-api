@@ -557,7 +557,6 @@ def import_routes_v2_1():
                         city_doc.insert()
                         print("\n\n")
                         print(city_doc)
-                        print(city_doc.name)
                         print("\n\n")
                         # Add to map
                         city_name = city_doc.name
