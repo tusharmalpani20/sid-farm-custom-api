@@ -544,6 +544,8 @@ def import_routes_v2_1():
                     
                     # Get or create city
                     city_doc = None
+                    print(row["city_id"])
+                    print(row["city_id"] in city_sf_analytics_id_map)
                     if row["city_id"] in city_sf_analytics_id_map:
                         # We already have the city in our map, no need to fetch it again
                         city_name = city_sf_analytics_id_map[row["city_id"]]["name"]
