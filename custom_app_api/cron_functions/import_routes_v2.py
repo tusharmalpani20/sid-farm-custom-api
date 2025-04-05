@@ -88,180 +88,178 @@ def import_routes_v2():
         new_areas_count = 0
         new_points_count = 0
         new_routes_count = 0
+        
+        # Start transaction
+        frappe.db.begin()
+        
+        try:
+            for row in rows:
+                try:
+                    # Determine state and branch based on city
+                    state_name = None
+                    branch = None
+                    
+                    if row["city"] == "BLR":
+                        state_name = "Karnataka"
+                        branch = "Bengaluru"
+                    elif row["city"] == "HYD":
+                        state_name = "Telangana"
+                        branch = "Hyderabad"
+                    else:
+                        print(f"Unknown city code: {row['city']}, skipping row")
+                        continue
+                    
+                    # # Get or create state
+                    # state_doc = None
+                    # if frappe.db.exists("State", {"state_name": state_name}):
+                    #     state_doc = frappe.get_doc("State", {"state_name": state_name})
+                    # else:
+                    #     state_doc = frappe.get_doc({
+                    #         "doctype": "State",
+                    #         "state_name": state_name
+                    #     })
+                    #     state_doc.insert()
 
-        
-        
-        # # Start transaction
-        # frappe.db.begin()
-        
-        # try:
-        #     for row in rows:
-        #         try:
-        #             # Determine state and branch based on city
-        #             state_name = None
-        #             branch = None
+                    state_doc = {
+                        "name": state_name,
+                        "state_name": state_name
+                    }
                     
-        #             if row["city"] == "BLR":
-        #                 state_name = "Karnataka"
-        #                 branch = "Bengaluru"
-        #             elif row["city"] == "HYD":
-        #                 state_name = "Telangana"
-        #                 branch = "Hyderabad"
-        #             else:
-        #                 print(f"Unknown city code: {row['city']}, skipping row")
-        #                 continue
-                    
-        #             # # Get or create state
-        #             # state_doc = None
-        #             # if frappe.db.exists("State", {"state_name": state_name}):
-        #             #     state_doc = frappe.get_doc("State", {"state_name": state_name})
-        #             # else:
-        #             #     state_doc = frappe.get_doc({
-        #             #         "doctype": "State",
-        #             #         "state_name": state_name
-        #             #     })
-        #             #     state_doc.insert()
-
-        #             state_doc = {
-        #                 "name": state_name,
-        #                 "state_name": state_name
-        #             }
-                    
-        #             # Get or create city
-        #             city_doc = None
-        #             if row["city_id"] in city_sf_analytics_id_map:
-        #                 # We already have the city in our map, no need to fetch it again
-        #                 city_name = city_sf_analytics_id_map[row["city_id"]]["name"]
-        #             else:
-        #                 city_doc = frappe.get_doc({
-        #                     "doctype": "City",
-        #                     "city_name": row["city"],
-        #                     "state_name": state_doc.name,
-        #                     "sf_analytics_id": row["city_id"]
-        #                 })
-        #                 city_doc.insert()
+                    # Get or create city
+                    city_doc = None
+                    if row["city_id"] in city_sf_analytics_id_map:
+                        # We already have the city in our map, no need to fetch it again
+                        city_name = city_sf_analytics_id_map[row["city_id"]]["name"]
+                    else:
+                        city_doc = frappe.get_doc({
+                            "doctype": "City",
+                            "city_name": row["city"],
+                            "state_name": state_doc.name,
+                            "sf_analytics_id": row["city_id"]
+                        })
+                        city_doc.insert()
                         
-        #                 # Add to map
-        #                 city_name = city_doc.name
-        #                 city_sf_analytics_id_map[row["city_id"]] = {
-        #                     "name": city_name,
-        #                     "city_name": city_doc.city_name
-        #                 }
-        #                 new_cities_count += 1
+                        # Add to map
+                        city_name = city_doc.name
+                        city_sf_analytics_id_map[row["city_id"]] = {
+                            "name": city_name,
+                            "city_name": city_doc.city_name
+                        }
+                        new_cities_count += 1
                     
-        #             # Get or create zone
-        #             zone_doc = None
-        #             if row["zone_id"] in zone_sf_analytics_id_map:
-        #                 # We already have the zone in our map, no need to fetch it again
-        #                 zone_name = zone_sf_analytics_id_map[row["zone_id"]]["name"]
-        #             else:
-        #                 zone_doc = frappe.get_doc({
-        #                     "doctype": "Zone",
-        #                     "zone_name": row["zone"],
-        #                     "city_name": city_name,
-        #                     "state_name": state_doc.name,
-        #                     "branch": branch,
-        #                     "sf_analytics_id": row["zone_id"]
-        #                 })
-        #                 zone_doc.insert()
+                    # # Get or create zone
+                    # zone_doc = None
+                    # if row["zone_id"] in zone_sf_analytics_id_map:
+                    #     # We already have the zone in our map, no need to fetch it again
+                    #     zone_name = zone_sf_analytics_id_map[row["zone_id"]]["name"]
+                    # else:
+                    #     zone_doc = frappe.get_doc({
+                    #         "doctype": "Zone",
+                    #         "zone_name": row["zone"],
+                    #         "city_name": city_name,
+                    #         "state_name": state_doc.name,
+                    #         "branch": branch,
+                    #         "sf_analytics_id": row["zone_id"]
+                    #     })
+                    #     zone_doc.insert()
                         
-        #                 # Add to map
-        #                 zone_name = zone_doc.name
-        #                 zone_sf_analytics_id_map[row["zone_id"]] = {
-        #                     "name": zone_name,
-        #                     "zone_name": zone_doc.zone_name
-        #                 }
-        #                 new_zones_count += 1
+                    #     # Add to map
+                    #     zone_name = zone_doc.name
+                    #     zone_sf_analytics_id_map[row["zone_id"]] = {
+                    #         "name": zone_name,
+                    #         "zone_name": zone_doc.zone_name
+                    #     }
+                    #     new_zones_count += 1
                     
-        #             # Get or create area
-        #             area_doc = None
-        #             if row["area_id"] in area_sf_analytics_id_map:
-        #                 # We already have the area in our map, no need to fetch it again
-        #                 area_name = area_sf_analytics_id_map[row["area_id"]]["name"]
-        #             else:
-        #                 area_doc = frappe.get_doc({
-        #                     "doctype": "Area",
-        #                     "area_name": row["area"],
-        #                     "zone_name": zone_name,
-        #                     "city_name": city_name,
-        #                     "state_name": state_doc.name,
-        #                     "branch": branch,
-        #                     "sf_analytics_id": row["area_id"]
-        #                 })
-        #                 area_doc.insert()
+                    # # Get or create area
+                    # area_doc = None
+                    # if row["area_id"] in area_sf_analytics_id_map:
+                    #     # We already have the area in our map, no need to fetch it again
+                    #     area_name = area_sf_analytics_id_map[row["area_id"]]["name"]
+                    # else:
+                    #     area_doc = frappe.get_doc({
+                    #         "doctype": "Area",
+                    #         "area_name": row["area"],
+                    #         "zone_name": zone_name,
+                    #         "city_name": city_name,
+                    #         "state_name": state_doc.name,
+                    #         "branch": branch,
+                    #         "sf_analytics_id": row["area_id"]
+                    #     })
+                    #     area_doc.insert()
                         
-        #                 # Add to map
-        #                 area_name = area_doc.name
-        #                 area_sf_analytics_id_map[row["area_id"]] = {
-        #                     "name": area_name,
-        #                     "area_name": area_doc.area_name
-        #                 }
-        #                 new_areas_count += 1
+                    #     # Add to map
+                    #     area_name = area_doc.name
+                    #     area_sf_analytics_id_map[row["area_id"]] = {
+                    #         "name": area_name,
+                    #         "area_name": area_doc.area_name
+                    #     }
+                    #     new_areas_count += 1
                     
-        #             # Get or create point
-        #             point_doc = None
-        #             if row["pickup_point_id"] in point_sf_analytics_id_map:
-        #                 # We already have the point in our map, no need to fetch it again
-        #                 point_name = point_sf_analytics_id_map[row["pickup_point_id"]]["name"]
-        #             else:
-        #                 point_doc = frappe.get_doc({
-        #                     "doctype": "Point",
-        #                     "point_name": row["pick_up_point"],
-        #                     "point_code": str(row["pickup_point_id"]),
-        #                     "area_name": area_name,
-        #                     "zone_name": zone_name,
-        #                     "city_name": city_name,
-        #                     "state_name": state_doc.name,
-        #                     "branch": branch,
-        #                     "sf_analytics_id": row["pickup_point_id"]
-        #                 })
-        #                 point_doc.insert()
+                    # # Get or create point
+                    # point_doc = None
+                    # if row["pickup_point_id"] in point_sf_analytics_id_map:
+                    #     # We already have the point in our map, no need to fetch it again
+                    #     point_name = point_sf_analytics_id_map[row["pickup_point_id"]]["name"]
+                    # else:
+                    #     point_doc = frappe.get_doc({
+                    #         "doctype": "Point",
+                    #         "point_name": row["pick_up_point"],
+                    #         "point_code": str(row["pickup_point_id"]),
+                    #         "area_name": area_name,
+                    #         "zone_name": zone_name,
+                    #         "city_name": city_name,
+                    #         "state_name": state_doc.name,
+                    #         "branch": branch,
+                    #         "sf_analytics_id": row["pickup_point_id"]
+                    #     })
+                    #     point_doc.insert()
                         
-        #                 # Add to map
-        #                 point_name = point_doc.name
-        #                 point_sf_analytics_id_map[row["pickup_point_id"]] = {
-        #                     "name": point_name,
-        #                     "point_name": point_doc.point_name
-        #                 }
-        #                 new_points_count += 1
+                    #     # Add to map
+                    #     point_name = point_doc.name
+                    #     point_sf_analytics_id_map[row["pickup_point_id"]] = {
+                    #         "name": point_name,
+                    #         "point_name": point_doc.point_name
+                    #     }
+                    #     new_points_count += 1
                     
-        #             # Get or create route
-        #             if row["route_id"] in route_sf_analytics_id_map:
-        #                 # Update existing route's total_delivery
-        #                 route_name = route_sf_analytics_id_map[row["route_id"]]["name"]
-        #                 route_doc = frappe.get_doc("Route", route_name)
-        #                 route_doc.total_delivery = row["count_of_customers"]
-        #                 route_doc.save()
-        #             else:
-        #                 route_doc = frappe.get_doc({
-        #                     "doctype": "Route",
-        #                     "route_name": row["route"],
-        #                     "point_name": point_name,
-        #                     "area_name": area_name,
-        #                     "zone_name": zone_name,
-        #                     "city_name": city_name,
-        #                     "state_name": state_doc.name,
-        #                     "branch": branch,
-        #                     "total_delivery": row["count_of_customers"],
-        #                     "sf_analytics_id": row["route_id"]
-        #                 })
-        #                 route_doc.insert()
+                    # # Get or create route
+                    # if row["route_id"] in route_sf_analytics_id_map:
+                    #     # Update existing route's total_delivery
+                    #     route_name = route_sf_analytics_id_map[row["route_id"]]["name"]
+                    #     route_doc = frappe.get_doc("Route", route_name)
+                    #     route_doc.total_delivery = row["count_of_customers"]
+                    #     route_doc.save()
+                    # else:
+                    #     route_doc = frappe.get_doc({
+                    #         "doctype": "Route",
+                    #         "route_name": row["route"],
+                    #         "point_name": point_name,
+                    #         "area_name": area_name,
+                    #         "zone_name": zone_name,
+                    #         "city_name": city_name,
+                    #         "state_name": state_doc.name,
+                    #         "branch": branch,
+                    #         "total_delivery": row["count_of_customers"],
+                    #         "sf_analytics_id": row["route_id"]
+                    #     })
+                    #     route_doc.insert()
                         
-        #                 # Add to map
-        #                 route_name = route_doc.name
-        #                 route_sf_analytics_id_map[row["route_id"]] = {
-        #                     "name": route_name,
-        #                     "route_name": route_doc.route_name
-        #                 }
-        #                 new_routes_count += 1
+                    #     # Add to map
+                    #     route_name = route_doc.name
+                    #     route_sf_analytics_id_map[row["route_id"]] = {
+                    #         "name": route_name,
+                    #         "route_name": route_doc.route_name
+                    #     }
+                    #     new_routes_count += 1
                 
-        #         except Exception as e:
-        #             print(f"Error processing row {row}: {str(e)}")
-        #             frappe.db.rollback()
-        #             continue
+                except Exception as e:
+                    print(f"Error processing row {row}: {str(e)}")
+                    frappe.db.rollback()
+                    continue
             
-        #     # Commit transaction once at the end
-        #     frappe.db.commit()
+            # Commit transaction once at the end
+            frappe.db.commit()
             
             # Log summary
             summary = f"""
