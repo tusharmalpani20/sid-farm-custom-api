@@ -540,10 +540,7 @@ def import_routes_v2_1():
                         "name": state_name,
                         "state_name": state_name
                     }
-                    print("\n\n")
-                    print(state_doc)
-                    print(state_doc["name"])
-                    print("\n\n")
+                    
                     
                     # Get or create city
                     city_doc = None
@@ -554,7 +551,7 @@ def import_routes_v2_1():
                         city_doc = frappe.get_doc({
                             "doctype": "City",
                             "city_name": row["city"],
-                            "state_name": state_doc.name,
+                            "state_name": state_doc["name"],
                             "sf_analytics_id": row["city_id"]
                         })
                         city_doc.insert()
