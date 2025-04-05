@@ -71,7 +71,7 @@ def import_routes_v2():
         routes = frappe.get_all("Route", fields=["name", "route_name", "sf_analytics_id"], limit_page_length=None)
         for route in routes:
             if route.sf_analytics_id:
-                route_sf_analytics_id_map[route.sf_analytics_id] = {
+                route_sf_analytics_id_map[int(route.sf_analytics_id)] = {
                     "name": route.name,
                     "route_name": route.route_name
                 }
