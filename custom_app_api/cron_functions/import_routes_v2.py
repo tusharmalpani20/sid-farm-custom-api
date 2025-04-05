@@ -494,7 +494,7 @@ def import_routes_v2_1():
         cities = frappe.get_all("City", fields=["name", "city_name", "sf_analytics_id"], limit_page_length=None)
         for city in cities:
             if city.sf_analytics_id:
-                city_sf_analytics_id_map[city.sf_analytics_id] = {
+                city_sf_analytics_id_map[int(city.sf_analytics_id)] = {
                     "name": city.name,
                     "city_name": city.city_name
                 }
