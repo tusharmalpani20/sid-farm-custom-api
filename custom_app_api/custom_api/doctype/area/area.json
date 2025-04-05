@@ -38,11 +38,16 @@
   },
   {
    "fetch_from": "zone_name.state_name",
-   "fieldname": "state_name",
+   "fieldname": "state_name",   
    "fieldtype": "Link",
    "label": "State Name",
    "options": "State",
    "reqd": 1
+  },
+  {
+    "fieldname": "sf_analytics_id",
+    "fieldtype": "Data",
+    "label": "SF Analytics ID"
   },
   {
    "fieldname": "branch",

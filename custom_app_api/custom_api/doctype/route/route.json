@@ -68,6 +68,11 @@
    "reqd": 1
   },
   {
+    "fieldname": "sf_analytics_id",
+    "fieldtype": "Data",
+    "label": "SF Analytics ID"
+  },
+  {
    "fetch_from": "point_name.branch",
    "fieldname": "branch",
    "fieldtype": "Link",

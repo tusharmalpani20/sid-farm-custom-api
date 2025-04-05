@@ -95,6 +95,11 @@
    "options": "State"
   },
   {
+    "fieldname": "sf_analytics_id",
+    "fieldtype": "Data",
+    "label": "SF Analytics ID"
+  },
+  {
    "fetch_from": "area_name.branch",
    "fieldname": "branch",
    "fieldtype": "Link",

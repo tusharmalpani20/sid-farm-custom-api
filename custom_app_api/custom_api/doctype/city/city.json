@@ -19,6 +19,11 @@
    "unique": 1
   },
   {
+    "fieldname": "sf_analytics_id",
+    "fieldtype": "Data",
+    "label": "SF Analytics ID"
+  },
+  {
    "fieldname": "state_name",
    "fieldtype": "Link",
    "label": "State Name",
