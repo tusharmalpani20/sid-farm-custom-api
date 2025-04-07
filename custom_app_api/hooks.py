@@ -213,7 +213,7 @@ scheduler_events = {
 		],
 		"0 23 * * *": [  # Runs at 11:00 PM (23:00) every day
 			"custom_app_api.cron_functions.salary_slip_cron.generate_salary_slips_for_active_employees",
-			"custom_app_api.cron_functions.update_delivery_count_for_each_route.update_delivery_count_for_routes"
+			"custom_app_api.cron_functions.update_delivery_count_for_each_route.update_delivery_count_for_routes_v2"
 		],
 		"0 0 * * *": [
 			"custom_app_api.cron_functions.employee.check_notice_period_completion"
