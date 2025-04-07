@@ -191,6 +191,9 @@ scheduler_events = {
 			#"custom_app_api.cron_functions.import_routes.import_routes",
 			"custom_app_api.cron_functions.import_routes_v2.import_routes_v2"
         ],
+		"0 1 * * *" :[
+			"custom_app_api.cron_functions.update_delivery_count_for_each_route.update_delivery_count_for_routes_v2"
+		],
 		"0 9 * * *": [
 			"custom_app_api.cron_functions.check_attendance_index_for_route_tracking.check_attendance_index_for_route_tracking"
 		],
@@ -212,8 +215,7 @@ scheduler_events = {
 			"custom_app_api.cron_functions.auto_assign_salary_structure_for_promotions.auto_assign_salary_structure"
 		],
 		"0 23 * * *": [  # Runs at 11:00 PM (23:00) every day
-			"custom_app_api.cron_functions.salary_slip_cron.generate_salary_slips_for_active_employees",
-			"custom_app_api.cron_functions.update_delivery_count_for_each_route.update_delivery_count_for_routes_v2"
+			"custom_app_api.cron_functions.salary_slip_cron.generate_salary_slips_for_active_employees"
 		],
 		"0 0 * * *": [
 			"custom_app_api.cron_functions.employee.check_notice_period_completion"
