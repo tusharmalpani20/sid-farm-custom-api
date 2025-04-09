@@ -196,6 +196,23 @@ def verify_otp(phone_number, otp_code, app_name = 'sf_partner' , app_version = '
                 "http_status_code": 400
             }
 
+        # Check app version
+        mobile_config = frappe.get_doc("Mobile App Config")
+        required_version_field = f"{app_name}_app_version"
+        required_version = getattr(mobile_config, required_version_field, None)
+        
+        if required_version and app_version != required_version:
+            frappe.local.response['http_status_code'] = 403
+            return {
+                "success": False,
+                "status": "error",
+                "code": "App Update Required",
+                "message": f"Please update your app to version {required_version}",
+                "required_version": required_version,
+                "current_version": app_version,
+                "http_status_code": 403
+            }
+
         if phone_number == "1234567890":
 
             # Get employee details

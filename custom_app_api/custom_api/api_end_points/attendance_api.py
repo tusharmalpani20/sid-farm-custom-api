@@ -78,6 +78,29 @@ def verify_dp_token(headers: Dict[str, Any]) -> Tuple[bool, Dict[str, Any]]:
                 "http_status_code": 401
             }
 
+        # Check app version
+        app_name = token_record.app_name
+        app_version = token_record.app_version
+        
+        # Get required app version from Mobile App Config
+        mobile_config = frappe.get_doc("Mobile App Config")
+        required_version_field = f"{app_name}_app_version"
+        required_version = getattr(mobile_config, required_version_field, None)
+        
+        if required_version and app_version != required_version:
+            # Update token status to expired
+            token_record.status = "Expired"
+            token_record.save()
+            frappe.local.response['http_status_code'] = 403
+            return False, {
+                "success": False,
+                "status": "error",
+                "code": "App Update Required",
+                "message": f"Please update your app to version {required_version}",
+                "required_version": required_version,
+                "current_version": app_version,
+                "http_status_code": 403
+            }
         
         # Since multiple reuqest from same user were casuing error, document modified error
         # "_server_messages": "[\"{\\\"message\\\": \\\"Error: Document has been modified after you have opened it (2025-02-19 11:19:51.726123, 2025-02-19 11:20:13.290599). Please refresh to get the latest document.\\\", \\\"title\\\": \\\"Message\\\", \\\"indicator\\\": \\\"red\\\", \\\"raise_exception\\\": 1, \\\"__frappe_exc_id\\\": \\\"166d44d09551bea0cad529572b05cd343aef0a24a373954b7d77c9d1\\\"}\"]"

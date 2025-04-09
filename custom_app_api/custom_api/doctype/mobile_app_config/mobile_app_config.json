@@ -7,8 +7,10 @@
  "field_order": [
   "sf_partner_section",
   "sf_partner_access",
+  "sf_partner_app_version",
   "sf_farmer_tracker_section",
-  "sf_farmer_tracker_access"
+  "sf_farmer_tracker_access",
+  "sf_farmer_tracker_app_version"
  ],
  "fields": [
   {
@@ -23,6 +25,12 @@
    "options": "Designation Mapping"
   },
   {
+   "fieldname": "sf_partner_app_version",
+   "fieldtype": "Data",
+   "label": "Required App Version",
+   "description": "Minimum required version for SF Partner app"
+  },
+  {
    "fieldname": "sf_farmer_tracker_section",
    "fieldtype": "Section Break",
    "label": "SF Farmer Tracker"
@@ -32,6 +40,12 @@
    "fieldtype": "Table MultiSelect",
    "label": "Designation Access",
    "options": "Designation Mapping"
+  },
+  {
+   "fieldname": "sf_farmer_tracker_app_version",
+   "fieldtype": "Data",
+   "label": "Required App Version",
+   "description": "Minimum required version for SF Farmer Tracker app"
   }
  ],
  "index_web_pages_for_search": 1,

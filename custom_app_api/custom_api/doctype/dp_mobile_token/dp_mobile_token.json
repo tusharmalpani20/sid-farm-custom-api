@@ -8,7 +8,9 @@
   "employee",
   "status",
   "expires_at",
-  "last_login"
+  "last_login",
+  "app_name",
+  "app_version"
  ],
  "fields": [
   {
@@ -68,8 +70,7 @@
     "fieldtype": "Data",
     "label": "App Version",
     "reqd": 0,
-    "hidden": 1,
-    "default": "1.0.0"
+    "hidden": 1
   }
  ],
  "index_web_pages_for_search": 1,
