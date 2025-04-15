@@ -34,9 +34,9 @@ def send_custom_time_reports():
             # Update date only for Point Wise Attendance report
             if doc.report == "Point Wise Attendance-Hyderabad":
                 filters = frappe.parse_json(doc.filters)
+                filters["branch"] = ["Hyderabad"]
                 if "date" in filters:
                     filters["date"] = today
-                    filters["branch"] = ["Hyderabad"]
                     doc.filters = frappe.as_json(filters)
                     doc.save()
                 print(f"Filters updated for {doc.report}: {filters}")
@@ -58,9 +58,9 @@ def send_custom_time_reports():
                     continue
             elif doc.report == "Point Wise Attendance-Bengaluru":
                 filters = frappe.parse_json(doc.filters)
+                filters["branch"] = ["Bengaluru"]
                 if "date" in filters:
                     filters["date"] = today
-                    filters["branch"] = ["Bengaluru"]
                     doc.filters = frappe.as_json(filters)
                     doc.save()
                 print(f"Filters updated for {doc.report}: {filters}")
