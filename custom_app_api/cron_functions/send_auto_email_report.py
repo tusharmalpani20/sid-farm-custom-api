@@ -36,7 +36,7 @@ def send_custom_time_reports():
                 # Extract branch name from the report name
                 branch_name = doc.name.split("-")[-1].strip()
                 filters = frappe.parse_json(doc.filters)
-                filters["branch"] = [branch_name]
+                filters["branch"] = branch_name
                 if "date" in filters:
                     filters["date"] = today
                     doc.filters = frappe.as_json(filters)
