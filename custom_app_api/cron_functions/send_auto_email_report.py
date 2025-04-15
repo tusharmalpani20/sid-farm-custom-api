@@ -32,10 +32,11 @@ def send_custom_time_reports():
             print(f"Processing report: {doc.report} scheduled for {doc.custom_time}")  # Debug print
             
             # Update date only for Point Wise Attendance report
-            if doc.report == "Point Wise Attendance":
+            if doc.report == "Point Wise Attendance-Hyderabad":
                 filters = frappe.parse_json(doc.filters)
                 if "date" in filters:
                     filters["date"] = today
+                    filters["branch"] = ["Hyderabad"]
                     doc.filters = frappe.as_json(filters)
                     doc.save()
                 print(f"Filters updated for {doc.report}: {filters}")
@@ -47,6 +48,31 @@ def send_custom_time_reports():
                     filters={
                         "attendance_date": today,
                         "status": "Present",
+                        "custom_branch": "Hyderabad",
+                        "docstatus": 1
+                    }
+                )
+                
+                if not present_records:
+                    print(f"No present records found for {today}. Skipping Point Wise Attendance report.")
+                    continue
+            elif doc.report == "Point Wise Attendance-Bengaluru":
+                filters = frappe.parse_json(doc.filters)
+                if "date" in filters:
+                    filters["date"] = today
+                    filters["branch"] = ["Bengaluru"]
+                    doc.filters = frappe.as_json(filters)
+                    doc.save()
+                print(f"Filters updated for {doc.report}: {filters}")
+                print(f"Today's date: {today}")
+                
+                # Check if there are any present records for today
+                present_records = frappe.get_all(
+                    "Attendance",
+                    filters={
+                        "attendance_date": today,
+                        "status": "Present",
+                        "custom_branch": "Bengaluru",
                         "docstatus": 1
                     }
                 )
