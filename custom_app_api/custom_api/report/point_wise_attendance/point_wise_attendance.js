@@ -75,7 +75,7 @@ frappe.query_reports["Point Wise Attendance"] = {
 			label: __("Branch"),
 			fieldtype: "Link",
 			options: "Branch",
-			hidden: 1,
+			hidden: 0,
 		}
 	]
 };
