@@ -50,7 +50,7 @@ def send_custom_time_reports():
                     filters={
                         "attendance_date": today,
                         "status": "Present",
-                        "custom_branch": branch_name,
+                        # "custom_branch": branch_name,
                         "docstatus": 1
                     }
                 )
