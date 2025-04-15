@@ -340,6 +340,10 @@ def get_point_wise_attendance(filters):
     if filters.get("zones"):
         point_filters["zone_name"] = ("in", filters.get("zones"))
     
+    # Add branch filter if specified
+    if filters.get("branch"):
+        point_filters["branch"] = filters.get("branch")
+    
     allowed_points = frappe.get_list("Point", 
         fields=["name", "zone_name"],
         filters=point_filters
