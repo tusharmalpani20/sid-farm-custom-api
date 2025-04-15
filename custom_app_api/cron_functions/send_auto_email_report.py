@@ -32,9 +32,11 @@ def send_custom_time_reports():
             print(f"Processing report: {doc.report} scheduled for {doc.custom_time}")  # Debug print
             
             # Update date only for Point Wise Attendance report
-            if doc.report == "Point Wise Attendance-Hyderabad":
+            if doc.report == "Point Wise Attendance":
+                # Extract branch name from the report name
+                branch_name = doc.name.split("-")[-1].strip()
                 filters = frappe.parse_json(doc.filters)
-                filters["branch"] = ["Hyderabad"]
+                filters["branch"] = [branch_name]
                 if "date" in filters:
                     filters["date"] = today
                     doc.filters = frappe.as_json(filters)
@@ -48,39 +50,15 @@ def send_custom_time_reports():
                     filters={
                         "attendance_date": today,
                         "status": "Present",
-                        "custom_branch": "Hyderabad",
+                        "custom_branch": branch_name,
                         "docstatus": 1
                     }
                 )
                 
                 if not present_records:
-                    print(f"No present records found for {today}. Skipping Point Wise Attendance report.")
+                    print(f"No present records found for {today} in branch {branch_name}. Skipping Point Wise Attendance report.")
                     continue
-            elif doc.report == "Point Wise Attendance-Bengaluru":
-                filters = frappe.parse_json(doc.filters)
-                filters["branch"] = ["Bengaluru"]
-                if "date" in filters:
-                    filters["date"] = today
-                    doc.filters = frappe.as_json(filters)
-                    doc.save()
-                print(f"Filters updated for {doc.report}: {filters}")
-                print(f"Today's date: {today}")
-                
-                # Check if there are any present records for today
-                present_records = frappe.get_all(
-                    "Attendance",
-                    filters={
-                        "attendance_date": today,
-                        "status": "Present",
-                        "custom_branch": "Bengaluru",
-                        "docstatus": 1
-                    }
-                )
-                
-                if not present_records:
-                    print(f"No present records found for {today}. Skipping Point Wise Attendance report.")
-                    continue
-                    
+                        
             elif doc.report == "Delivery Partner Status Report":
                 filters = frappe.parse_json(doc.filters)
                 if "from" in filters and "to" in filters:
