@@ -89,6 +89,13 @@ def get_columns(filters):
             "width": 120
         },
         {
+            "label": _("Reports To"),
+            "fieldname": "reports_to",
+            "fieldtype": "Link",
+            "options": "Employee",
+            "width": 120
+        },
+        {
             "label": _("PAN No."),
             "fieldname": "custom_pan",
             "fieldtype": "Data",
@@ -160,13 +167,6 @@ def get_columns(filters):
             "label": _("Account Number"),
             "fieldname": "bank_ac_no",
             "fieldtype": "Data",
-            "width": 120
-        },
-        {
-            "label": _("Reports To"),
-            "fieldname": "reports_to",
-            "fieldtype": "Link",
-            "options": "Employee",
             "width": 120
         },
         {
