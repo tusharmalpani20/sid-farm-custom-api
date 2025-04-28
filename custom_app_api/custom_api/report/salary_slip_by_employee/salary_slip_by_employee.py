@@ -150,7 +150,6 @@ def get_columns(filters):
             "fieldtype": "Currency",
             "width": 120
         },
-,
         {
             "label": _("Beneficiary Name"),
             "fieldname": "custom_beneficiary_name",
