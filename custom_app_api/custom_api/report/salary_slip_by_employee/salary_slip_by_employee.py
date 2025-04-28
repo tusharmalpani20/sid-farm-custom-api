@@ -34,35 +34,17 @@ def get_columns(filters):
     # Add other basic columns
     columns.extend([
         {
-            "label": _("Employee"),
+            "label": _("DP Id"),
             "fieldname": "employee",
             "fieldtype": "Link",
             "options": "Employee",
             "width": 120
         },
         {
-            "label": _("Employee Name"),
+            "label": _("Name"),
             "fieldname": "employee_name",
             "fieldtype": "Data",
             "width": 120
-        },
-        {
-            "label": _("PAN No."),
-            "fieldname": "custom_pan",
-            "fieldtype": "Data",
-            "width": 120
-        },
-        {
-            "label": _("Beneficiary Name"),
-            "fieldname": "custom_beneficiary_name",
-            "fieldtype": "Data",
-            "width": 120
-        },
-        {   
-            "label": _("Payment Days"),
-            "fieldname": "payment_days",
-            "fieldtype": "Float",
-            "width": 100
         },
         {
             "label": _("Route"),
@@ -95,33 +77,9 @@ def get_columns(filters):
             "width": 120
         },
         {
-            "label": _("Bank Name"),
-            "fieldname": "bank_name",
-            "fieldtype": "Data",
-        },
-        {
-            "label": _("IFSC No."),
-            "fieldname": "custom_ifsc_no",
-            "fieldtype": "Data",
-            "width": 120
-        },
-        {
-            "label": _("Bank A/C No."),
-            "fieldname": "bank_ac_no",
-            "fieldtype": "Data",
-            "width": 120
-        },
-        {
             "label": _("Designation"),
             "fieldname": "designation",
             "fieldtype": "Data",
-            "width": 120
-        },
-        {
-            "label": _("Reports To"),
-            "fieldname": "reports_to",
-            "fieldtype": "Link",
-            "options": "Employee",
             "width": 120
         },
         {
@@ -129,6 +87,24 @@ def get_columns(filters):
             "fieldname": "custom_manager_name",
             "fieldtype": "Data",
             "width": 120
+        },
+        {
+            "label": _("PAN No."),
+            "fieldname": "custom_pan",
+            "fieldtype": "Data",
+            "width": 120
+        },
+        {
+            "label": _("Total Working Days"),
+            "fieldname": "total_working_days",
+            "fieldtype": "Float",
+            "width": 120
+        },
+        {   
+            "label": _("Payment Days"),
+            "fieldname": "payment_days",
+            "fieldtype": "Float",
+            "width": 100
         }
     ])
 
@@ -172,6 +148,37 @@ def get_columns(filters):
             "label": _("Net Pay"),
             "fieldname": "net_pay",
             "fieldtype": "Currency",
+            "width": 120
+        },
+,
+        {
+            "label": _("Beneficiary Name"),
+            "fieldname": "custom_beneficiary_name",
+            "fieldtype": "Data",
+            "width": 120
+        },
+        {
+            "label": _("Account Number"),
+            "fieldname": "bank_ac_no",
+            "fieldtype": "Data",
+            "width": 120
+        },
+        {
+            "label": _("Reports To"),
+            "fieldname": "reports_to",
+            "fieldtype": "Link",
+            "options": "Employee",
+            "width": 120
+        },
+        {
+            "label": _("Bank Name"),
+            "fieldname": "bank_name",
+            "fieldtype": "Data",
+        },
+        {
+            "label": _("IFSC Code"),
+            "fieldname": "custom_ifsc_no",
+            "fieldtype": "Data",
             "width": 120
         }
     ])
@@ -243,6 +250,7 @@ def get_salary_slip_data(filters):
             ss.workflow_state,
             ss.employee,
             ss.employee_name,
+            ss.total_working_days,
             ss.payment_days,
             ss.net_pay,
             e.custom_route,
@@ -326,7 +334,6 @@ def get_salary_slip_data(filters):
             "employee": slip.employee,
             "employee_name": slip.employee_name,
             "custom_pan": slip.custom_pan,
-            "custom_beneficiary_name": slip.custom_beneficiary_name,
             "payment_days": slip.payment_days,
             "route": slip.custom_route,
             "point": slip.custom_point,
@@ -335,6 +342,7 @@ def get_salary_slip_data(filters):
             "branch": slip.branch,
             "bank_name": slip.bank_name,
             "custom_ifsc_no": slip.custom_ifsc_no,
+            "custom_beneficiary_name": slip.custom_beneficiary_name,
             "bank_ac_no": slip.bank_ac_no,
             "designation": slip.designation,
             "reports_to": slip.reports_to,
