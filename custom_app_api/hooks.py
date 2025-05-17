@@ -55,7 +55,8 @@ doctype_js = {
 }
 doctype_list_js = {
 	# "doctype" : "public/js/doctype_list.js"
-	"Employee" : "public/js/employee_list.js"
+	"Employee" : "public/js/employee_list.js",
+	"Salary Slip" : "public/js/salary_slip_list.js"
 }
 # doctype_tree_js = {"doctype" : "public/js/doctype_tree.js"}
 # doctype_calendar_js = {"doctype" : "public/js/doctype_calendar.js"}
@@ -149,9 +150,10 @@ permission_query_conditions = {
 # ---------------
 # Override standard doctype classes
 
-# override_doctype_class = {
-# 	"ToDo": "custom_app.overrides.CustomToDo"
-# }
+override_doctype_class = {
+	# "ToDo": "custom_app.overrides.CustomToDo"
+	"Salary Slip": "custom_app_api.overrides.doctypes.salary_slip.CustomSalarySlip"
+}
 
 # Document Events
 # ---------------
