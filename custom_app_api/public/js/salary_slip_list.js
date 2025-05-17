@@ -1,6 +1,9 @@
 frappe.listview_settings['Salary Slip'] = {
     onload: function (listview) {
         // Check if user has System Manager role
+        console.log(frappe.user_roles);
+        console.log(frappe.user);
+        console.log(frappe.user_roles.includes('System Manager') || frappe.user == "Administrator" );
         if (frappe.user_roles.includes('System Manager') || frappe.user == "Administrator" ) {
             // Add button only for System Manager
             listview.page.add_inner_button(__("Process Salary Slips"), function () {
