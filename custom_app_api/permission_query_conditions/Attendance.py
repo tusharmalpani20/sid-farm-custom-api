@@ -50,8 +50,8 @@ def get_permission_query_conditions(user):
         )
         SELECT name FROM emp_hierarchy
     """
-    subordinates = frappe.db.sql(subordinates_query, {"employee": employee}, as_dict=1)
-    subordinate_names = [employee]  # Include self
+    subordinates = frappe.db.sql(subordinates_query, {"employee": employee.name}, as_dict=1)
+    subordinate_names = [employee.name]  # Include self
     subordinate_names.extend([d.name for d in subordinates])
     # frappe.msgprint(f"Found subordinates: {subordinate_names}")
     
