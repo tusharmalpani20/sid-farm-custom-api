@@ -4,6 +4,7 @@ def get_permission_query_conditions(user):
     """
     Adds permission conditions for Point doctype based on employee hierarchy and geographical assignments:
     - System Manager/Administrator: No restrictions
+    - Last Mile Manager: Access to all points in their branch
     - Last Mile Head: Access to points in their branch
     - Last Mile Zonal Head: Access to points in their zone
     - Last Mile Lead: Access to points in their area
@@ -34,7 +35,14 @@ def get_permission_query_conditions(user):
     # frappe.msgprint(f"Checking filters for designation: {employee.designation}")
     
     # Apply filters based on designation
-    if employee.designation == "Last Mile Head":
+    if employee.designation == "Last Mile Manager":
+        if employee.branch:
+            conditions.append(f"`tabZone`.branch = '{employee.branch}'")
+        else:
+            # frappe.msgprint("Warning: Last Mile Manager has no branch assigned!")
+            pass
+
+    elif employee.designation == "Last Mile Head":
         if employee.branch:
             conditions.append(f"`tabPoint`.branch = '{employee.branch}'")
             # frappe.msgprint(f"Last Mile Head filter applied for branch: {employee.branch}")

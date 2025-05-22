@@ -27,7 +27,14 @@ def get_permission_query_conditions(user):
         return ""
     
     # Apply filters based on designation
-    if employee.designation == "Last Mile Head":
+    if employee.designation == "Last Mile Manager":
+        if employee.branch:
+            conditions.append(f"`tabZone`.branch = '{employee.branch}'")
+        else:
+            # frappe.msgprint("Warning: Last Mile Manager has no branch assigned!")
+            pass
+
+    elif employee.designation == "Last Mile Head":
         if employee.branch:
             conditions.append(f"`tabArea`.branch = '{employee.branch}'")
             

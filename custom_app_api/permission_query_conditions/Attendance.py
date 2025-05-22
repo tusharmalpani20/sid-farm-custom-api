@@ -27,6 +27,12 @@ def get_permission_query_conditions(user):
         # frappe.msgprint("No employee record found - using default permissions")
         return " and ".join(conditions)
     
+    # For Last Mile Managers, show all employees in their branch
+    if employee.designation == "Last Mile Manager":
+        if employee.branch:
+            conditions.append(f"custom_branch = '{employee.branch}'")
+        return " and ".join(conditions)
+    
     # Get all subordinates using MariaDB recursive query
     subordinates_query = """
         WITH RECURSIVE emp_hierarchy AS (

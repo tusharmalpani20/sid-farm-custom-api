@@ -18,10 +18,16 @@ def get_permission_query_conditions(user):
         return " and ".join(conditions)
     
     # Get employee record for logged-in user
-    employee = frappe.db.get_value("Employee", {"user_id": user}, "name")
+    employee = frappe.db.get_value("Employee", {"user_id": user}, ["name", "designation", "branch"], as_dict=1)
     #frappe.msgprint(f"Employee found: {employee}")
     if not employee:
         return " and ".join(conditions)  # Return default permissions if no employee record
+    
+    # For Last Mile Managers, show all employees in their branch
+    if employee.designation == "Last Mile Manager":
+        if employee.branch:
+            conditions.append(f"branch = '{employee.branch}'")
+        return " and ".join(conditions)
     
     # Get all subordinates using MariaDB recursive query
     subordinates_query = """
@@ -40,8 +46,8 @@ def get_permission_query_conditions(user):
         )
         SELECT name FROM emp_hierarchy
     """
-    subordinates = frappe.db.sql(subordinates_query, {"employee": employee}, as_dict=1)
-    subordinate_names = [employee]  # Include self
+    subordinates = frappe.db.sql(subordinates_query, {"employee": employee.name}, as_dict=1)
+    subordinate_names = [employee.name]  # Include self
     subordinate_names.extend([d.name for d in subordinates])
     
     #frappe.msgprint(f"Subordinates: {subordinate_names}")

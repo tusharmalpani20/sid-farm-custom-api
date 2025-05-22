@@ -4,6 +4,7 @@ def get_permission_query_conditions(user):
     """
     Adds permission conditions for Zone doctype based on employee hierarchy and geographical assignments:
     - System Manager/Administrator: No restrictions
+    - Last Mile Manager: Access to all zones in their branch
     - Last Mile Head: Access to zones in their branch
     - Last Mile Zonal Head: Access to zones in their assigned zones
     - Last Mile Lead: Access to zones associated with their assigned areas
@@ -27,7 +28,12 @@ def get_permission_query_conditions(user):
         return ""
     
     # Apply filters based on designation
-    if employee.designation == "Last Mile Head":
+
+    if employee.designation == "Last Mile Manager":
+        if employee.branch:
+            conditions.append(f"`tabZone`.branch = '{employee.branch}'")
+
+    elif employee.designation == "Last Mile Head":
         if employee.branch:
             conditions.append(f"`tabZone`.branch = '{employee.branch}'")
             
