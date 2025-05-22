@@ -1,0 +1,68 @@
+{
+  "add_total_row": 0,
+  "columns": [],
+  "creation": "2024-05-22 17:00:01.746553",
+  "disabled": 0,
+  "docstatus": 0,
+  "doctype": "Report",
+  "filters": [],
+  "idx": 0,
+  "is_standard": "Yes",
+  "letter_head": "Default",
+  "modified": "2024-05-22 17:10:01.746553",
+  "modified_by": "Administrator",
+  "module": "Custom API",
+  "name": "Leave Policy Assignment Status",
+  "owner": "Administrator",
+  "prepared_report": 0,
+  "ref_doctype": "Leave Policy Assignment",
+  "report_name": "Leave Policy Assignment Status",
+  "report_type": "Script Report",
+  "roles": [
+    {
+      "role": "System Manager"
+    },
+    {
+      "role": "HR Manager"
+    },
+    {
+      "role": "HR User"
+    },
+    {
+      "role": "Employee"
+    },
+    {
+      "role": "Analyst Team"
+    },
+    {
+      "role": "Mid-Mile Lead(MML)"
+    },
+    {
+      "role": "Zonal Mid-Mile Lead(ZMML)"
+    },
+    {
+      "role": "Pan India Mid Mile Manager(PMMM)"
+    },
+    {
+      "role": "Pan India Last Mile Manager(PLMM)"
+    },
+    {
+      "role": "Last Mile Manager(LMM)"
+    },
+    {
+      "role": "Last Mile Zonal Head(LMZm)"
+    },
+    {
+      "role": "Last Mile Zonal Head(LMZm)"
+    },
+    {
+      "role": "Last Mile Lead(LML)"
+    },
+    {
+      "role": "Last Mile Head(LMH)"
+    },
+    {
+      "role" : "Attendance(Master Access)"
+    }
+  ]
+}
