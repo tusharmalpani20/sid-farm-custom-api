@@ -20,7 +20,7 @@ def get_permission_query_conditions(user):
         return " and ".join(conditions)
     
     # Get employee record for logged-in user
-    employee = frappe.db.get_value("Employee", {"user_id": user}, ["name", "designation", "branch"], as_dict=1)
+    employee = frappe.db.get_value("Employee", {"user_id": user}, ["name", "designation", "branch"], as_dict=1)``
     # frappe.msgprint(f"Employee record found: {employee}")
     
     if not employee:
