@@ -36,7 +36,7 @@ function show_modal_with_buttons(listview) {
                     let today = new Date();
                     let year = today.getFullYear();
                     let month = today.getMonth() + 1;
-                    process_salary_slips(year, month, d);
+                    process_salary_slips(year, month, true, d);
                 }
             },
             {
@@ -51,7 +51,33 @@ function show_modal_with_buttons(listview) {
                         month = 12;
                         year -= 1;
                     }
-                    process_salary_slips(year, month, d);
+                    process_salary_slips(year, month, true, d);
+                }
+            },
+            {
+                fieldname: 'current_month_for_all_btn',
+                fieldtype: 'Button',
+                label: __('Generate for Current Month For All Employees'),
+                click: function() {
+                    let today = new Date();
+                    let year = today.getFullYear();
+                    let month = today.getMonth() + 1;
+                    process_salary_slips(year, month, false, d);
+                }
+            },
+            {
+                fieldname: 'prev_month_for_all_btn',
+                fieldtype: 'Button',
+                label: __('Generate for Previous Month For All Employees'),
+                click: function() {
+                    let today = new Date();
+                    let year = today.getFullYear();
+                    let month = today.getMonth();
+                    if (month === 0) {
+                        month = 12;
+                        year -= 1;
+                    }
+                    process_salary_slips(year, month, false, d);
                 }
             }
         ],
