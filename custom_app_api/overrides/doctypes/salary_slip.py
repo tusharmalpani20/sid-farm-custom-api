@@ -10,7 +10,7 @@ class CustomSalarySlip(ERPNextSalarySlip):
     pass
 
 @frappe.whitelist(methods=['POST'])
-def generate_salary_slips(year=None, month=None, generate_for_active_employees=True):
+def generate_salary_slips(year=None, month=None, generate_for_active_employees="true"):
     """
     Generate salary slips for active employees for a specific month
     Args:
@@ -31,7 +31,7 @@ def generate_salary_slips(year=None, month=None, generate_for_active_employees=T
 
         employee_filter = {}
 
-        if  generate_for_active_employees:
+        if  generate_for_active_employees == "true":
             employee_filter = {
                 "status": "Active",
             }
