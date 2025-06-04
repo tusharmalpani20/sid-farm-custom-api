@@ -90,11 +90,11 @@ function show_modal_with_buttons(listview) {
     d.show();
 }
 
-function process_salary_slips(year, month, dialog) {
+function process_salary_slips(year, month, generate_for_active_employees, dialog) {
     frappe.dom.freeze(__('Generating Salary Slips...')); // Show loading indicator
     frappe.call({
         method: 'custom_app_api.overrides.doctypes.salary_slip.generate_salary_slips',
-        args: { year, month },
+        args: { year, month, generate_for_active_employees },
         callback: function(r) {
             frappe.dom.unfreeze(); // Hide loading indicator
             if (r.message.success) {
