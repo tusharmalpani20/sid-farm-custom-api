@@ -10,7 +10,7 @@
  "is_standard": "Yes",
  "letter_head": "Default",
  "letterhead": null,
- "modified": "2024-11-30 13:07:43.933611",
+ "modified": "2025-06-05 19:07:43.933611",
  "modified_by": "Administrator",
  "module": "Custom API",
  "name": "Route Wise Attendance",
@@ -25,6 +25,9 @@
   },
   {
    "role": "HR Manager"
+  },
+  {
+    "role": "HR Team"
   },
   {
    "role": "Employee"

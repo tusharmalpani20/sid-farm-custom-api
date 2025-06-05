@@ -9,7 +9,7 @@
     "idx": 0,
     "is_standard": "Yes",
     "letter_head": "Default",
-    "modified": "2024-12-25 10:07:43.933611",
+    "modified": "2025-06-05 19:07:43.933611",
     "modified_by": "Administrator",
     "module": "Custom API",
     "name": "Zone Wise Attendance",
@@ -27,6 +27,9 @@
      },
      {
       "role": "HR User"
+     },
+     {
+      "role": "HR Team"
      },
      {
       "role": "Employee"
