@@ -232,14 +232,17 @@ def get_salary_slip_data(filters):
     """Get salary slip data with employee details, earnings, and deductions"""
     # Modify docstatus condition based on workflow states
     if filters.get("include_draft"):
-        workflow_states = (
-            "'Pending', 'Approved by LMM', 'Rejected by LMM', "
-            "'Cancelled'"
-        )
+        workflow_states = [
+            "Pending",
+            "Approved by LMM",
+            "Rejected by LMM",
+            "Approved by PLMM",
+            "Cancelled"
+        ]
         docstatus_condition = "ss.docstatus in (0, 1, 2)"
     else:
         # Only show approved documents
-        workflow_states = "'Approved by PLMM'"
+        workflow_states = ["Approved by PLMM"]
         docstatus_condition = "ss.docstatus = 1"
     
     query = """
@@ -268,13 +271,10 @@ def get_salary_slip_data(filters):
         FROM `tabSalary Slip` ss
         JOIN `tabEmployee` e ON ss.employee = e.name
         WHERE {docstatus_condition}
-        AND ss.workflow_state IN ({workflow_states})
+        AND ss.workflow_state IN %(workflow_states)s
         AND MONTH(ss.posting_date) = %(month)s
         AND YEAR(ss.posting_date) = %(year)s
-    """.format(
-        docstatus_condition=docstatus_condition,
-        workflow_states=workflow_states
-    )
+    """.format(docstatus_condition=docstatus_condition)
 
     # Add point filter if specified
     if filters.get("points"):
@@ -283,7 +283,8 @@ def get_salary_slip_data(filters):
     params = {
         'month': int(filters.month),
         'year': int(filters.year),
-        'points': tuple(filters.get("points")) if filters.get("points") else None
+        'points': tuple(filters.get("points")) if filters.get("points") else None,
+        'workflow_states': tuple(workflow_states)
     }
 
     salary_slips = frappe.db.sql(query, params, as_dict=1)
@@ -305,7 +306,7 @@ def get_salary_slip_data(filters):
     """
 
     components = frappe.db.sql(components_query, {
-        'salary_slips': tuple([d.salary_slip_id for d in salary_slips]) or ("",)
+        'salary_slips': tuple([d.salary_slip_id for d in salary_slips])
     }, as_dict=1)
 
     # Organize components by salary slip
@@ -316,11 +317,19 @@ def get_salary_slip_data(filters):
         if comp.parentfield == 'earnings':
             if comp.parent not in earnings_data:
                 earnings_data[comp.parent] = {}
-            earnings_data[comp.parent][comp.salary_component] = comp.amount
+            # Sum up multiple entries of the same component
+            if comp.salary_component in earnings_data[comp.parent]:
+                earnings_data[comp.parent][comp.salary_component] += comp.amount
+            else:
+                earnings_data[comp.parent][comp.salary_component] = comp.amount
         else:  # deductions
             if comp.parent not in deductions_data:
                 deductions_data[comp.parent] = {}
-            deductions_data[comp.parent][comp.salary_component] = comp.amount
+            # Sum up multiple entries of the same component
+            if comp.salary_component in deductions_data[comp.parent]:
+                deductions_data[comp.parent][comp.salary_component] += comp.amount
+            else:
+                deductions_data[comp.parent][comp.salary_component] = comp.amount
 
     # Prepare final data
     data = []
@@ -333,6 +342,7 @@ def get_salary_slip_data(filters):
             "employee": slip.employee,
             "employee_name": slip.employee_name,
             "custom_pan": slip.custom_pan,
+            "total_working_days": slip.total_working_days,
             "payment_days": slip.payment_days,
             "route": slip.custom_route,
             "point": slip.custom_point,
@@ -358,7 +368,7 @@ def get_salary_slip_data(filters):
                 "Approved by PLMM": "Approved by PLMM",
                 "Cancelled": "Cancelled"
             }
-            row["status"] = status_map.get(slip.workflow_state, slip.workflow_state)
+            row["status"] = status_map.get(slip.workflow_state, "Unknown")
 
         # Add earnings
         total_earnings = 0
