@@ -169,7 +169,7 @@
     "fieldname": "farm_type",
     "fieldtype": "Select",
     "label": "Farm Type",
-    "options": "Buffalo\nCow\nMix"
+    "options": "Buffalo\nCow\nDesi Cow\nMix"
    },
    {
     "fieldname": "farm_land_size",
