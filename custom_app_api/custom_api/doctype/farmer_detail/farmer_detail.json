@@ -1,5 +1,6 @@
 {
   "actions": [],
+  "allow_import": 1,
   "allow_rename": 1,
   "autoname": "format:SIDS-FRM-{YY}-{####}",
   "creation": "2024-12-17 16:27:24.761570",

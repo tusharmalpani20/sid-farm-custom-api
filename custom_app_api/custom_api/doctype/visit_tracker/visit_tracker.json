@@ -1,5 +1,6 @@
 {
  "actions": [],
+ "allow_import": 1,
  "allow_rename": 1,
  "autoname": "format:VISIT-{MM}-{YY}-{####}",
  "creation": "2024-12-17 17:15:17.630260",

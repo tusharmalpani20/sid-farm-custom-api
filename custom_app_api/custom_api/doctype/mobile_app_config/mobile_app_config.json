@@ -10,7 +10,10 @@
   "sf_partner_app_version",
   "sf_farmer_tracker_section",
   "sf_farmer_tracker_access",
-  "sf_farmer_tracker_app_version"
+  "sf_farmer_tracker_app_version",
+  "sf_inventory_tracker_section",
+  "sf_inventory_tracker_access",
+  "sf_inventory_tracker_app_version"
  ],
  "fields": [
   {
@@ -25,10 +28,10 @@
    "options": "Designation Mapping"
   },
   {
+   "description": "Minimum required version for SF Partner app",
    "fieldname": "sf_partner_app_version",
    "fieldtype": "Data",
-   "label": "Required App Version",
-   "description": "Minimum required version for SF Partner app"
+   "label": "Required App Version"
   },
   {
    "fieldname": "sf_farmer_tracker_section",
@@ -42,16 +45,34 @@
    "options": "Designation Mapping"
   },
   {
+   "description": "Minimum required version for SF Farmer Tracker app",
    "fieldname": "sf_farmer_tracker_app_version",
    "fieldtype": "Data",
-   "label": "Required App Version",
-   "description": "Minimum required version for SF Farmer Tracker app"
+   "label": "Required App Version"
+  },
+  {
+   "fieldname": "sf_inventory_tracker_section",
+   "fieldtype": "Section Break",
+   "label": "SF Inventory Tracker "
+  },
+  {
+   "fieldname": "sf_inventory_tracker_access",
+   "fieldtype": "Table MultiSelect",
+   "label": "Designation Access",
+   "options": "Designation Mapping"
+  },
+  {
+   "description": "Minimum required version for SF Farmer Tracker app",
+   "fieldname": "sf_inventory_tracker_app_version",
+   "fieldtype": "Data",
+   "label": "Required App Version"
   }
  ],
+ "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-02-07 11:28:59.802794",
+ "modified": "2025-06-07 15:24:55.176635",
  "modified_by": "Administrator",
  "module": "Custom API",
  "name": "Mobile App Config",
@@ -68,6 +89,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []
