@@ -165,3 +165,73 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
             message=f"Error in auto mark absent job: {str(e)}",
             title="Auto Mark Absent Job Failed"
         )
+
+def update_historical_attendance_branch_data():
+    """
+    Updates historical attendance records that are missing custom_branch data.
+    Gets branch and other route-related data from the Route doctype if available.
+    Uses direct SQL updates to bypass document submission checks and avoid version logs.
+    """
+    try:
+        # Get attendance records without custom_branch but with custom_route
+        attendance_records = frappe.db.sql("""
+            SELECT name, custom_route
+            FROM `tabAttendance`
+            WHERE (custom_branch IS NULL OR custom_branch = '')
+            AND custom_route IS NOT NULL
+            AND custom_route != ''
+        """, as_dict=1)
+
+        print(f"Found {len(attendance_records)} attendance records to update")
+        
+        for idx, attendance in enumerate(attendance_records):
+            try:
+                # Get route details
+                route_details = frappe.db.get_value("Route", 
+                    attendance.custom_route,
+                    ["branch", "point_name", "area_name", "zone_name"],
+                    as_dict=1
+                )
+                
+                if route_details and route_details.branch:
+                    # Prepare update fields
+                    update_fields = {
+                        "custom_branch": route_details.branch
+                    }
+                    
+                    # Add additional route-related fields if they exist in route_details
+                    if route_details.point_name:
+                        update_fields["custom_route_point"] = route_details.point_name
+                    if route_details.area_name:
+                        update_fields["custom_area"] = route_details.area_name
+                    if route_details.zone_name:
+                        update_fields["custom_zone"] = route_details.zone_name
+                    
+                    # Build SQL SET clause
+                    set_clause = ", ".join([f"`{field}` = %s" for field in update_fields.keys()])
+                    
+                    # Direct SQL update to bypass submission checks and avoid version logs
+                    frappe.db.sql(f"""
+                        UPDATE `tabAttendance`
+                        SET {set_clause}
+                        WHERE name = %s
+                    """, tuple(list(update_fields.values()) + [attendance.name]))
+                    
+                    if (idx + 1) % 100 == 0:
+                        print(f"Processed {idx + 1} records")
+                        frappe.db.commit()
+                
+            except Exception as e:
+                print(f"Error updating attendance {attendance.name}: {str(e)}")
+                continue
+        
+        # Final commit
+        frappe.db.commit()
+        print("Completed updating historical attendance records")
+        
+    except Exception as e:
+        print(f"Error in update_historical_attendance_branch_data: {str(e)}")
+        frappe.log_error(
+            message=f"Error updating historical attendance branch data: {str(e)}",
+            title="Update Historical Attendance Error"
+        )

@@ -140,7 +140,7 @@ def send_otp(phone_number, app_name = 'sf_partner' , app_version = '1.0.0' ):
         frappe.logger("otp").info(f"New OTP generated for {phone_number}")
 
         # Send SMS and log the result
-        #sms_result = send_sms_via_textlocal(phone_number, otp_code)
+        sms_result = send_sms_via_textlocal(phone_number, otp_code)
         if not sms_result:
             frappe.logger("otp").error(f"SMS sending failed for {phone_number}")
             frappe.local.response['http_status_code'] = 500
