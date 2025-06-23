@@ -9,7 +9,7 @@ frappe.ui.form.on('Delivery Mapping', {
         frm.set_query('employee', function() {
             return {
                 filters: {
-                    'designation': ['in', ['Last Mile Zonal Head', 'Last Mile Lead']],
+                    'designation': ['in', ['Last Mile Zonal Head', 'Last Mile Lead' , 'Zonal Mid-Mile Lead', 'Mid-Mile Lead']],
                     'status': 'Active'
                 }
             };
