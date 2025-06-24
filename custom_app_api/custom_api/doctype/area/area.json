@@ -56,7 +56,8 @@
    "in_list_view": 1,
    "label": "Branch",
    "options": "Branch",
-   "reqd": 1
+   "reqd": 1,
+   "fetch_from": "zone_name.branch"
   }
  ],
  "index_web_pages_for_search": 1,
