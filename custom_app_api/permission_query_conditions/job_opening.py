@@ -12,6 +12,10 @@ def get_permission_query_conditions(user):
     if "System Manager" in frappe.get_roles(user) or user == "Administrator":
         return ""
     
+    #if the user role is PAN India Access - Data then aslo we will show the data for all the employees
+    if "PAN India Access - Data" in frappe.get_roles(user):
+        return ""
+    
     # Get the routes accessible to the user
     route_condition = frappe.get_attr("custom_app_api.permission_query_conditions.Route.get_permission_query_conditions")(user)
     

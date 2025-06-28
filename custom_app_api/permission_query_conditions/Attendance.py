@@ -19,6 +19,10 @@ def get_permission_query_conditions(user):
         # frappe.msgprint("User is System Manager or Administrator - no conditions applied")
         return " and ".join(conditions)
     
+    #if the user role is PAN India Access - Data then aslo we will show the data for all the employees
+    if "PAN India Access - Data" in frappe.get_roles(user):
+        return " and ".join(conditions)
+    
     # Get employee record for logged-in user
     employee = frappe.db.get_value("Employee", {"user_id": user}, ["name", "designation", "branch"], as_dict=1)
     # frappe.msgprint(f"Employee record found: {employee}")
