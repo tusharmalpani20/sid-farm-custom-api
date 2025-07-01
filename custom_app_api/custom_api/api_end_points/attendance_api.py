@@ -3,6 +3,7 @@ from frappe import _
 from typing import Dict, Any, Optional, Tuple
 import jwt
 from datetime import datetime
+import math
 
 def handle_error_response(error: Exception, error_message: str) -> Dict[str, Any]:
     """Standard error response handler"""
@@ -736,97 +737,328 @@ def mobile_punch_out() -> Dict[str, Any]:
     except Exception as e:
         return handle_error_response(e, "Error updating punch out time")
 
-# @frappe.whitelist()
-# def create_attendance() -> Dict[str, Any]:
-#     """
-#     Create a new attendance record and submit it
-#     Request body should contain attendance details
-#     Returns:
-#         Dict containing status, message and data
-#     """
-#     try:
-#         if not frappe.request.json:
-#             return {
-#                 "status": "error",
-#                 "message": _("Request body is required"),
-#                 "http_status_code": 400
-#             }
-        
-#         attendance_data = frappe.request.json
-        
-#         # Validate required fields
-#         required_fields = ["naming_series", "employee", "employee_name", "status", 
-#                          "attendance_date", "company"]
-#         missing_fields = [field for field in required_fields 
-#                          if not attendance_data.get(field)]
-        
-#         if missing_fields:
-#             frappe.local.response['http_status_code'] = 400
-#             return {
-#                 "status": "error",
-#                 "message": "Missing required fields: {}".format(", ".join(missing_fields)),
-#                 "http_status_code": 400
-#             }
-#         # Check if attendance already exists
-#         existing_attendance = frappe.db.exists("Attendance", {
-#             "employee": attendance_data.get("employee"),
-#             "attendance_date": attendance_data.get("attendance_date"),
-#             "docstatus": ["!=", 2]  # Not cancelled
-#         })
-        
-#         if existing_attendance:
-#             frappe.local.response['http_status_code'] = 400
-#             return {
-#                 "status": "error",
-#                 "message": "Attendance already exists for this employee on this date",
-#                 "http_status_code": 400
-#             }
-        
-#         # Get employee details and validate status
-#         employee = frappe.get_doc("Employee", attendance_data.get("employee"))
-#         if not employee or employee.status != "Active":
-#             frappe.local.response['http_status_code'] = 400
-#             return {
-#                 "status": "error",
-#                 "message": "Employee is not active or does not exist",
-#                 "http_status_code": 400
-#             }
+def calculate_distance(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """
+    Calculate the great circle distance between two points on earth in meters
+    Args:
+        lat1, lon1: Latitude and longitude of first point
+        lat2, lon2: Latitude and longitude of second point
+    Returns:
+        Distance in meters
+    """
+    # Convert latitude and longitude from degrees to radians
+    lat1, lon1, lat2, lon2 = map(math.radians, [lat1, lon1, lat2, lon2])
+    
+    # Haversine formula
+    dlat = lat2 - lat1
+    dlon = lon2 - lon1
+    a = math.sin(dlat/2)**2 + math.cos(lat1) * math.cos(lat2) * math.sin(dlon/2)**2
+    c = 2 * math.asin(math.sqrt(a))
+    
+    # Radius of earth in meters
+    r = 6371000
+    
+    return c * r
 
-#         # Add custom_route and fetch total_delivery from Route
-#         if employee.custom_route:
-#             attendance_data["custom_route"] = employee.custom_route
+def validate_employee_location(employee: str, latitude: float, longitude: float) -> Tuple[bool, Dict[str, Any]]:
+    """
+    Validate if employee is within the allowed point radius
+    Args:
+        employee: Employee ID
+        latitude: User's current latitude
+        longitude: User's current longitude
+    Returns:
+        Tuple of (is_valid, response_dict)
+    """
+    try:
+        # Get employee route
+        employee_route = frappe.db.get_value("Employee", employee, "custom_route")
+        if not employee_route:
+            return False, {
+                "status": "error",
+                "message": "No route assigned to employee",
+                "code": "NO_ROUTE_ASSIGNED",
+                "http_status_code": 400
+            }
+        
+        # Get point_name from route
+        route_point = frappe.db.get_value("Route", employee_route, "point_name")
+        if not route_point:
+            return False, {
+                "status": "error",
+                "message": "No point assigned to employee route",
+                "code": "NO_POINT_ASSIGNED",
+                "http_status_code": 400
+            }
+        
+        # Get point details with location data
+        point = frappe.db.get_value("Point", 
+            route_point,
+            ["name", "point_name", "latitude", "longitude", "radius", "is_active"],
+            as_dict=True
+        )
+        
+        if not point:
+            return False, {
+                "status": "error", 
+                "message": "Point not found",
+                "code": "POINT_NOT_FOUND",
+                "http_status_code": 400
+            }
+        
+        # Check if point is active
+        if not point.is_active:
+            return False, {
+                "status": "error",
+                "message": "Point is not active",
+                "code": "POINT_NOT_ACTIVE", 
+                "http_status_code": 400
+            }
+        
+        # Check if point has location data
+        if not point.latitude or not point.longitude or not point.radius:
+            return False, {
+                "status": "error",
+                "message": "Point location data is incomplete",
+                "code": "INCOMPLETE_POINT_DATA",
+                "http_status_code": 400
+            }
+        
+        # Calculate distance from user to point
+        distance = calculate_distance(
+            latitude, longitude,
+            point.latitude, point.longitude
+        )
+        
+        # Check if user is within point's radius
+        if distance <= point.radius:
+            return True, {
+                "status": "success",
+                "message": "Employee is within allowed location",
+                "data": {
+                    "point_id": point.name,
+                    "point_name": point.point_name,
+                    "distance": round(distance, 2),
+                    "allowed_radius": point.radius,
+                    "route": employee_route
+                }
+            }
+        else:
+            return False, {
+                "status": "error",
+                "message": "You are not within the allowed location radius for attendance",
+                "code": "LOCATION_OUT_OF_BOUNDS",
+                "data": {
+                    "point_name": point.point_name,
+                    "distance": round(distance, 2),
+                    "allowed_radius": point.radius,
+                    "route": employee_route
+                },
+                "http_status_code": 400
+            }
+        
+    except Exception as e:
+        frappe.log_error(f"Location validation error: {str(e)}")
+        return False, {
+            "status": "error",
+            "message": "Error validating location",
+            "error": str(e),
+            "http_status_code": 500
+        }
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def create_mobile_attendance() -> Dict[str, Any]:
+    """
+    Create attendance record with location validation
+    Required fields in request body:
+    {
+        "latitude": float,
+        "longitude": float,
+        "accuracy": float,
+        "attendance_date": "YYYY-MM-DD",
+        "status": "Present/Absent/Half Day",
+        "in_time": "HH:MM:SS" (optional),
+        "out_time": "HH:MM:SS" (optional)
+    }
+    
+    Headers required:
+    - Auth-Token: Bearer <jwt_token>
+    
+    Returns:
+        Dict containing status, message, and attendance data
+    """
+    try:
+        # Verify token and authenticate
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        if not is_valid:
+            frappe.local.response['http_status_code'] = result.get("http_status_code", 401)
+            return result
+        
+        employee = result["employee"]
+        
+        # Get request data
+        if not frappe.request.json:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Request body is required",
+                "code": "REQUEST_BODY_REQUIRED",
+                "http_status_code": 400
+            }
+        
+        data = frappe.request.json
+        
+        # Validate required fields
+        required_fields = ["latitude", "longitude", "accuracy"]
+        missing_fields = [field for field in required_fields if not data.get(field)]
+        
+        if missing_fields:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": f"Missing required fields: {', '.join(missing_fields)}",
+                "code": "MISSING_REQUIRED_FIELDS",
+                "http_status_code": 400
+            }
+        
+        # Extract location data
+        latitude = float(data.get("latitude"))
+        longitude = float(data.get("longitude"))
+        accuracy = float(data.get("accuracy"))
+        attendance_date = frappe.utils.now().date()
+        status = "Present"
+        
+        # Validate employee status
+        employee_doc = frappe.get_doc("Employee", employee)
+        if not employee_doc or employee_doc.status != "Active":
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Employee is not active",
+                "code": "EMPLOYEE_NOT_ACTIVE",
+                "http_status_code": 400
+            }
+        
+        # Check if attendance already exists
+        existing_attendance = frappe.db.exists("Attendance", {
+            "employee": employee,
+            "attendance_date": attendance_date,
+            "docstatus": ["!=", 2]  # Not cancelled
+        })
+        
+        if existing_attendance:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Attendance already exists for this date",
+                "code": "ATTENDANCE_EXISTS",
+                "data": {
+                    "existing_attendance": existing_attendance,
+                    "attendance_date": attendance_date
+                },
+                "http_status_code": 400
+            }
+        
+        # Validate location (geofencing)
+        is_location_valid, location_result = validate_employee_location(employee, latitude, longitude)
+        if not is_location_valid:
+            frappe.local.response['http_status_code'] = location_result.get("http_status_code", 400)
+            return {
+                "success": False,
+                **location_result
+            }
+        
+        # Prepare attendance data
+        attendance_data = {
+            "doctype": "Attendance",
+            "naming_series": "HR-ATT-.YYYY.-",
+            "employee": employee,
+            "employee_name": employee_doc.employee_name,
+            "status": status,
+            "attendance_date": attendance_date,
+            "company": employee_doc.company,
+            "custom_mobile_latitude": latitude,
+            "custom_mobile_longitude": longitude,
+            "custom_mobile_accuracy": accuracy,
+            "custom_attendance_marked_at": frappe.utils.now(),
+            "custom_location_verified": 1,
+            "custom_geofence_data": frappe.as_json(location_result.get("data", {}))
+        }
+        
+        # Add route information
+        if employee_doc.custom_route:
+            attendance_data["custom_route"] = employee_doc.custom_route
+            route_total_delivery = frappe.db.get_value(
+                "Route", 
+                employee_doc.custom_route, 
+                "total_delivery"
+            )
+            if route_total_delivery:
+                attendance_data["custom_total_deliveries"] = route_total_delivery
+        
+        # Add times if provided
+        if data.get("in_time"):
+            attendance_data["in_time"] = data.get("in_time")
+        if data.get("out_time"):
+            attendance_data["out_time"] = data.get("out_time")
             
-#             # Get total_delivery from Route doctype
-#             route_total_delivery = frappe.db.get_value(
-#                 "Route",
-#                 employee.custom_route,
-#                 "total_delivery"
-#             )
-            
-#             if route_total_delivery:
-#                 attendance_data["custom_total_deliveries"] = route_total_delivery
+        # Create attendance record
+        attendance = frappe.get_doc(attendance_data)
+        attendance.insert()
         
-#         # Create new attendance record
-#         attendance = frappe.get_doc({
-#             "doctype": "Attendance",
-#             **attendance_data
-#         })
+        # Create route tracking record for location history
+        route_tracking = frappe.get_doc({
+            "doctype": "Route Tracking",
+            "attendance": attendance.name,
+            "employee": employee,
+            "latitude": latitude,
+            "longitude": longitude,
+            "accuracy": accuracy,
+            "recorded_at": frappe.utils.now()
+        })
+        route_tracking.insert()
         
-#         attendance.insert()
-#         # Don't submit the document here anymore
-#         # attendance.submit()  # Removed
+        frappe.db.commit()
         
-#         return {
-#             "status": "success",
-#             "message": "Attendance created successfully",
-#             "data": {
-#                 "name": attendance.name,
-#                 "employee": attendance.employee,
-#                 "attendance_date": attendance.attendance_date,
-#                 "custom_route": attendance.custom_route,
-#                 "docstatus": attendance.docstatus
-#             }
-#         }
+        return {
+            "success": True,
+            "status": "success",
+            "message": "Attendance created successfully with location verification",
+            "code": "ATTENDANCE_CREATED",
+            "data": {
+                "attendance_id": attendance.name,
+                "employee": employee,
+                "employee_name": employee_doc.employee_name,
+                "attendance_date": attendance_date,
+                "status": status,
+                "location_data": {
+                    "latitude": latitude,
+                    "longitude": longitude,
+                    "accuracy": accuracy,
+                    "verified_point": location_result.get("data", {}),
+                    "route": location_result.get("data", {}).get("route")
+                },
+                "route_tracking_id": route_tracking.name,
+                "custom_route": employee_doc.custom_route,
+                "total_deliveries": attendance_data.get("custom_total_deliveries")
+            },
+            "http_status_code": 200
+        }
         
-#     except Exception as e:
-#         return handle_error_response(e, "Error creating attendance record")
+    except ValueError as e:
+        frappe.local.response['http_status_code'] = 400
+        return {
+            "success": False,
+            "status": "error",
+            "message": "Invalid data format",
+            "error": str(e),
+            "code": "INVALID_DATA_FORMAT",
+            "http_status_code": 400
+        }
+    except Exception as e:
+        frappe.db.rollback()
+        return handle_error_response(e, "Error creating mobile attendance")
