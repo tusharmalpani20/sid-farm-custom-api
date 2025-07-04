@@ -1,0 +1,106 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-02-07 11:19:28.318318",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "face_recognition_section",
+  "registration_attempts",
+  "face_distance",
+  "left_eye_open_probability",
+  "right_eye_open_probability",
+  "smiling_probability",
+  "roll_angle",
+  "pitch_angle",
+  "yaw_angle"
+ ],
+ "fields": [
+  {
+   "fieldname": "face_recognition_section",
+   "fieldtype": "Section Break",
+   "label": "Face Recognition Constants"
+  },
+  {
+   "default": "4",
+   "description": "Number of times of registration attempts allowed",
+   "fieldname": "registration_attempts",
+   "fieldtype": "Int",
+   "label": "Number of Times of Registration"
+  },
+  {
+   "default": "120",
+   "description": "Distance between face and device",
+   "fieldname": "face_distance",
+   "fieldtype": "Int",
+   "label": "X Distance (Face to Device)"
+  },
+  {
+   "default": "0.5",
+   "description": "Left eye open probability threshold",
+   "fieldname": "left_eye_open_probability",
+   "fieldtype": "Float",
+   "label": "Left Eye Open Probability"
+  },
+  {
+   "default": "0.5",
+   "description": "Right eye open probability threshold",
+   "fieldname": "right_eye_open_probability",
+   "fieldtype": "Float",
+   "label": "Right Eye Open Probability"
+  },
+  {
+   "default": "0.3",
+   "description": "Smiling probability threshold",
+   "fieldname": "smiling_probability",
+   "fieldtype": "Float",
+   "label": "Smiling Probability"
+  },
+  {
+   "default": "5",
+   "description": "Roll angle threshold in degrees",
+   "fieldname": "roll_angle",
+   "fieldtype": "Int",
+   "label": "Roll Angle"
+  },
+  {
+   "default": "5",
+   "description": "Pitch angle threshold in degrees",
+   "fieldname": "pitch_angle",
+   "fieldtype": "Int",
+   "label": "Pitch Angle"
+  },
+  {
+   "default": "5",
+   "description": "Yaw angle threshold in degrees",
+   "fieldname": "yaw_angle",
+   "fieldtype": "Int",
+   "label": "Yaw Angle"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "issingle": 1,
+ "links": [],
+ "modified": "2025-01-23 12:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Custom API",
+ "name": "Attendance Mobile App Config",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "print": 1,
+   "read": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

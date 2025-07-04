@@ -867,7 +867,7 @@ def validate_employee_location(employee: str, latitude: float, longitude: float)
         }
 
 @frappe.whitelist(allow_guest=True, methods=["POST"])
-def create_mobile_attendance() -> Dict[str, Any]:
+def create_mobile_attendance_dev() -> Dict[str, Any]:
     """
     Create attendance record with location validation
     Required fields in request body:
@@ -1062,3 +1062,72 @@ def create_mobile_attendance() -> Dict[str, Any]:
     except Exception as e:
         frappe.db.rollback()
         return handle_error_response(e, "Error creating mobile attendance")
+
+
+@frappe.whitelist(allow_guest=True, methods=["POST"])
+def get_todays_attendance_dev() -> Dict[str, Any]:
+    """
+    Get today's attendance for a specific employee
+    Required fields in request body:
+    
+    Headers required:
+    - Auth-Token: Bearer <jwt_token>
+    
+    Returns:
+        Dict containing status, message, and attendance data
+    
+    """
+    try:
+        # Verify token and authenticate
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        if not is_valid:
+            frappe.local.response['http_status_code'] = result.get("http_status_code", 401)
+            return result
+        
+        employee = result["employee"]
+
+        # Get today's attendance
+        attendance = frappe.db.get_list("Attendance", {
+            "employee": employee,
+            "attendance_date": frappe.utils.now().date()
+        })
+
+        if not attendance:
+            frappe.local.response['http_status_code'] = 400
+            return {
+                "success": False,
+                "status": "error",
+                "message": "No attendance found for today",
+                "code": "NO_ATTENDANCE_FOUND",
+                "http_status_code": 400
+            }
+        
+        return {
+            "success": True,
+            "status": "success",
+            "message": "Attendance found for today",
+            "data": attendance
+        }
+        
+    except Exception as e:
+        frappe.db.rollback()
+        return handle_error_response(e, "Error getting today's attendance")
+
+
+@frappe.whitelist(allow_guest=True, methods=["GET"])
+def get_attendance_mobile_app_config() -> Dict[str, Any]:
+    """
+    Get attendance mobile app config
+    """
+    try:
+        config = frappe.get_doc("Attendance Mobile App Config")
+        return {
+            "success": True,
+            "status": "success",
+            "message": "Attendance mobile app config fetched successfully",
+            "data": config
+        }
+
+    except Exception as e:
+        frappe.db.rollback()
+        return handle_error_response(e, "Error getting attendance mobile app config")
