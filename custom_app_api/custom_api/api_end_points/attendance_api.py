@@ -927,7 +927,7 @@ def create_mobile_attendance_dev() -> Dict[str, Any]:
         latitude = float(data.get("latitude"))
         longitude = float(data.get("longitude"))
         accuracy = float(data.get("accuracy"))
-        attendance_date = frappe.utils.now().date()
+        attendance_date = frappe.utils.nowdate()
         status = "Present"
         
         # Validate employee status
@@ -1064,7 +1064,7 @@ def create_mobile_attendance_dev() -> Dict[str, Any]:
         return handle_error_response(e, "Error creating mobile attendance")
 
 
-@frappe.whitelist(allow_guest=True, methods=["POST"])
+@frappe.whitelist(allow_guest=True, methods=["GET"])
 def get_todays_attendance_dev() -> Dict[str, Any]:
     """
     Get today's attendance for a specific employee
@@ -1089,7 +1089,7 @@ def get_todays_attendance_dev() -> Dict[str, Any]:
         # Get today's attendance
         attendance = frappe.db.get_list("Attendance", {
             "employee": employee,
-            "attendance_date": frappe.utils.now().date()
+            "attendance_date": frappe.utils.nowdate()
         })
 
         if not attendance:
@@ -1119,7 +1119,7 @@ def get_attendance_mobile_app_config() -> Dict[str, Any]:
     """
     Get attendance mobile app config
     """
-    try:
+    try:    
         config = frappe.get_doc("Attendance Mobile App Config")
         return {
             "success": True,
