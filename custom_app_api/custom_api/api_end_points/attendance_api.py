@@ -1089,17 +1089,18 @@ def get_todays_attendance_dev() -> Dict[str, Any]:
         # Get today's attendance
         attendance = frappe.db.get_list("Attendance", {
             "employee": employee,
-            "attendance_date": frappe.utils.nowdate()
+            "attendance_date": frappe.utils.nowdate(),
+            "docstatus": ["!=", 2]
         })
 
         if not attendance:
-            frappe.local.response['http_status_code'] = 400
+            frappe.local.response['http_status_code'] = 404 
             return {
                 "success": False,
                 "status": "error",
                 "message": "No attendance found for today",
                 "code": "NO_ATTENDANCE_FOUND",
-                "http_status_code": 400
+                "http_status_code": 404
             }
         
         return {
