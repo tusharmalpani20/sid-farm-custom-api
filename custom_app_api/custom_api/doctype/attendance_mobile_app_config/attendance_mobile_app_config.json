@@ -13,7 +13,10 @@
   "smiling_probability",
   "roll_angle",
   "pitch_angle",
-  "yaw_angle"
+  "yaw_angle",
+  "pitch",
+  "roll",
+  "yaw"
  ],
  "fields": [
   {
@@ -76,6 +79,27 @@
    "fieldname": "yaw_angle",
    "fieldtype": "Int",
    "label": "Yaw Angle"
+  },
+  {
+   "default": "0.5",
+   "description": "Pitch threshold",
+   "fieldname": "pitch",
+   "fieldtype": "Float",
+   "label": "Pitch"
+  },
+  {
+   "default": "1",
+   "description": "Roll threshold",
+   "fieldname": "roll",
+   "fieldtype": "Int",
+   "label": "Roll"
+  },
+  {
+   "default": "1",
+   "description": "Yaw threshold",
+   "fieldname": "yaw",
+   "fieldtype": "Int",
+   "label": "Yaw"
   }
  ],
  "grid_page_length": 50,
