@@ -1,254 +1,258 @@
 {
-  "actions": [],
-  "allow_import": 1,
-  "allow_rename": 1,
-  "autoname": "format:SIDS-FRM-{YY}-{####}",
-  "creation": "2024-12-17 16:27:24.761570",
-  "doctype": "DocType",
-  "engine": "InnoDB",
-  "field_order": [
-   "section_break_7suo",
-   "first_name",
-   "last_name",
-   "age",
-   "caste",
-   "source_of_income",
-   "annual_income",
-   "financial_status",
-   "educational_qualification",
-   "column_break_wccq",
-   "contact_number",
-   "village",
-   "mandal",
-   "district",
-   "state",
-   "pincode",
-   "prospect_type",
-   "assigned_sales_person",
-   "registered_by",
-   "work_details_section",
-   "bmc",
-   "farm_type",
-   "farm_land_size",
-   "is_there_year_round_water_facility",
-   "is_there_an_electricity_supply",
-   "is_there_a_proper_access_to_road",
-   "does_the_farmer_agree_to_construct_a_shed_as_per_our_standards",
-   "is_the_farmer_considered_innovative",
-   "is_the_family_willing_to_work",
-   "is_the_famer_ready_to_invest_in_farm",
-   "amount_of_investment"
-  ],
-  "fields": [
-   {
-    "fieldname": "section_break_7suo",
-    "fieldtype": "Section Break",
-    "label": "Personal Details"
-   },
-   {
-    "fieldname": "first_name",
-    "fieldtype": "Data",
-    "label": "First Name"
-   },
-   {
-    "fieldname": "last_name",
-    "fieldtype": "Data",
-    "label": "Last Name"
-   },
-   {
-    "fieldname": "age",
-    "fieldtype": "Int",
-    "label": "Age"
-   },
-   {
-    "fieldname": "caste",
-    "fieldtype": "Select",
-    "label": "Caste",
-    "options": "GEN (General)\nSC (Scheduled Caste)\nST (Scheduled Tribe)\nOBC (Other Backward Classes)"
-   },
-   {
-    "fieldname": "source_of_income",
-    "fieldtype": "Select",
-    "label": "Source of Income",
-    "options": "Salary\nAgriculture\nHouse Property\nProfits and Gains from Business\nCapital Gains\nOther Sources"
-   },
-   {
-    "fieldname": "annual_income",
-    "fieldtype": "Select",
-    "label": "Annual Income",
-    "options": "<1 Lakh\n1 - 3Lakh\n>3Lakh"
-   },
-   {
-    "fieldname": "financial_status",
-    "fieldtype": "Select",
-    "label": "Financial Status",
-    "options": "\nGood\nAverage\nWeak"
-   },
-   {
-    "fieldname": "educational_qualification",
-    "fieldtype": "Select",
-    "label": "Educational Qualification",
-    "options": "Uneducated\nHigh School\nIntermediate(10+2)\nDiploma\nBachelor's Degree\nMaster's Degree"
-   },
-   {
-    "fieldname": "column_break_wccq",
-    "fieldtype": "Column Break"
-   },
-   {
-    "default": "+91-",
-    "fieldname": "contact_number",
-    "fieldtype": "Phone",
-    "label": "Contact Number"
-   },
-   {
-    "fieldname": "village",
-    "fieldtype": "Link",
-    "in_list_view": 1,
-    "label": "Village",
-    "options": "Village",
-    "reqd": 1
-   },
-   {
-    "fetch_from": "village.mandal",
-    "fieldname": "mandal",
-    "fieldtype": "Data",
-    "label": "Mandal"
-   },
-   {
-    "fetch_from": "village.district",
-    "fieldname": "district",
-    "fieldtype": "Data",
-    "label": "District"
-   },
-   {
-    "fetch_from": "village.state",
-    "fieldname": "state",
-    "fieldtype": "Data",
-    "label": "State"
-   },
-   {
-    "fetch_from": "village.pincode",
-    "fieldname": "pincode",
-    "fieldtype": "Data",
-    "label": "Pincode"
-   },
-   {
-    "fieldname": "prospect_type",
-    "fieldtype": "Select",
-    "label": "Prospect Type",
-    "options": "Warm\nCold\nHot\nLost\nConverted"
-   },
-   {
-    "fieldname": "assigned_sales_person",
-    "fieldtype": "Link",
-    "in_list_view": 1,
-    "label": "Assigned Sales Person",
-    "options": "Employee",
-    "reqd": 1
-   },
-   {
-    "fieldname": "registered_by",
-    "fieldtype": "Link",
-    "in_list_view": 1,
-    "label": "Registered By",
-    "options": "Employee",
-    "reqd": 1
-   },
-   {
-    "fieldname": "work_details_section",
-    "fieldtype": "Section Break",
-    "label": "Work Details"
-   },
-   {
-    "fieldname": "bmc",
-    "fieldtype": "Link",
-    "label": "BMC",
-    "options": "BMC"
-   },
-   {
-    "fieldname": "farm_type",
-    "fieldtype": "Select",
-    "label": "Farm Type",
-    "options": "Buffalo\nCow\nDesi Cow\nMix"
-   },
-   {
-    "fieldname": "farm_land_size",
-    "fieldtype": "Data",
-    "label": "How much land does the farmer have?"
-   },
-   {
-    "fieldname": "is_there_year_round_water_facility",
-    "fieldtype": "Select",
-    "label": "Is there year round water facility?",
-    "options": "\nYes\nNo"
-   },
-   {
-    "fieldname": "is_there_an_electricity_supply",
-    "fieldtype": "Select",
-    "label": "Is there an electricity supply?",
-    "options": "\nYes\nNo"
-   },
-   {
-    "fieldname": "is_there_a_proper_access_to_road",
-    "fieldtype": "Select",
-    "label": "Is there a proper access to road?",
-    "options": "\nYes\nNo"
-   },
-   {
-    "fieldname": "does_the_farmer_agree_to_construct_a_shed_as_per_our_standards",
-    "fieldtype": "Select",
-    "label": "Does the farmer agree to construct a shed as per our standards?",
-    "options": "\nYes\nNo"
-   },
-   {
-    "fieldname": "is_the_farmer_considered_innovative",
-    "fieldtype": "Select",
-    "label": "Is the farmer considered innovative?",
-    "options": "\nYes\nNo"
-   },
-   {
-    "fieldname": "is_the_family_willing_to_work",
-    "fieldtype": "Select",
-    "label": "Is the family willing to work?",
-    "options": "\nYes\nNo"
-   },
-   {
-    "fieldname": "is_the_famer_ready_to_invest_in_farm",
-    "fieldtype": "Select",
-    "label": "Is the farmer ready to invest in farm?",
-    "options": "\nYes\nNo"
-   },
-   {
-    "depends_on": "eval:doc.is_the_famer_ready_to_invest_in_farm == 'Yes'",
-    "fieldname": "amount_of_investment",
-    "fieldtype": "Data",
-    "label": "Amount of investment(in rupees)"
-   }
-  ],
-  "index_web_pages_for_search": 1,
-  "links": [],
-  "modified": "2025-02-07 13:43:02.221920",
-  "modified_by": "Administrator",
-  "module": "Custom API",
-  "name": "Farmer Detail",
-  "naming_rule": "Expression",
-  "owner": "Administrator",
-  "permissions": [
-   {
-    "create": 1,
-    "delete": 1,
-    "email": 1,
-    "export": 1,
-    "print": 1,
-    "read": 1,
-    "report": 1,
-    "role": "System Manager",
-    "share": 1,
-    "write": 1
-   }
-  ],
-  "sort_field": "modified",
-  "sort_order": "DESC",
-  "states": [],
-  "track_changes": 1
- }
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "format:SIDS-FRM-{YY}-{####}",
+ "creation": "2024-12-17 16:27:24.761570",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_7suo",
+  "first_name",
+  "last_name",
+  "age",
+  "caste",
+  "source_of_income",
+  "annual_income",
+  "financial_status",
+  "educational_qualification",
+  "column_break_wccq",
+  "contact_number",
+  "village",
+  "mandal",
+  "district",
+  "state",
+  "pincode",
+  "prospect_type",
+  "assigned_sales_person",
+  "registered_by",
+  "work_details_section",
+  "bmc",
+  "farm_type",
+  "farm_land_size",
+  "is_there_year_round_water_facility",
+  "is_there_an_electricity_supply",
+  "is_there_a_proper_access_to_road",
+  "does_the_farmer_agree_to_construct_a_shed_as_per_our_standards",
+  "is_the_farmer_considered_innovative",
+  "is_the_family_willing_to_work",
+  "is_the_famer_ready_to_invest_in_farm",
+  "amount_of_investment"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_7suo",
+   "fieldtype": "Section Break",
+   "label": "Personal Details"
+  },
+  {
+   "fieldname": "first_name",
+   "fieldtype": "Data",
+   "label": "First Name"
+  },
+  {
+   "fieldname": "last_name",
+   "fieldtype": "Data",
+   "label": "Last Name"
+  },
+  {
+   "fieldname": "age",
+   "fieldtype": "Int",
+   "label": "Age"
+  },
+  {
+   "fieldname": "caste",
+   "fieldtype": "Select",
+   "label": "Caste",
+   "options": "GEN (General)\nSC (Scheduled Caste)\nST (Scheduled Tribe)\nOBC (Other Backward Classes)"
+  },
+  {
+   "fieldname": "source_of_income",
+   "fieldtype": "Select",
+   "label": "Source of Income",
+   "options": "Salary\nAgriculture\nHouse Property\nProfits and Gains from Business\nCapital Gains\nOther Sources"
+  },
+  {
+   "fieldname": "annual_income",
+   "fieldtype": "Select",
+   "label": "Annual Income",
+   "options": "<1 Lakh\n1 - 3Lakh\n>3Lakh"
+  },
+  {
+   "fieldname": "financial_status",
+   "fieldtype": "Select",
+   "label": "Financial Status",
+   "options": "\nGood\nAverage\nWeak"
+  },
+  {
+   "fieldname": "educational_qualification",
+   "fieldtype": "Select",
+   "label": "Educational Qualification",
+   "options": "Uneducated\nHigh School\nIntermediate(10+2)\nDiploma\nBachelor's Degree\nMaster's Degree"
+  },
+  {
+   "fieldname": "column_break_wccq",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "+91-",
+   "fieldname": "contact_number",
+   "fieldtype": "Phone",
+   "label": "Contact Number"
+  },
+  {
+   "fieldname": "village",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Village",
+   "options": "Village",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "village.mandal",
+   "fieldname": "mandal",
+   "fieldtype": "Link",
+   "label": "Mandal",
+   "options": "Mandal"
+  },
+  {
+   "fetch_from": "village.district",
+   "fieldname": "district",
+   "fieldtype": "Link",
+   "label": "District",
+   "options": "District"
+  },
+  {
+   "fetch_from": "village.state",
+   "fieldname": "state",
+   "fieldtype": "Link",
+   "label": "State",
+   "options": "State"
+  },
+  {
+   "fetch_from": "village.pincode",
+   "fieldname": "pincode",
+   "fieldtype": "Data",
+   "label": "Pincode"
+  },
+  {
+   "fieldname": "prospect_type",
+   "fieldtype": "Select",
+   "label": "Prospect Type",
+   "options": "Warm\nCold\nHot\nLost\nConverted"
+  },
+  {
+   "fieldname": "assigned_sales_person",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Assigned Sales Person",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fieldname": "registered_by",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Registered By",
+   "options": "Employee",
+   "reqd": 1
+  },
+  {
+   "fieldname": "work_details_section",
+   "fieldtype": "Section Break",
+   "label": "Work Details"
+  },
+  {
+   "fieldname": "bmc",
+   "fieldtype": "Link",
+   "label": "BMC",
+   "options": "BMC"
+  },
+  {
+   "fieldname": "farm_type",
+   "fieldtype": "Select",
+   "label": "Farm Type",
+   "options": "Buffalo\nCow\nDesi Cow\nMix"
+  },
+  {
+   "fieldname": "farm_land_size",
+   "fieldtype": "Data",
+   "label": "How much land does the farmer have?"
+  },
+  {
+   "fieldname": "is_there_year_round_water_facility",
+   "fieldtype": "Select",
+   "label": "Is there year round water facility?",
+   "options": "\nYes\nNo"
+  },
+  {
+   "fieldname": "is_there_an_electricity_supply",
+   "fieldtype": "Select",
+   "label": "Is there an electricity supply?",
+   "options": "\nYes\nNo"
+  },
+  {
+   "fieldname": "is_there_a_proper_access_to_road",
+   "fieldtype": "Select",
+   "label": "Is there a proper access to road?",
+   "options": "\nYes\nNo"
+  },
+  {
+   "fieldname": "does_the_farmer_agree_to_construct_a_shed_as_per_our_standards",
+   "fieldtype": "Select",
+   "label": "Does the farmer agree to construct a shed as per our standards?",
+   "options": "\nYes\nNo"
+  },
+  {
+   "fieldname": "is_the_farmer_considered_innovative",
+   "fieldtype": "Select",
+   "label": "Is the farmer considered innovative?",
+   "options": "\nYes\nNo"
+  },
+  {
+   "fieldname": "is_the_family_willing_to_work",
+   "fieldtype": "Select",
+   "label": "Is the family willing to work?",
+   "options": "\nYes\nNo"
+  },
+  {
+   "fieldname": "is_the_famer_ready_to_invest_in_farm",
+   "fieldtype": "Select",
+   "label": "Is the farmer ready to invest in farm?",
+   "options": "\nYes\nNo"
+  },
+  {
+   "depends_on": "eval:doc.is_the_famer_ready_to_invest_in_farm == 'Yes'",
+   "fieldname": "amount_of_investment",
+   "fieldtype": "Data",
+   "label": "Amount of investment(in rupees)"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-07-11 11:18:25.321416",
+ "modified_by": "Administrator",
+ "module": "Custom API",
+ "name": "Farmer Detail",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
