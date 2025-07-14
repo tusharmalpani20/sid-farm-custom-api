@@ -16,6 +16,11 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
         
         # Get all active employees
         employee_start_time = time.time()
+
+        # List of employee IDs to ignore
+        employee_ids_to_ignore = ["SF-BDP-00140"]
+
+
         active_employees = frappe.get_all(
             "Employee",
             filters={
@@ -52,6 +57,10 @@ def auto_mark_employee_absent_and_submit_all_todays_attendance() -> None:
         submitted_count = 0
 
         for employee in active_employees:
+
+            if employee.name in employee_ids_to_ignore:
+                continue
+
             if employee.name not in employees_with_attendance:
                 employee_start = time.time()
                 try:
