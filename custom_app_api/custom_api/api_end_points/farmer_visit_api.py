@@ -1600,7 +1600,8 @@ def get_farmer_pending_revisits() -> Dict[str, Any]:
                     "id": farmer.name,
                     "first_name": farmer.first_name,
                     "last_name": farmer.last_name,
-                    "name": f"{farmer.first_name} {farmer.last_name}",
+                    "name" : farmer.name,
+                    "full_name": f"{farmer.first_name} {farmer.last_name}",
                     "contact_number": farmer.contact_number,
                     "prospect_type": farmer.prospect_type
                 },
@@ -1674,7 +1675,8 @@ def get_all_pending_revisits_with_farmer_details() -> Dict[str, Any]:
                 "id": farmer.name,
                 "first_name": farmer.first_name,
                 "last_name": farmer.last_name,
-                "name": f"{farmer.first_name} {farmer.last_name}",
+                "name" : farmer.name,
+                "full_name": f"{farmer.first_name} {farmer.last_name}",
                 "contact_number": farmer.contact_number,
                 "prospect_type": farmer.prospect_type
             }
