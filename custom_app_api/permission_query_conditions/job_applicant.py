@@ -17,6 +17,10 @@ def get_permission_query_conditions(user):
     if "PAN India Access - Data" in frappe.get_roles(user):
         return ""
     
+    #if the user role is Read Only then aslo we will show the data for all the employees
+    if "Read Only" in frappe.get_roles(user):
+        return " and ".join(conditions)
+    
     # Get the job openings accessible to the user
     job_opening_condition = frappe.get_attr("custom_app_api.permission_query_conditions.job_opening.get_permission_query_conditions")(user)
     
