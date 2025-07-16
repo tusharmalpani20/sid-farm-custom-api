@@ -29,7 +29,7 @@ def get_permission_query_conditions(user):
 
     #if the user role is Read Only then aslo we will show the data for all the employees
     if "Read Only" in frappe.get_roles(user):
-        return " and ".join(conditions)
+        return ""
     
     # Get employee record for logged-in user
     employee = frappe.db.get_value("Employee", 
