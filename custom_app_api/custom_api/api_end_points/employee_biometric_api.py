@@ -378,6 +378,60 @@ def verify_face_biometric() -> Dict[str, Any]:
             http_status_code=500
         )
 
+@frappe.whitelist(allow_guest=True, methods=["GET"])
+def check_user_biometric_registration() -> Dict[str, Any]:
+    """Check if user has biometric registration"""
+    try:
+        # Verify token and authenticate
+        is_valid, result = verify_dp_token(frappe.request.headers)
+        
+        if not is_valid:
+            frappe.local.response['http_status_code'] = result.get("http_status_code", 500)
+            return result
+
+        # Extract employee from token verification result
+        employee = result["employee"]
+        logger.info(f"Checking biometric registration for employee: {employee}")
+
+        # Get employee's biometric registration
+        biometric_record = frappe.get_value(
+            "Employee Biometric Master",
+            {
+                "employee": employee,
+                "status": "Active"
+            },
+            ["name", "registration_date", "employee_name"],
+            as_dict=True
+        )
+
+        if not biometric_record:
+            return create_error_response(
+                code="NO_BIOMETRIC_REGISTRATION",
+                message="No active biometric registration found",
+                http_status_code=404
+            )
+
+        # Return success with registration details
+        return create_success_response(
+            code="BIOMETRIC_REGISTRATION_FOUND",
+            message="Active biometric registration exists",
+            data={
+                "registration_id": biometric_record.name,
+                "registration_date": biometric_record.registration_date,
+                "employee": employee,
+                "employee_name": biometric_record.employee_name
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error checking biometric registration: {str(e)}")
+        return create_error_response(
+            code="INTERNAL_SERVER_ERROR",
+            message="An unexpected error occurred while checking biometric registration",
+            details={"error": str(e)},
+            http_status_code=500
+        )
+
 def check_existing_registration(employee: str) -> Dict:
     """Check if employee already has an active registration"""
     return frappe.db.get_value(
