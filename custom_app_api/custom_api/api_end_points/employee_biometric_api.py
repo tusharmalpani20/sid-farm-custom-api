@@ -508,8 +508,7 @@ def create_biometric_log(employee: str, verification_result: Dict) -> Any:
     data = verification_result.get("data", {})
     validation = data.get("validation", {})
     
-    # Determine status
-    status = "Success" if verification_result["success"] else "Failed"
+    # Determine status based on both success and match result
     if verification_result.get("code") in [
         "MULTIPLE_FACES_DETECTED",
         "NO_FACE_DETECTED",
@@ -517,6 +516,10 @@ def create_biometric_log(employee: str, verification_result: Dict) -> Any:
         "LIVENESS_CHECK_FAILED"
     ]:
         status = "Error"
+    elif verification_result["success"] and data.get("is_match", False):
+        status = "Success"
+    else:
+        status = "Failed"
     
     # Create log document
     log_doc = frappe.get_doc({
