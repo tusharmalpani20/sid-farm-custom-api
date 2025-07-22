@@ -26,6 +26,34 @@ def get_columns():
             "width": 180
         },
         {
+            "label": _("Branch"),
+            "fieldname": "branch",
+            "fieldtype": "Link",
+            "options": "Branch",
+            "width": 150
+        },
+        {
+            "label": _("Zone"),
+            "fieldname": "zone",
+            "fieldtype": "Link",
+            "options": "Zone",
+            "width": 150
+        },
+        {
+            "label": _("Area"),
+            "fieldname": "area",
+            "fieldtype": "Link",
+            "options": "Area",
+            "width": 150
+        },
+        {
+            "label": _("Point"),
+            "fieldname": "point",
+            "fieldtype": "Link",
+            "options": "Point",
+            "width": 200
+        },
+        {
             "label": _("Has Assignment"),
             "fieldname": "has_assignment",
             "fieldtype": "Check",
@@ -89,7 +117,7 @@ def get_leave_policy_assignments(filters):
     # Get all employees user has access to
     employees = frappe.get_all(
         "Employee",
-        fields=["name", "employee_name", "designation", "department"],
+        fields=["name", "employee_name", "designation", "department", "custom_point", "custom_area", "custom_zone", "branch"],
         filters=employee_filters
     )
     
@@ -134,6 +162,10 @@ def get_leave_policy_assignments(filters):
         row = {
             "employee": employee.name,
             "employee_name": employee.employee_name,
+            "branch": employee.branch,
+            "zone": employee.custom_zone,
+            "area": employee.custom_area,
+            "point": employee.custom_point,
             "has_assignment": 1 if assignment else 0,
             "leave_policy": assignment.leave_policy if assignment else None,
             "effective_from": assignment.effective_from if assignment else None,
