@@ -25,32 +25,52 @@ def register_face_biometric() -> Dict[str, Any]:
         is_valid, result = verify_dp_token(frappe.request.headers)
         
         if not is_valid:
+            frappe.log_error(
+                title="Biometric Registration - Token Verification Failed",
+                message=f"Token verification failed: {json.dumps(result, indent=2)}"
+            )
             frappe.local.response['http_status_code'] = result.get("http_status_code", 500)
             return result
 
         # Validate request body
         if not frappe.request.json:
-            return create_error_response(
+            error_response = create_error_response(
                 code="REQUEST_BODY_REQUIRED",
                 message="Request body is required",
                 http_status_code=400
             )
+            frappe.log_error(
+                title="Biometric Registration - Missing Request Body",
+                message=f"Employee: {result.get('employee', 'Unknown')} - Request body is required"
+            )
+            return error_response
 
         # Extract data
         data = frappe.request.json
         employee = result["employee"]
         images = data.get("images", [])
 
+        # Log registration attempt
+        frappe.log_error(
+            title="Biometric Registration - Attempt Started",
+            message=f"Employee: {employee} - Registration process initiated with {len(images)} images"
+        )
+
         # Validate images
         if not isinstance(images, list):
-            return create_error_response(
+            error_response = create_error_response(
                 code="INVALID_IMAGE_FORMAT",
                 message="Images must be provided as a list",
                 http_status_code=400
             )
+            frappe.log_error(
+                title="Biometric Registration - Invalid Image Format",
+                message=f"Employee: {employee} - Images must be provided as a list, received: {type(images)}"
+            )
+            return error_response
 
         if len(images) != REQUIRED_IMAGE_COUNT:
-            return create_error_response(
+            error_response = create_error_response(
                 code="INVALID_IMAGE_COUNT",
                 message=f"Exactly {REQUIRED_IMAGE_COUNT} images are required",
                 details={
@@ -59,6 +79,11 @@ def register_face_biometric() -> Dict[str, Any]:
                 },
                 http_status_code=400
             )
+            frappe.log_error(
+                title="Biometric Registration - Invalid Image Count",
+                message=f"Employee: {employee} - Required: {REQUIRED_IMAGE_COUNT}, Provided: {len(images)}"
+            )
+            return error_response
 
         # Check for any existing registration (not just active)
         existing_record = frappe.db.get_value(
@@ -69,7 +94,7 @@ def register_face_biometric() -> Dict[str, Any]:
         )
 
         if existing_record:
-            return create_error_response(
+            error_response = create_error_response(
                 code="BIOMETRIC_REGISTRATION_EXISTS",
                 message="Biometric registration already exists for this employee",
                 details={
@@ -79,16 +104,41 @@ def register_face_biometric() -> Dict[str, Any]:
                 },
                 http_status_code=400
             )
+            frappe.log_error(
+                title="Biometric Registration - Duplicate Registration Attempt",
+                message=f"Employee: {employee} - Registration already exists: {existing_record.name} (Status: {existing_record.status})"
+            )
+            return error_response
 
         # Call face recognition server
+        frappe.log_error(
+            title="Biometric Registration - Calling Face Recognition Server",
+            message=f"Employee: {employee} - Sending {len(images)} images to face recognition server at {BIOMETRIC_SERVER_URL}"
+        )
+        
         face_server_response = call_face_recognition_server(images)
         if not face_server_response["success"]:
+            frappe.log_error(
+                title="Biometric Registration - Face Server Error",
+                message=f"Employee: {employee} - Face recognition server failed: {json.dumps(face_server_response, indent=2)}"
+            )
             return handle_face_server_error(face_server_response)
+
+        # Log successful face server response
+        frappe.log_error(
+            title="Biometric Registration - Face Server Success",
+            message=f"Employee: {employee} - Face recognition server responded successfully. Models used: {face_server_response.get('data', {}).get('models_used', [])}. Embeddings count: {face_server_response.get('data', {}).get('embeddings_count', 0)}"
+        )
 
         # Create biometric record
         try:
             biometric_doc = create_biometric_record(employee, face_server_response)
-            logger.info(f"Created biometric registration for employee {employee}")
+            
+            # Log successful registration
+            frappe.log_error(
+                title="Biometric Registration - Registration Completed Successfully",
+                message=f"Employee: {employee} - Biometric registration completed. Registration ID: {biometric_doc.name}, Embeddings Count: {biometric_doc.embeddings_count}"
+            )
             
             return create_success_response(
                 code="BIOMETRIC_REGISTRATION_SUCCESS",
@@ -105,8 +155,10 @@ def register_face_biometric() -> Dict[str, Any]:
             )
 
         except Exception as e:
-            logger.error(f"Failed to create biometric record for {employee}: {str(e)}")
-            logger.error(f"Face Server Response: {json.dumps(face_server_response, indent=2)}")
+            frappe.log_error(
+                title="Biometric Registration - Database Record Creation Failed",
+                message=f"Employee: {employee} - Failed to create biometric record in database.\nError: {str(e)}\nFace Server Response: {json.dumps(face_server_response, indent=2)}\nTraceback: {frappe.get_traceback()}"
+            )
             return create_error_response(
                 code="BIOMETRIC_REGISTRATION_FAILED",
                 message="Failed to save biometric data",
@@ -115,7 +167,10 @@ def register_face_biometric() -> Dict[str, Any]:
             )
 
     except Exception as e:
-        logger.error(f"Biometric registration error: {str(e)}")
+        frappe.log_error(
+            title="Biometric Registration - Unexpected Error",
+            message=f"Employee: {result.get('employee', 'Unknown') if 'result' in locals() else 'Unknown'} - Unexpected error occurred during registration.\nError: {str(e)}\nTraceback: {frappe.get_traceback()}"
+        )
         return create_error_response(
             code="INTERNAL_SERVER_ERROR",
             message="An unexpected error occurred",
@@ -458,7 +513,11 @@ def call_face_recognition_server(images: List[str]) -> Dict[str, Any]:
         return response.json()
         
     except requests.RequestException as e:
-        print(f"Face Recognition Error: {str(e)}")
+        # Log face recognition server errors using Frappe's error logging
+        frappe.log_error(
+            title="Biometric Registration - Face Recognition Service Error",
+            message=f"Failed to connect to face recognition server at {BIOMETRIC_SERVER_URL}\nError: {str(e)}\nImages count: {len(images)}\nTraceback: {frappe.get_traceback()}"
+        )
         return {
             "success": False,
             "status": "error",
@@ -469,36 +528,50 @@ def call_face_recognition_server(images: List[str]) -> Dict[str, Any]:
 
 def create_biometric_record(employee: str, face_data: Dict) -> Any:
     """Create a new biometric record in Frappe"""
-    current_time = now_datetime()
-    
-    # Extract data from face recognition response
-    response_data = face_data["data"]
-    embeddings_data = response_data["embeddings_by_model"]
-    models_used = response_data["models_used"]
-    embeddings_count = response_data["embeddings_count"]
-    
-    # Get additional metrics if available
-    registration_metrics = response_data.get("registration_metrics", {})
-    identity_validation = registration_metrics.get("identity_validation", {})
-    quality_checks = registration_metrics.get("validation_results", {})
-    
-    # Create document with extended information
-    biometric_doc = frappe.get_doc({
-        "doctype": "Employee Biometric Master",
-        "employee": employee,
-        "face_embeddings": json.dumps(embeddings_data),
-        "registration_date": current_time,
-        "last_updated": current_time,
-        "status": "Active",
-        "models_used": json.dumps(models_used),
-        "embeddings_count": embeddings_count,
-        # Store additional metrics as JSON strings
-        "identity_validation": json.dumps(identity_validation) if identity_validation else None,
-        "quality_metrics": json.dumps(quality_checks) if quality_checks else None
-    })
-    
-    biometric_doc.insert(ignore_permissions=True)
-    return biometric_doc
+    try:
+        current_time = now_datetime()
+        
+        # Extract data from face recognition response
+        response_data = face_data["data"]
+        embeddings_data = response_data["embeddings_by_model"]
+        models_used = response_data["models_used"]
+        embeddings_count = response_data["embeddings_count"]
+        
+        # Get additional metrics if available
+        registration_metrics = response_data.get("registration_metrics", {})
+        identity_validation = registration_metrics.get("identity_validation", {})
+        quality_checks = registration_metrics.get("validation_results", {})
+        
+        # Log record creation attempt
+        frappe.log_error(
+            title="Biometric Registration - Creating Database Record",
+            message=f"Employee: {employee} - Creating biometric record with {embeddings_count} embeddings using models: {models_used}"
+        )
+        
+        # Create document with extended information
+        biometric_doc = frappe.get_doc({
+            "doctype": "Employee Biometric Master",
+            "employee": employee,
+            "face_embeddings": json.dumps(embeddings_data),
+            "registration_date": current_time,
+            "last_updated": current_time,
+            "status": "Active",
+            "models_used": json.dumps(models_used),
+            "embeddings_count": embeddings_count,
+            # Store additional metrics as JSON strings
+            "identity_validation": json.dumps(identity_validation) if identity_validation else None,
+            "quality_metrics": json.dumps(quality_checks) if quality_checks else None
+        })
+        
+        biometric_doc.insert(ignore_permissions=True)
+        return biometric_doc
+        
+    except Exception as e:
+        frappe.log_error(
+            title="Biometric Registration - Record Creation Exception",
+            message=f"Employee: {employee} - Exception during biometric record creation.\nError: {str(e)}\nFace Data: {json.dumps(face_data, indent=2)}\nTraceback: {frappe.get_traceback()}"
+        )
+        raise e
 
 def create_biometric_log(employee: str, verification_result: Dict) -> Any:
     """Create a biometric verification log entry"""
