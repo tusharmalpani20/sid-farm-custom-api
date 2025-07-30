@@ -223,7 +223,7 @@ scheduler_events = {
 			"custom_app_api.cron_functions.employee.check_notice_period_completion"
 		],
 		"0 11 L * *": [
-            "custom_app_api.cron_functions.additional_salary_packet_bonus.calculate_packet_bonus"
+            # "custom_app_api.cron_functions.additional_salary_packet_bonus.calculate_packet_bonus"
         ],
 	},
 	# "all": [
