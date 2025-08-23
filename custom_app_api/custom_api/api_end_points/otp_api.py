@@ -127,7 +127,7 @@ def send_otp(phone_number, app_name = 'sf_partner' , app_version = '1.0.0' ):
             "phone": phone_number,
             "code": otp_code,
             "send_for": "Delivery Partner Mobile Auth",
-            "provider": "Text Local",
+            "provider": "Webex Connect",
             "send_at": current_ist_time,
             "expires_at": current_ist_time + timedelta(minutes=2),
             "is_expired": 0,
@@ -140,7 +140,7 @@ def send_otp(phone_number, app_name = 'sf_partner' , app_version = '1.0.0' ):
         frappe.logger("otp").info(f"New OTP generated for {phone_number}")
 
         # Send SMS and log the result
-        sms_result = send_sms_via_textlocal(phone_number, otp_code)
+        sms_result = send_sms_via_webex_connect(phone_number, otp_code)
         if not sms_result:
             frappe.logger("otp").error(f"SMS sending failed for {phone_number}")
             frappe.local.response['http_status_code'] = 500
@@ -571,4 +571,74 @@ def send_sms_via_textlocal(phone_number, otp_code):
 
     except Exception as e:
         frappe.log_error(f"Failed to send SMS via TextLocal: {str(e)}", "SMS Error")
+        return False
+
+def send_sms_via_webex_connect(phone_number, otp_code):
+    try:
+        # Get API key from Frappe configuration
+        api_key = frappe.conf.get('webex_connect_api_key')
+        if not api_key:
+            frappe.log_error("Webex Connect API key not configured", "SMS Error")
+            return False
+
+        # Get DLT template ID from configuration
+        dlt_template_id = frappe.conf.get('webex_connect_dlt_template_id', '1407162867250922316')
+
+        # Standardize and format phone number
+        try:
+            standardized_number = standardize_phone_number(phone_number)
+            formatted_number = f"+91{standardized_number}"
+        except ValueError as e:
+            frappe.log_error(f"Phone number standardization failed: {str(e)}", "SMS Error")
+            return False
+
+        # Prepare payload for Webex Connect API
+        payload = {
+            "deliverychannel": "sms",
+            "channels": {
+                "sms": {
+                    "text": f"{otp_code} is your 4 digit Sid's farm OTP for log in.\n\n {otp_code}\nSid's Farm.",
+                    "senderid": frappe.conf.get('webex_connect_sender_id', 'SIDOTP'),
+                    "extras": {
+                        "dlt_templateid": dlt_template_id
+                    }
+                }
+            },
+            "destination": [
+                {
+                    "msisdn": [formatted_number]
+                }
+            ]
+        }
+
+        # Prepare headers
+        headers = {
+            'Content-Type': 'application/json',
+            'key': api_key
+        }
+
+        # Make API request
+        request = urllib.request.Request(
+            "https://api.in.webexconnect.io/resources/v1/messaging",
+            data=json.dumps(payload).encode('utf-8'),
+            headers=headers,
+            method='POST'
+        )
+        
+        response = urllib.request.urlopen(request)
+        response_data = response.read().decode('utf-8')
+        
+        # Parse response
+        json_response = frappe.parse_json(response_data)
+        
+        # Check if the request was successful
+        # You may need to adjust this based on the actual response format from Webex Connect
+        if response.getcode() == 200:
+            return True
+        else:
+            frappe.log_error(f"Webex Connect API Error: {response_data}", "SMS Error")
+            return False
+
+    except Exception as e:
+        frappe.log_error(f"Failed to send SMS via Webex Connect: {str(e)}", "SMS Error")
         return False

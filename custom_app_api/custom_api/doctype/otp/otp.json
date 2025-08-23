@@ -12,7 +12,9 @@
   "send_at",
   "expires_at",
   "is_expired",
-  "verified_at"
+  "verified_at",
+  "app_name",
+  "app_version"
  ],
  "fields": [
   {
@@ -39,7 +41,7 @@
    "fieldname": "provider",
    "fieldtype": "Select",
    "label": "Provider",
-   "options": "Text Local",
+   "options": "Text Local\nWebex Connect",
    "reqd": 1
   },
   {
@@ -67,25 +69,25 @@
    "label": "Is Expired"
   },
   {
-    "fieldname": "app_name",
-    "fieldtype": "Data",
-    "label": "App Name",
-    "reqd": 1,
-    "hidden": 1,
-    "default": "SF Partner"
+   "default": "SF Partner",
+   "fieldname": "app_name",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "App Name",
+   "reqd": 1
   },
   {
-    "fieldname": "app_version",
-    "fieldtype": "Data",
-    "label": "App Version",
-    "reqd": 0,
-    "hidden": 1,
-    "default": "1.0.0"
+   "default": "1.0.0",
+   "fieldname": "app_version",
+   "fieldtype": "Data",
+   "hidden": 1,
+   "label": "App Version"
   }
  ],
+ "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-12-06 14:57:20.875410",
+ "modified": "2025-08-23 13:02:25.800272",
  "modified_by": "Administrator",
  "module": "Custom API",
  "name": "OTP",
@@ -116,6 +118,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []
